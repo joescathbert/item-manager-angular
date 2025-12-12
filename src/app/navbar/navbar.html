@@ -1,0 +1,11 @@
+<nav class="navbar">
+  <div class="navbar-left">
+    <a routerLink="/" class="navbar-logo">Item Manager</a>
+  </div>
+
+  <div class="navbar-right">
+    @if (!isLoginPage) {
+      <button (click)="logout()">Logout</button>
+    }
+  </div>
+</nav>

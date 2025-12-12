@@ -1,0 +1,132 @@
+@use "sass:color";
+// Theme variables
+$primary-color: #ff4500; // Reddit orange
+$primary-hover: color.adjust($primary-color, $lightness: -8%);
+$error-color: #ff6b6b;
+$card-radius: 12px;
+$bg-dark: #1a1a1b; // Reddit dark background
+$text-light: #f6f7f8;
+
+.login-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 50px);
+  background: $bg-dark;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: #2a2a2d; // slightly lighter than background
+  border-radius: $card-radius;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+  padding: 2rem;
+  animation: fadeInUp 0.4s ease;
+  color: $text-light;
+
+  .login-title {
+    text-align: center;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: $text-light;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    input {
+      padding: 0.8rem;
+      border: 1px solid #444;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: #1a1a1b;
+      color: $text-light;
+      transition: border-color 0.2s, box-shadow 0.2s;
+
+      &::placeholder {
+        color: #aaa;
+      }
+
+      &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 3px rgba($primary-color, 0.4);
+        outline: none;
+      }
+    }
+
+    button {
+      padding: 0.9rem;
+      background: $primary-color;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: $primary-hover;
+      }
+    }
+  }
+
+  .error {
+    margin-top: 1rem;
+    color: $error-color;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .login-footer {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.9rem;
+
+    span {
+      color: #aaa;
+    }
+
+    a {
+      color: $primary-color;
+      font-weight: 600;
+      margin-left: 0.3rem;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+// Snappy animation
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Mobile tweaks
+@media (max-width: 600px) {
+  .login-wrapper {
+    min-height: calc(100vh - 110px);
+  }
+  .login-card {
+    margin: 0 1rem;
+    padding: 1.5rem;
+  }
+
+  .login-title {
+    font-size: 1.4rem;
+  }
+}

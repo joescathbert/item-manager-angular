@@ -1,0 +1,19 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <h2 class="login-title">Sign In</h2>
+    <form (ngSubmit)="login()" [formGroup]="loginForm" class="login-form">
+      <input formControlName="username" placeholder="Username" required />
+      <input formControlName="password" type="password" placeholder="Password" required />
+      <button type="submit">Login</button>
+    </form>
+
+    @if (errorMessage) {
+      <p class="error">{{ errorMessage }}</p>
+    }
+
+    <div class="login-footer">
+      <span>New here?</span>
+      <a routerLink="/register">Create an account</a>
+    </div>
+  </div>
+</div>
