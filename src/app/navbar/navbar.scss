@@ -1,51 +1,61 @@
-@use "sass:color";
-
-$primary-color: #ff4500;
-$primary-hover: color.adjust($primary-color, $lightness: -8%);
-$bg-dark: #1a1a1b;
-$text-light: #f6f7f8;
+@use 'theme_variables.scss' as *;
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #2a2a2d;
-  color: $text-light;
-  padding: 0.75rem 1.5rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  background: $color-netural-bg;
+  color: $color-text-light;
+  padding: 0.75rem 0.75rem;
+  border-bottom: .05rem solid $color-neutral-border;
 
-  a {
-    color: $text-light;
-    text-decoration: none;
-    margin: 0 0.75rem;
-    font-weight: 500;
-    transition: color 0.2s ease;
+  div.navbar-left {
+    display: flex;
 
-    &.active {
-      color: $primary-color;
-    }
-
-    &:hover {
-      color: $primary-hover;
+    a.navbar-logo {
+      display: flex;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: $color-text-light;
+      text-decoration: none;
+      margin: 0.75 0.75rem;
+      img.app-logo {
+        height: 2.5rem;
+        width: auto;
+      }
     }
   }
 
-  .navbar-logo {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: $primary-color;
-  }
+  .navbar-right {
+    display: flex;
+    gap: 1rem;
 
-  .navbar-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: $text-light;
+    a.nav-icon-button-link {
+      color: $color-text-light;
+      text-decoration: none;
+      border-radius: 999px;
+      padding: 0.5rem 1rem;
+
+      &:hover {
+        background: $color-item-hover-bg;
+      }
+
+      span.nav-icon-button-content {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        span.nav-icon {
+          display: flex;
+        }
+      }
+    }
   }
 
   button {
     background: $primary-color;
     border: none;
-    border-radius: 6px;
+    border-radius: 999px;
     padding: 0.5rem 1rem;
     color: #fff;
     cursor: pointer;

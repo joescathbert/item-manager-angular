@@ -2,7 +2,7 @@
   <div class="login-card">
     <h2 class="login-title">Sign In</h2>
     <form (ngSubmit)="login()" [formGroup]="loginForm" class="login-form">
-      <input formControlName="username" placeholder="Username" required />
+      <input formControlName="username" placeholder="Username" autocapitalize="off" required />
       <input formControlName="password" type="password" placeholder="Password" required />
       <button type="submit">Login</button>
     </form>

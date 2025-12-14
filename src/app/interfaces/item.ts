@@ -16,8 +16,28 @@ export interface Item {
   url?: string;
 }
 
+export interface PagedItems {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Item[];
+}
+
 export interface Link {
   id: number;
   item: number;
+  url: string;
+}
+
+
+export interface ItemPayload {
+  name: string;
+  type: string;
+  date_of_origin: string; // Django expects snake_case
+  tag_names: string[];
+}
+
+export interface LinkPayload {
+  item: number; // The ID of the newly created item
   url: string;
 }

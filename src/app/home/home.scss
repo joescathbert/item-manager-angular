@@ -1,38 +1,43 @@
+@use 'theme_variables.scss' as *;
+
 .items-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: .2rem;
   padding: 1rem;
   align-items: center;
+  min-height: 83vh;
 }
 
 .item-card {
-  background: #2a2a2d;
   color: #f6f7f8;
   padding: 1rem;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
   width: 35%;
+}
+
+.item-card:hover {
+  background: $color-item-hover-bg;
 }
 
 .tag-list {
   display: flex;
-  flex-wrap: wrap; // Allow tags to wrap if there are many
-  gap: 8px;        // Space between tags
-  margin-bottom: 1rem; // Space between tags and the content below
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #3c3c40; // Subtle separator
+  border-bottom: 1px solid $color-neutral-border-weak;
 }
 
 .tag-pill {
   // Pill styling
-  background-color: #007bff; // A nice blue color
+  background-color: #007bff;
   color: white;
   font-size: 0.75rem;
   font-weight: 500;
   padding: 4px 10px;
-  border-radius: 50px; // High border-radius creates the pill shape
-  white-space: nowrap; // Prevent tags from breaking across lines internally
+  border-radius: 50px;
+  white-space: nowrap;
 }
 
 .card-actions {
@@ -42,10 +47,13 @@
 }
 
 .delete-button {
-  background-color: #e53935; // Red background for a delete action
+  background-color: #e53935;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
@@ -56,6 +64,13 @@
   }
 }
 
+.delete-icon {
+  /* Ensure the SVG is sized appropriately */
+  width: 1.25rem; /* 20px */
+  height: 1.25rem; /* 20px */
+  fill: currentColor; /* Inherit the white color from the button */
+}
+
 // Mobile tweaks
 @media (max-width: 600px) {
   .items-container {
@@ -64,4 +79,203 @@
   .item-card {
     width: unset;
   }
+}
+
+/* --- 1. Loading Spinner Keyframes --- */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- 2. Loading and Status Styles --- */
+.scroll-status-footer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+/* --- 3. Loading Spinner Container (No text, just centering) --- */
+.loading-spinner-container {
+  display: flex;
+  justify-content: center; /* Center the spinner horizontally */
+  align-items: center;
+}
+
+.spinner {
+  /* Styling for the circular spinner */
+  
+  // 🚨 THICKER and SMALLER: Set width/height to 20px and border to 5px
+  width: 20px;
+  height: 20px;
+  border: 5px solid rgba(229, 57, 53, 0.2); /* Light transparent version of the red theme */
+  border-top: 5px solid #e53935; /* Primary Red color for the moving part */
+  
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* --- 4. End of Page Message Styles (Remains the same) --- */
+/* Keyframes for a subtle entrance/fade in */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.end-of-page-message {
+  padding: 15px 30px;
+  border: 1px solid #3c3c40;
+  border-radius: 20px;
+  background-color: #1e1e1e;
+  color: #8c8c8c;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* --- Modal Overlay Styles (Add to the end of your file) --- */
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+    z-index: 9999; /* Ensure it's on top */
+}
+
+.modal-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #2a2a2d; /* Matches your card background */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 10000; /* Above the backdrop */
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    color: #f6f7f8;
+}
+
+.modal-header h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #3c3c40;
+    padding-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.modal-body p {
+    margin: 15px 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #3c3c40;
+}
+
+.modal-button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+}
+
+.modal-cancel-button {
+    background-color: #555;
+    color: white;
+
+    &:hover {
+        background-color: #777;
+    }
+}
+
+.modal-confirm-button {
+    background-color: #e53935; /* Your existing red theme */
+    color: white;
+
+    &:hover {
+        background-color: #b71c1c;
+    }
+}
+
+/* --- SKELETON LOADING STYLES --- */
+
+// Define the shimmer animation
+@keyframes shimmer {
+  0% { background-position: -468px 0; }
+  100% { background-position: 468px 0; }
+}
+
+.skeleton-card {
+  // Inherits base .item-card styles (width, margin, shadow)
+  
+  // Reset background and remove interactive styles
+  background-color: #3c3c40; /* Slightly darker base for skeleton */
+  pointer-events: none;
+  cursor: default;
+  overflow: hidden; /* Important for the shimmer effect */
+
+  // Apply shimmer effect background
+  background: linear-gradient(to right, #3c3c40 8%, #4e4e52 18%, #3c3c40 33%);
+  background-size: 800px 104px;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-line {
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1); /* Visible lines within the shimmer */
+  margin-bottom: 10px;
+}
+
+.skeleton-header {
+  height: 18px;
+  width: 60%; /* Mimics a title/user name */
+  margin-top: 5px;
+}
+
+.skeleton-body-short {
+  height: 12px;
+  width: 95%;
+}
+
+.skeleton-body-long {
+  height: 12px;
+  width: 80%;
+}
+
+.skeleton-image {
+    width: 100%;
+    padding-top: 50%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: rgba(255, 255, 255, 0.1); 
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.skeleton-footer-section {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.skeleton-tag {
+  height: 10px;
+  width: 60px;
+  border-radius: 50px;
+  background-color: rgba(255, 255, 255, 0.1);
 }
