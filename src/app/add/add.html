@@ -12,9 +12,17 @@
                     [(ngModel)]="tagInput"
                     [ngModelOptions]="{standalone: true}"
                     (keydown.enter)="$event.preventDefault(); addTag()"
+                    (input)="filterSuggestions()"  list="tag-suggestions"
+                    autocapitalize="off"
                 />
                 <button type="button" (click)="addTag()">Add Tag</button>
             </div>
+
+            <datalist id="tag-suggestions">
+                @for (tag of suggestionTags; track tag.id) {
+                    <option [value]="tag.name"></option>
+                }
+            </datalist>
 
             <div class="tag-pills">
                 @for (tag of tags; track tag) {

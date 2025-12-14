@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems } from '../interfaces/item';
+import { Item as ItemInterface, Link, PagedItems, Tag } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
 
@@ -46,10 +46,10 @@ export class Item {
     return this.http.get<Link>(url);
   }
 
-  deleteItem(itemId: number): Observable<any> {
-    const url = `${this.baseUrl}/items/${itemId}/`;
-    this.logger.log('Deleting item at URL:', url);
-    return this.http.delete(url);
+  getTags(): Observable<Tag[]> {
+    const url = `${this.baseUrl}/tags/`
+    this.logger.log('Fetching tags from URL:', url);
+    return this.http.get<Tag[]>(url);
   }
 
   createItem(payload: ItemPayload): Observable<any> {
@@ -62,5 +62,11 @@ export class Item {
     const url = `${this.baseUrl}/links/`;
     this.logger.log('Creating link at URL:', url, 'with payload:', payload);
     return this.http.post(url, payload);
+  }
+
+  deleteItem(itemId: number): Observable<any> {
+    const url = `${this.baseUrl}/items/${itemId}/`;
+    this.logger.log('Deleting item at URL:', url);
+    return this.http.delete(url);
   }
 }

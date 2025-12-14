@@ -1,4 +1,3 @@
-// 📝 add.ts
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -6,6 +5,7 @@ import { mergeMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common'; // Needed for Common features like NgIf, NgFor
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
+import { Tag } from '../interfaces/item';
 
 // We need to inject the NgIf/NgFor directives for standalone components
 @Component({
@@ -20,6 +20,9 @@ export class Add {
   tagInput: string = '';
   tags: string[] = [];
   loading: boolean = false; // For submission button state
+  // 👈 NEW: State for suggestions
+  allTags: Tag[] = [];
+  suggestionTags: Tag[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -35,6 +38,8 @@ export class Add {
       // Validators.required for date is strong, adjust if needed
       dateOfOrigin: [this.getCurrentDate(), Validators.required], 
     });
+    // 👈 NEW: Load all tags when the component initializes
+    this.loadAllTags();
   }
   
   // Helper to get today's date in YYYY-MM-DD format for the input default
@@ -53,6 +58,34 @@ export class Add {
 
   removeTag(tagToRemove: string) {
     this.tags = this.tags.filter(tag => tag !== tagToRemove);
+  }
+
+  // --- Tag Suggestion Management ---
+  loadAllTags(): void {
+    // 👈 IMPORTANT: Assuming ItemService has a getTags() method that returns Tag[]
+    this.itemService.getTags().subscribe({
+      next: (tags: Tag[]) => {
+        this.allTags = tags;
+        this.suggestionTags = tags; // Initially show all tags
+      },
+      error: (err) => {
+        console.error('Failed to load tags for suggestions:', err);
+      }
+    });
+  }
+
+  // 👈 NEW: Filters the suggestions based on user input
+  filterSuggestions(): void {
+    const input = this.tagInput.trim().toLowerCase();
+    if (!input) {
+        // If input is empty, show all available tags that haven't been selected
+        this.suggestionTags = this.allTags.filter(tag => !this.tags.includes(tag.name));
+    } else {
+        // Filter tags that match the input AND haven't been selected
+        this.suggestionTags = this.allTags.filter(tag => 
+            tag.name.toLowerCase().includes(input) && !this.tags.includes(tag.name)
+        );
+    }
   }
 
   // --- Form Actions ---
