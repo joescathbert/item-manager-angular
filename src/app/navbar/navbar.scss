@@ -6,28 +6,22 @@
   align-items: center;
   background: $color-netural-bg;
   color: $color-text-light;
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 0.75rem;
   border-bottom: .05rem solid $color-neutral-border;
 
   div.navbar-left {
     display: flex;
-    // padding: .5rem 0;
 
     a.navbar-logo {
+      display: flex;
       font-size: 1.2rem;
       font-weight: 700;
       color: $color-text-light;
       text-decoration: none;
-      margin: 0 0.75rem;
-      padding: 0.5rem 1rem;
-      transition: color 0.2s ease;
-
-      &.active {
-        color: $color-text-light
-      }
-
-      &:hover {
-        color: $primary-hover;
+      margin: 0.75 0.75rem;
+      img.app-logo {
+        height: 2.5rem;
+        width: auto;
       }
     }
   }
