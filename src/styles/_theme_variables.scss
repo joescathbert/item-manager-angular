@@ -1,0 +1,27 @@
+@use "sass:color";
+// Theme variables
+$primary-color: #ff4500;
+$primary-hover: color.adjust($primary-color, $lightness: -8%);
+$error-color: #ff6b6b;
+$card-radius: 12px;
+
+$color-netural-bg: black;
+$color-neutral-bg-hover: #181C1F;
+
+$color-text-light: #f6f7f8;
+
+$color-item-hover-bg: #2a2a2d;
+$color-button-bg: #2A3236;
+$color-button-bg-hover: #333D42;
+$color-action-button-bg: #115BCA;
+$color-action-button-bg-hover: #1870F4;
+
+
+$pill-border-radius: 999px;
+
+$color-neutral-border: #FFFFFF33;
+$color-neutral-border-medium: #FFFFFF7F;
+$color-neutral-border-strong: #F6F8F9;
+$color-neutral-border-weak: #FFFFFF19;
+
+$focus-color: white;

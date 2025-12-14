@@ -1,18 +1,10 @@
-@use "sass:color";
-// Theme variables
-$primary-color: #ff4500; // Reddit orange
-$primary-hover: color.adjust($primary-color, $lightness: -8%);
-$error-color: #ff6b6b;
-$card-radius: 12px;
-$bg-dark: #1a1a1b; // Reddit dark background
-$text-light: #f6f7f8;
+@use 'theme_variables.scss' as *;
 
 .login-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 50px);
-  background: $bg-dark;
 }
 
 .login-card {
@@ -23,14 +15,14 @@ $text-light: #f6f7f8;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
   padding: 2rem;
   animation: fadeInUp 0.4s ease;
-  color: $text-light;
+  color: $color-text-light;
 
   .login-title {
     text-align: center;
     font-size: 1.6rem;
     font-weight: 600;
     margin-bottom: 1.5rem;
-    color: $text-light;
+    color: $color-text-light;
   }
 
   .login-form {
@@ -44,7 +36,7 @@ $text-light: #f6f7f8;
       border-radius: 8px;
       font-size: 1rem;
       background: #1a1a1b;
-      color: $text-light;
+      color: $color-text-light;
       transition: border-color 0.2s, box-shadow 0.2s;
 
       &::placeholder {

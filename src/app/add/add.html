@@ -1,0 +1,56 @@
+<div class="add-container">
+    <h2>Add Item</h2>
+
+    <form [formGroup]="addItemForm" (ngSubmit)="onSubmit()">
+
+        <section class="form-section tag-section">
+            <!-- <h3>Tags</h3> -->
+            <div class="tag-input-group">
+                <input 
+                    type="text" 
+                    placeholder="Enter tag name (e.g., angular, rxjs)"
+                    [(ngModel)]="tagInput"
+                    [ngModelOptions]="{standalone: true}"
+                    (keydown.enter)="$event.preventDefault(); addTag()"
+                />
+                <button type="button" (click)="addTag()">Add Tag</button>
+            </div>
+
+            <div class="tag-pills">
+                @for (tag of tags; track tag) {
+                    <span class="tag-pill">
+                        {{ tag }}
+                        <span class="remove-tag" (click)="removeTag(tag)">x</span>
+                    </span>
+                }
+            </div>
+        </section>
+
+        <section class="form-section item-section">
+            <!-- <h3>Item Details (Type: Link)</h3> -->
+
+            <div class="form-group">
+                <input id="url" type="url" formControlName="url" placeholder="URL" required>
+            </div>
+
+            <div class="form-group">
+                <input id="dateOfOrigin" type="date" formControlName="dateOfOrigin" required>
+            </div>
+
+            <input type="hidden" formControlName="name">
+        </section>
+
+        <section class="button-section">
+            <button type="button" class="cancel-button" (click)="cancel()">
+                Cancel
+            </button>
+            <button type="submit" class="submit-button" [disabled]="addItemForm.invalid || loading">
+                @if (loading) {
+                    <span>Submitting...</span> 
+                } @else {
+                    <span>Submit Item</span>
+                }
+            </button>
+        </section>
+    </form>
+</div>

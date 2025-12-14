@@ -1,3 +1,5 @@
+@use 'theme_variables.scss' as *;
+
 :host {
   --bright-blue: oklch(51.01% 0.274 263.83);
   --electric-violet: oklch(53.18% 0.28 296.97);
@@ -55,7 +57,7 @@
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
-  background: #1a1a1b;
+  background: $color-netural-bg;
   color: #f6f7f8;
 }
 
