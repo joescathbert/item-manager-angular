@@ -76,10 +76,10 @@ export class Home {
         const itemObservables = data.map(item => {
           if (item.type === 'link' && item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
-              map(link => ({ ...item, url: link.url }))
+              map(link => ({ ...item, url: link.url, domain_name: link.domain_name }))
             );
           } else {
-            return of(item); 
+            return of(item);
           }
         });
         return forkJoin(itemObservables); 
@@ -152,7 +152,6 @@ export class Home {
   }
 
   onScroll() {
-    console.log('--- SCROLL EVENT TRIGGERED ---');
     this.loadItems();
   }
 

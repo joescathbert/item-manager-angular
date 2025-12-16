@@ -10,12 +10,22 @@
         </div>
       }
       @if (item.type === 'link') {
-        <blockquote 
-            class="twitter-tweet" 
-            data-media-max-width="560"
-            data-width="450"  >
-          <a [href]="item.url"></a>
-        </blockquote> 
+        @if (item.domain_name === 'twitter.com') {
+          <blockquote 
+              class="twitter-tweet"
+              data-media-max-width="560"
+              data-width="450">
+            <a [href]="item.url"></a>
+          </blockquote>
+        }
+        @if (item.domain_name === 'www.reddit.com') {
+          <blockquote 
+              class="reddit-embed-bq"
+              data-embed-theme="dark"
+              data-embed-height="736">
+            <a [href]="item.url"></a>
+          </blockquote>
+        }
       }
       @if (item.type === 'file') {
         <p>File ID: {{ item.file_id }}</p>
