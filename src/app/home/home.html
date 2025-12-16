@@ -2,13 +2,31 @@
   <!-- <button (click)="testPrint()">Test Print</button> -->
   @for (item of items; track item.id) {
     <div class="item-card">
-      @if (item.tags && item.tags.length > 0) {
-        <div class="tag-list">
-          @for (tag of item.tags; track $index) {
-            <span class="tag-pill">{{ tag }}</span>
+      <div class="item-header-row">
+        @if (item.tags && item.tags.length > 0) {
+          <div class="tag-list">
+            @for (tag of item.tags; track $index) {
+              <span class="tag-pill">{{ tag }}</span>
+            }
+          </div>
+        }
+
+        <div class="item-options-menu">
+          <button class="options-button" (click)="toggleOptions(item.id, $event)">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
+              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+            </svg>
+          </button>
+
+          @if (activeOptionsMenuId === item.id) {
+            <div class="options-dropdown" (click)="$event.stopPropagation()">
+              <button class="menu-item" (click)="useAsTemplate(item)">
+                Use as Template
+              </button>
+            </div>
           }
         </div>
-      }
+    </div>
       @if (item.type === 'link') {
         <blockquote 
             class="twitter-tweet" 

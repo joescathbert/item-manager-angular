@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { mergeMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common'; // Needed for Common features like NgIf, NgFor
@@ -27,23 +27,26 @@ export class Add {
   constructor(
     private fb: FormBuilder,
     private itemService: ItemService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.addItemForm = this.fb.group({
-      // We'll use a placeholder name for now.
-      name: ['New Item', Validators.required], 
+      name: ['New Item', Validators.required], // Default name can be adjusted
       url: ['', Validators.required], 
       // Validators.required for date is strong, adjust if needed
       dateOfOrigin: [this.getCurrentDate(), Validators.required], 
     });
-    // 👈 NEW: Load all tags when the component initializes
+
+    // Load all tags when the component initializes
     this.loadAllTags();
+
+    this.handleTemplateTags();
   }
-  
+
   // Helper to get today's date in YYYY-MM-DD format for the input default
-  getCurrentDate(): string {
+  private getCurrentDate(): string {
     return new Date().toISOString().split('T')[0];
   }
 
@@ -62,7 +65,6 @@ export class Add {
 
   // --- Tag Suggestion Management ---
   loadAllTags(): void {
-    // 👈 IMPORTANT: Assuming ItemService has a getTags() method that returns Tag[]
     this.itemService.getTags().subscribe({
       next: (tags: Tag[]) => {
         this.allTags = tags;
@@ -74,7 +76,7 @@ export class Add {
     });
   }
 
-  // 👈 NEW: Filters the suggestions based on user input
+  // Filters the suggestions based on user input
   filterSuggestions(): void {
     const input = this.tagInput.trim().toLowerCase();
     if (!input) {
@@ -87,6 +89,34 @@ export class Add {
         );
     }
   }
+
+  // Handles pre filling tags from query parameters
+  private handleTemplateTags(): void {
+    // We subscribe to queryParams to capture tags passed from the Home component
+    this.route.queryParams.subscribe(params => {
+      const templateTagsString = params['templateTags'];
+
+      if (templateTagsString) {
+        const prefillTags = templateTagsString
+            .split(',')
+            .map((tag: string) => tag.trim())
+            .filter((tag: string) => tag.length > 0);
+
+        // Use the Set object to ensure no duplicates, then merge with existing tags
+        this.tags = [...new Set([...this.tags, ...prefillTags])];
+
+        // Remove the query parameter from the URL after it has been used
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { templateTags: null }, // Set the param to null to remove it
+          queryParamsHandling: 'merge' // Merge with existing params (if any)
+        });
+
+        // Re-filter suggestions to hide the newly added tags
+        this.filterSuggestions();
+      }
+    });
+}
 
   // --- Form Actions ---
   cancel() {
@@ -123,13 +153,13 @@ export class Add {
       // 1. Create the Item. API returns the new item object, including its ID.
       mergeMap((newItem: any) => {
         const newItemId = newItem.id;
-        
+
         // 2. Prepare payload for the Link API using the new item ID.
         const linkPayload: LinkPayload = {
           item: newItemId,
           url: url
         };
-        
+
         // 3. Create the Link.
         return this.itemService.createLink(linkPayload);
       })
