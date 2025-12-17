@@ -40,6 +40,87 @@
   white-space: nowrap;
 }
 
+/* --- Item Options Menu Styles --- */
+
+.item-header-row {
+  /* Ensures the tag-list and options-menu sit horizontally and justify space between them */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.item-options-menu {
+  position: relative; /* Essential for positioning the dropdown relative to the button */
+}
+
+.options-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-color, #aaa); /* Use a standard text/icon color */
+
+  &:hover {
+      color: var(--primary-color, #007bff); /* Highlight on hover */
+  }
+}
+
+.options-icon {
+  width: 20px;
+  height: 20px;
+  display: block; /* Ensure the SVG fills the button area nicely */
+}
+
+.options-dropdown {
+  position: absolute;
+  top: 100%; /* Position it right below the button */
+  right: 0;
+  z-index: 10; /* Ensure it floats above other content */
+
+  min-width: 150px;
+  margin-top: 4px;
+
+  background-color: var(--background-secondary, #222); /* Dark background for dropdown */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  animation: fadeInSlide 0.2s ease-out forwards;
+
+
+  .menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-color, #ccc);
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      background-color: var(--primary-color-hover, #0056b3); /* Highlight the selected action */
+      color: white;
+    }
+  }
+}
+
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Card Actions Styles --- */
+
 .card-actions {
   margin-top: 1rem; // Add space above the button
   display: flex;
@@ -120,11 +201,17 @@
   animation: spin 1s linear infinite;
 }
 
-/* --- 4. End of Page Message Styles (Remains the same) --- */
+/* --- 4. End of Page Message Styles --- */
 /* Keyframes for a subtle entrance/fade in */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .end-of-page-message {
@@ -139,77 +226,89 @@
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-/* --- Modal Overlay Styles (Add to the end of your file) --- */
+/* --- Modal Overlay Styles --- */
 
 .modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
-    z-index: 9999; /* Ensure it's on top */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+  z-index: 9999;
 }
 
 .modal-dialog {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #2a2a2d; /* Matches your card background */
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    z-index: 10000; /* Above the backdrop */
-    width: 90%;
-    max-width: 400px;
-    padding: 20px;
-    color: #f6f7f8;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #2a2a2d;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 10000; /* Above the backdrop */
+  width: 90%;
+  max-width: 400px;
+  padding: 20px;
+  color: #f6f7f8;
+  animation: fadeInModal 0.2s ease-out forwards;
 }
 
 .modal-header h3 {
-    margin-top: 0;
-    border-bottom: 1px solid #3c3c40;
-    padding-bottom: 10px;
-    font-size: 1.2rem;
+  margin-top: 0;
+  border-bottom: 1px solid #3c3c40;
+  padding-bottom: 10px;
+  font-size: 1.2rem;
 }
 
 .modal-body p {
-    margin: 15px 0;
+  margin: 15px 0;
 }
 
 .modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #3c3c40;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #3c3c40;
 }
 
 .modal-button {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.2s ease;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
 }
 
 .modal-cancel-button {
-    background-color: #555;
-    color: white;
+  background-color: #555;
+  color: white;
 
-    &:hover {
-        background-color: #777;
-    }
+  &:hover {
+    background-color: #777;
+  }
 }
 
 .modal-confirm-button {
-    background-color: #e53935; /* Your existing red theme */
-    color: white;
+  background-color: #e53935; /* Your existing red theme */
+  color: white;
 
-    &:hover {
-        background-color: #b71c1c;
-    }
+  &:hover {
+    background-color: #b71c1c;
+  }
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 /* --- SKELETON LOADING STYLES --- */

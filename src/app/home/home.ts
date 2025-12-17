@@ -32,6 +32,9 @@ export class Home {
   showDeleteConfirmation: boolean = false;
   itemToDelete: ItemInterface | null = null; // Stores the item awaiting confirmation
 
+  // Variable to track which item's menu is currently open
+  activeOptionsMenuId: number | null = null;
+
   constructor(
     private itemService: ItemService, 
     private router: Router, 
@@ -42,16 +45,16 @@ export class Home {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      // 🚨 1. RESET SERVICE STATE (MUST BE IMPLEMENTED IN SERVICE)
+      // RESET SERVICE STATE (MUST BE IMPLEMENTED IN SERVICE)
       this.itemService.resetPagination(); 
 
-      // 🚨 2. RESET COMPONENT STATE
+      // RESET COMPONENT STATE
       this.items = [];
       this.page = 1;
       this.loading = false;
       this.hasNextPage = true; 
       
-      // 3. Load Items
+      // Load Items
       this.loadItems();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
         this.hasNextPage = !!nextUrl;
@@ -61,7 +64,7 @@ export class Home {
   }
 
   ngOnDestroy() {
-    // 🚨 Clean up the subscription when the component is destroyed
+    // Clean up the subscription when the component is destroyed
     if (isPlatformBrowser(this.platformId)) {
       this.nextUrlSubscription.unsubscribe();
     }
@@ -113,6 +116,12 @@ export class Home {
     });
   }
 
+  // Method to handle scroll event
+  onScroll() {
+    console.log('--- SCROLL EVENT TRIGGERED ---');
+    this.loadItems();
+  }
+
   confirmDelete(item: ItemInterface): void {
       this.itemToDelete = item;
       this.showDeleteConfirmation = true;
@@ -151,9 +160,32 @@ export class Home {
     });
   }
 
-  onScroll() {
-    this.loadItems();
+  // Method to toggle the options menu
+  toggleOptions(itemId: number, event: Event): void {
+    console.log(`Toggling options menu for item ID: ${itemId}`);
+    // Prevent the click from propagating and closing the menu immediately
+    event.stopPropagation();
+
+    // Toggle the state: If the same menu is clicked, close it. Otherwise, open it.
+    this.activeOptionsMenuId = this.activeOptionsMenuId === itemId ? null : itemId;
+    this.cdRef.markForCheck();
   }
+
+  // Method to handle "Use as Template" action
+  useAsTemplate(item: ItemInterface): void {
+    // Ensure the tags exist and join them into a comma-separated string for URL passing
+    const tagsString = item.tags ? item.tags.join(',') : '';
+
+    // 1. Close the menu
+    this.activeOptionsMenuId = null;
+    this.cdRef.markForCheck();
+
+    // 2. Navigate to the add page, passing the tags as a query parameter
+    this.router.navigate(['/add'], {
+      queryParams: { templateTags: tagsString }
+    });
+  }
+
 
   testPrint() {
     console.log('Current items:', this.items);
