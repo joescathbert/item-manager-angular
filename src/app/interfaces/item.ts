@@ -14,7 +14,9 @@ export interface Item {
   link_id: number | null;
   file_id: number | null;
   url?: string;
-  domain_name?: string;
+  url_domain?: string;
+  media_url?: string;
+  media_url_domain?: string;
 }
 
 export interface PagedItems {
@@ -28,7 +30,9 @@ export interface Link {
   id: number;
   item: number;
   url: string;
-  domain_name: string;
+  url_domain: string;
+  media_url: string;
+  media_url_domain: string;
 }
 
 

@@ -5,12 +5,13 @@ import { map } from 'rxjs/operators';
 import { Item as ItemInterface, Link, PagedItems, Tag } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Item {
-  private baseUrl = 'http://192.168.0.109:8000/api';
+  private baseUrl = environment.apiUrl;
 
   private nextUrlSubject = new Subject<string | null>();
   public nextUrl$ = this.nextUrlSubject.asObservable();

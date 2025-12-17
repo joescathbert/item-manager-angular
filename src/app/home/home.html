@@ -28,7 +28,7 @@
         </div>
     </div>
       @if (item.type === 'link') {
-        @if (item.domain_name === 'twitter.com') {
+        @if (item.url_domain === 'twitter.com') {
           <blockquote 
               class="twitter-tweet"
               data-media-max-width="560"
@@ -36,13 +36,13 @@
             <a [href]="item.url"></a>
           </blockquote>
         }
-        @if (item.domain_name === 'www.reddit.com') {
-          <blockquote 
-              class="reddit-embed-bq"
-              data-embed-theme="dark"
-              data-embed-height="736">
-            <a [href]="item.url"></a>
-          </blockquote>
+        @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
+          <div class="item-content-video">
+            <video controls loop muted >
+              <source [src]="item.media_url" type="video/mp4">
+              <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
+            </video>
+          </div>
         }
       }
       @if (item.type === 'file') {

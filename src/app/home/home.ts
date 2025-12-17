@@ -79,7 +79,9 @@ export class Home {
         const itemObservables = data.map(item => {
           if (item.type === 'link' && item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
-              map(link => ({ ...item, url: link.url, domain_name: link.domain_name }))
+              map(link => ({ ...item,
+                url: link.url, url_domain: link.url_domain,
+                media_url: link.media_url, media_url_domain: link.media_url_domain }))
             );
           } else {
             return of(item);
