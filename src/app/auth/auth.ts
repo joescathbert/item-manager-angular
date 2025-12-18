@@ -4,12 +4,13 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Logger } from '../services/logger';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
-  private baseUrl = 'http://192.168.0.109:8000/api/users';
+  private baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -21,7 +22,7 @@ export class Auth {
     const token = 'Basic ' + btoa(`${username}:${password}`);
     const headers = new HttpHeaders({ Authorization: token });
 
-    return this.http.get(`${this.baseUrl}/by-username?username=${username}`, { headers });
+    return this.http.get(`${this.baseUrl}/users/by-username?username=${username}`, { headers });
   }
 
   saveToken(username: string, password: string) {
