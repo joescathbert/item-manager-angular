@@ -39,7 +39,13 @@ export class Item {
   resetPagination() {
     this.nextUrl = null;
     this.logger.log('ItemService: Pagination state reset.');
-}
+  }
+
+  getItem(itemId: number): Observable<ItemInterface> { {
+    const url = `${this.baseUrl}/items/${itemId}/`;
+    this.logger.log('Fetching item from URL:', url);
+    return this.http.get<ItemInterface>(url);
+  }}
 
   getLink(linkId: number): Observable<Link> {
     const url = `${this.baseUrl}/links/${linkId}/`;
@@ -63,6 +69,18 @@ export class Item {
     const url = `${this.baseUrl}/links/`;
     this.logger.log('Creating link at URL:', url, 'with payload:', payload);
     return this.http.post(url, payload);
+  }
+
+  updateItem(itemId: number, payload: ItemPayload): Observable<any> {
+    const url = `${this.baseUrl}/items/${itemId}/`;
+    this.logger.log('Updating item at URL:', url, 'with payload:', payload);
+    return this.http.put(url, payload);
+  }
+
+  updateLink(linkId: number, payload: LinkPayload): Observable<any> {
+    const url = `${this.baseUrl}/links/${linkId}/`;
+    this.logger.log('Updating link at URL:', url, 'with payload:', payload);
+    return this.http.put(url, payload);
   }
 
   deleteItem(itemId: number): Observable<any> {

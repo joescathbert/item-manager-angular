@@ -188,6 +188,19 @@ export class Home {
     });
   }
 
+  editItem(item: ItemInterface): void {
+    // 1. Close the dropdown menu
+    this.activeOptionsMenuId = null; 
+    
+    // 2. Navigate to the edit route using the item's ID
+    if (item.id) {
+        this.router.navigate(['/edit', item.id]);
+    } else {
+        console.error('Cannot edit item: ID is missing.', item);
+        // Optional: Show a user-friendly error message
+    }
+  }
+
 
   testPrint() {
     console.log('Current items:', this.items);
