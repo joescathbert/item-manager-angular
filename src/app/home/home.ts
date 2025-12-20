@@ -6,12 +6,18 @@ import { Inject } from '@angular/core';
 import { map, mergeMap } from 'rxjs/operators';
 import { of, forkJoin, Subscription} from 'rxjs';
 import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
 import { Item as ItemInterface } from '../interfaces/item';
-import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
+import { environment } from '../../environments/environment';
 
 
 declare var twttr: any;
+
+interface SafeItemInterface extends ItemInterface {
+    safe_media_url?: SafeResourceUrl;
+}
 
 @Component({
   selector: 'app-home',
@@ -22,7 +28,7 @@ declare var twttr: any;
 })
 export class Home {
   // Page and Item Variables
-  items: (ItemInterface)[] = [];
+  items: SafeItemInterface[] = [];
   page = 1;
   loading = false;
   hasNextPage: boolean = true; // Tracks if the 'next' link is present
@@ -40,6 +46,7 @@ export class Home {
     private router: Router, 
     private cdRef: ChangeDetectorRef, 
     private appRef: ApplicationRef,
+    private sanitizer: DomSanitizer,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -70,6 +77,26 @@ export class Home {
     }
   }
 
+  private processItemUrls(item: ItemInterface): SafeItemInterface {
+
+    if (item.media_url && item.media_url_domain === 'media.redgifs.com') {
+      // 🚨 CRITICAL: Construct the local proxy URL 🚨
+      // Ensure this path matches the Django URL pattern you defined
+      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
+
+      // Sanitize the local proxy URL (which is safe)
+      (item as SafeItemInterface).safe_media_url = 
+        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl);
+    }
+    else if (item.media_url) {
+      // For other media URLs, sanitize them directly
+      (item as SafeItemInterface).safe_media_url = 
+        this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url);
+    }
+
+    return item as SafeItemInterface;
+  }
+
   loadItems() {
     if (this.loading || !this.hasNextPage) return;
     this.loading = true;
@@ -93,7 +120,11 @@ export class Home {
       next: (processedItems: (ItemInterface & { url?: string })[]) => {
         console.log(`Loaded ${processedItems.length} items for page ${this.page}`);
         console.log(processedItems);
-        this.items = [...this.items, ...processedItems];
+        this.items = [
+          ...this.items, 
+          // 🚨 Apply the sanitization logic here 🚨
+          ...processedItems.map(item => this.processItemUrls(item))
+        ];
         this.page++;
         this.cdRef.markForCheck();
         this.appRef.tick();
@@ -124,17 +155,18 @@ export class Home {
     this.loadItems();
   }
 
+  // -------- Item Deletion Methods --------
   confirmDelete(item: ItemInterface): void {
-      this.itemToDelete = item;
-      this.showDeleteConfirmation = true;
-      this.cdRef.markForCheck();
+    this.itemToDelete = item;
+    this.showDeleteConfirmation = true;
+    this.cdRef.markForCheck();
   }
 
-  // 🚨 NEW: Method to cancel deletion and close overlay
+  // Method to cancel deletion and close overlay
   cancelDelete(): void {
-      this.showDeleteConfirmation = false;
-      this.itemToDelete = null;
-      this.cdRef.markForCheck();
+    this.showDeleteConfirmation = false;
+    this.itemToDelete = null;
+    this.cdRef.markForCheck();
   }
 
   deleteItem(): void {
@@ -148,9 +180,9 @@ export class Home {
         console.log(`Item ${itemToDeleteId} deleted successfully.`);
         this.items = this.items.filter(item => item.id !== itemToDeleteId);
 
-        // 🚨 CRITICAL: Close overlay and reset state after successful deletion
+        // Close overlay and reset state after successful deletion
         this.cancelDelete();
-        
+
         this.cdRef.markForCheck();
         this.appRef.tick();
       },
@@ -162,6 +194,7 @@ export class Home {
     });
   }
 
+  // -------- Item Option Methods --------
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {
     console.log(`Toggling options menu for item ID: ${itemId}`);
@@ -188,6 +221,7 @@ export class Home {
     });
   }
 
+  // Method to handle "Edit Item" action
   editItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
     this.activeOptionsMenuId = null; 
@@ -199,6 +233,32 @@ export class Home {
         console.error('Cannot edit item: ID is missing.', item);
         // Optional: Show a user-friendly error message
     }
+  }
+
+  // Method to safely opens the external URL in a new tab
+  openMediaUrl(safeUrl: any): void {
+    this.activeOptionsMenuId = null; // Close the menu
+
+    if (!safeUrl) {
+      console.error('URL is missing or unsafe.');
+      return;
+    }
+
+    // Since safeUrl is a SafeResourceUrl object, we access the string value 
+    // using the 'toString()' method or by accessing the private value (less ideal, but sometimes necessary).
+    // The most reliable way, assuming correct sanitization, is often to coerce it.
+    
+    // Attempt to extract the URL string:
+    // If you are using TypeScript 4.4+ and have configured things strictly, 
+    // you might need to use type assertion or check the structure.
+
+    // A quick way that works for most SafeUrl objects in templates:
+    const urlString = safeUrl.changingThisBreaksApplicationSecurity || safeUrl.toString();
+
+    // Open the URL in a new window/tab
+    window.open(urlString, '_blank');
+    
+    this.cdRef.markForCheck();
   }
 
 
