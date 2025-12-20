@@ -95,11 +95,17 @@ export class Add {
     }
   }
 
-  // Handles pre filling tags from query parameters
+  // Handles pre filling tags and date of origin from query parameters
   private handleTemplateTags(): void {
-    // We subscribe to queryParams to capture tags passed from the Home component
+    // We subscribe to queryParams to capture tags and date of origin passed from the Home component
     this.route.queryParams.subscribe(params => {
       const templateTagsString = params['templateTags'];
+      const templateDateOfOrigin = params['dateOfOrigin'];
+
+      // If a dateOfOrigin is provided, set it in the form
+      if (templateDateOfOrigin) {
+        this.addItemForm.patchValue({ dateOfOrigin: templateDateOfOrigin });
+      }
 
       if (templateTagsString) {
         const prefillTags = templateTagsString

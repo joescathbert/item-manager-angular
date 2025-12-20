@@ -184,7 +184,7 @@ export class Home {
 
     // 2. Navigate to the add page, passing the tags as a query parameter
     this.router.navigate(['/add'], {
-      queryParams: { templateTags: tagsString }
+      queryParams: { templateTags: tagsString, dateOfOrigin: item.date_of_origin }
     });
   }
 
