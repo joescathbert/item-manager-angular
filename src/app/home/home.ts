@@ -41,6 +41,9 @@ export class Home {
   // Variable to track which item's menu is currently open
   activeOptionsMenuId: number | null = null;
 
+  // Variable store the tags currently being filtered
+  activeFilters: string[] = [];
+
   constructor(
     private itemService: ItemService, 
     private router: Router, 
@@ -60,7 +63,8 @@ export class Home {
       this.page = 1;
       this.loading = false;
       this.hasNextPage = true; 
-      
+      this.activeFilters = [];
+
       // Load Items
       this.loadItems();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
@@ -101,7 +105,7 @@ export class Home {
     if (this.loading || !this.hasNextPage) return;
     this.loading = true;
 
-    this.itemService.getItems(this.page).pipe(
+    this.itemService.getItems(this.page, this.activeFilters).pipe(
       mergeMap((data: ItemInterface[]) => {
         const itemObservables = data.map(item => {
           if (item.type === 'link' && item.link_id) {
@@ -122,7 +126,6 @@ export class Home {
         console.log(processedItems);
         this.items = [
           ...this.items, 
-          // 🚨 Apply the sanitization logic here 🚨
           ...processedItems.map(item => this.processItemUrls(item))
         ];
         this.page++;
@@ -261,6 +264,47 @@ export class Home {
     this.cdRef.markForCheck();
   }
 
+  // -------- Tag Filter Methods --------
+
+  // Adds a tag to the active filters if not present and triggers a fresh item load.
+  addFilterTag(tag: string): void {
+    if (!this.activeFilters.includes(tag)) {
+      this.activeFilters = [...this.activeFilters, tag];
+      this.resetAndLoadItems();
+      // Close any open options menu when filtering starts
+      this.activeOptionsMenuId = null; 
+    }
+  }
+
+  // Removes a tag from the active filters and triggers a fresh item load.
+  removeFilterTag(tag: string): void {
+    this.activeFilters = this.activeFilters.filter(t => t !== tag);
+    this.resetAndLoadItems();
+  }
+
+  // Clears all active filters and triggers a fresh item load.
+  clearFilters(): void {
+    if (this.activeFilters.length > 0) {
+      this.activeFilters = [];
+      this.resetAndLoadItems();
+    }
+  }
+
+  // Resets the component/service pagination state and reloads items with the current filters.
+  private resetAndLoadItems(): void {
+    // 1. Reset component state for a fresh API call
+    this.items = [];
+    this.page = 1;
+    this.hasNextPage = true;
+    this.loading = false; 
+
+    // 2. Reset service pagination state
+    this.itemService.resetPagination(); 
+
+    // 3. Load items with the new filter
+    this.loadItems();
+    this.cdRef.markForCheck(); // Ensure the view updates
+  }
 
   testPrint() {
     console.log('Current items:', this.items);

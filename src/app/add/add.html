@@ -27,7 +27,7 @@
                 @for (tag of tags; track tag) {
                     <span class="tag-pill">
                         {{ tag }}
-                        <span class="remove-tag" (click)="removeTag(tag)">x</span>
+                        <button type="button" class="remove-tag" (click)="removeTag(tag)" title="Remove Tag: {{ tag }}">&times;</button>
                     </span>
                 }
             </div>

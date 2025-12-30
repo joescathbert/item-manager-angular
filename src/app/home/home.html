@@ -1,3 +1,20 @@
+@if (activeFilters.length > 0) {
+  <div class="filter-pills-container">
+    <span class="filter-label">Filtering by:</span>
+    @for (tag of activeFilters; track tag) {
+      <span class="filter-pill">
+        {{ tag }}
+        <button class="remove-filter-button" (click)="removeFilterTag(tag)" title="Remove filter: {{ tag }}">
+          &times;
+        </button>
+      </span>
+    }
+    <button class="clear-filters-button" (click)="clearFilters()">
+      &times;
+    </button>
+  </div>
+}
+
 <div class="items-container" infinite-scroll (scrolled)="onScroll()">
   <!-- <button (click)="testPrint()">Test Print</button> -->
   @for (item of items; track item.id) {
@@ -6,7 +23,12 @@
         @if (item.tags && item.tags.length > 0) {
           <div class="tag-list">
             @for (tag of item.tags.sort(); track $index) {
-              <span class="tag-pill">{{ tag }}</span>
+              <span
+                class="tag-pill clickable-tag"
+                [class.active-filter]="activeFilters.includes(tag)"
+                (click)="addFilterTag(tag)">
+                {{ tag }}
+              </span>
             }
           </div>
         }
@@ -26,7 +48,7 @@
               <button class="menu-item" (click)="editItem(item)">
                 Edit Item
               </button>
-              <button class="menu-item" (click)="openMediaUrl(item.safe_media_url)">
+              <button class="menu-item" (click)="openMediaUrl(item.media_url)">
                 Open Media
               </button>
             </div>

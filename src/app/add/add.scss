@@ -93,21 +93,31 @@ input[type="url"], input[type="date"] {
 .tag-pill {
   display: inline-flex;
   font-weight: bold;
+  align-items: center;
   background-color: #007bff;
   color: white;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   padding: .4em .5rem .4rem 1rem;
   border-radius: 50px;
+  white-space: nowrap;
 }
 
 .remove-tag {
+  background: none;
+  border: none;
+  color: white;
+  margin-left: 6px;
+  font-size: 1.1em;
   cursor: pointer;
-  font-weight: bold;
-  margin: 0rem .1rem 0 .3rem;
-  padding: 0rem .25rem 0rem .2rem;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
+  padding: 0;
   line-height: 1;
+  opacity: 0.8;
+  font-weight: 600;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 /* --- Button Section --- */

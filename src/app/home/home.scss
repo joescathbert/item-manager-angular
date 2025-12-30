@@ -1,5 +1,81 @@
 @use 'theme_variables.scss' as *;
 
+
+/* --- Filter Bar and Pill Styles --- */
+
+.filter-pills-container {
+  // Positioning and layout
+  width: 100%;
+  max-width: 35%; /* Match the width of .item-card */
+
+  // Center the container, matching .items-container alignment
+  margin: 0 auto 1.5rem auto; 
+  padding: 10px;
+
+  border-radius: 8px;
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-label {
+  color: #aaa;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-right: 5px;
+  white-space: nowrap;
+}
+
+.filter-pill {
+  // Styles for the active filter pill (the one at the top)
+  display: inline-flex;
+  align-items: center;
+  background-color: #e53935; /* Use your primary delete/action red */
+  color: $color-text-light;
+  padding: .4em .5rem .4rem 1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.remove-filter-button {
+  background: none;
+  border: none;
+  color: $color-text-light;
+  margin-left: 6px;
+  font-size: 1.1em;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+  font-weight: 600;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.clear-filters-button {
+  margin-left: auto; /* Push to the right */
+  background-color: $color-button-bg; 
+  color: $color-text-light;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #333D42;
+  }
+}
+
 .items-container {
   display: flex;
   flex-direction: column;
@@ -50,12 +126,40 @@
 .tag-pill {
   // Pill styling
   background-color: #007bff;
-  color: white;
+  color: $color-text-light;
   font-size: 0.75rem;
   font-weight: 500;
   padding: 4px 10px;
   border-radius: 50px;
   white-space: nowrap;
+}
+
+/* --- Clicakble Tag Pills (Inside Item Card) --- */
+
+.tag-pill {
+  // Inherits base pill styling
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &.clickable-tag {
+    cursor: pointer;
+    // Revert base background for neutral interactive look
+    background-color: #007bff; 
+    border: 2px solid transparent; 
+    // padding: 4px 10px; /* Base padding */
+  }
+
+  &.clickable-tag:hover {
+    opacity: 0.9;
+    background-color: #0056b3;
+  }
+
+  // Style when a tag is currently active as a filter
+  &.active-filter {
+    border-color: #e53935; /* Highlight the active filter with the red accent */
+    background-color: #1e1e1e; /* Darken background to show selection */
+    color: $color-text-light; 
+    // padding: 2px 8px; /* Adjust padding to accommodate the 2px border */
+  }
 }
 
 /* --- Item Options Menu Styles --- */
@@ -146,7 +250,7 @@
 
 .delete-button {
   background-color: #e53935;
-  color: white;
+  color: $color-text-light;
   border: none;
   padding: 0.5rem; 
   display: flex;
@@ -176,6 +280,11 @@
   }
   .item-card {
     width: unset;
+  }
+  .filter-pills-container {
+    width: unset; 
+    max-width: unset;
+    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
   }
 }
 
@@ -207,7 +316,6 @@
 
 .spinner {
   /* Styling for the circular spinner */
-  
   // 🚨 THICKER and SMALLER: Set width/height to 20px and border to 5px
   width: 20px;
   height: 20px;
@@ -301,7 +409,7 @@
 
 .modal-cancel-button {
   background-color: #555;
-  color: white;
+  color: $color-text-light;
 
   &:hover {
     background-color: #777;
@@ -310,7 +418,7 @@
 
 .modal-confirm-button {
   background-color: #e53935; /* Your existing red theme */
-  color: white;
+  color: $color-text-light;
 
   &:hover {
     background-color: #b71c1c;

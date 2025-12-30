@@ -23,8 +23,20 @@ export class Item {
     private logger: Logger
   ) {}
 
-  getItems(page: number): Observable<ItemInterface[]> {
-    const url = this.nextUrl || `${this.baseUrl}/items/?page=${page}`;
+  getItems(page: number, tags: string[] = []): Observable<ItemInterface[]> {
+    let url: string;
+
+    if (this.nextUrl) {
+      url = this.nextUrl;
+    } else {
+      let params = [`page=${page}`];
+      if (tags && tags.length > 0) {
+        // Join tags with a comma, as per your API update
+        params.push(`tag_names=${tags.join(',')}`); 
+      }
+      url = `${this.baseUrl}/items/?${params.join('&')}`;
+    }
+
     this.logger.log(`Fetching items from URL: ${url}`);
 
     return this.http.get<PagedItems>(url).pipe(
