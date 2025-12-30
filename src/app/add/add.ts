@@ -24,18 +24,23 @@ export class Add {
   allTags: Tag[] = [];
   suggestionTags: Tag[] = [];
 
+  // 🚨 NEW: Protected properties for the child (Edit) component to read/override 🚨
+  protected isEditing: boolean = false;
+  protected headerText: string = 'Add New Item';
+  protected submitButtonText: string = 'Add Item';
+
+
   constructor(
-    private fb: FormBuilder,
-    private itemService: ItemService,
-    private router: Router,
-    private route: ActivatedRoute
+    protected fb: FormBuilder,
+    protected itemService: ItemService,
+    protected router: Router,
+    protected route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.addItemForm = this.fb.group({
-      name: ['New Item', Validators.required], // Default name can be adjusted
+      name: ['New Item', Validators.required],
       url: ['', Validators.required], 
-      // Validators.required for date is strong, adjust if needed
       dateOfOrigin: [this.getCurrentDate(), Validators.required], 
     });
 
@@ -90,11 +95,17 @@ export class Add {
     }
   }
 
-  // Handles pre filling tags from query parameters
+  // Handles pre filling tags and date of origin from query parameters
   private handleTemplateTags(): void {
-    // We subscribe to queryParams to capture tags passed from the Home component
+    // We subscribe to queryParams to capture tags and date of origin passed from the Home component
     this.route.queryParams.subscribe(params => {
       const templateTagsString = params['templateTags'];
+      const templateDateOfOrigin = params['dateOfOrigin'];
+
+      // If a dateOfOrigin is provided, set it in the form
+      if (templateDateOfOrigin) {
+        this.addItemForm.patchValue({ dateOfOrigin: templateDateOfOrigin });
+      }
 
       if (templateTagsString) {
         const prefillTags = templateTagsString
@@ -119,18 +130,9 @@ export class Add {
 }
 
   // --- Form Actions ---
-  cancel() {
-    this.router.navigate(['/home']);
-  }
-
   onSubmit() {
-    if (this.addItemForm.invalid) {
-      alert('Please fill out all required fields.');
-      return;
-    }
-    
-    if (this.tags.length === 0) {
-        alert('Please add at least one tag.');
+    if (this.addItemForm.invalid || this.tags.length === 0) {
+      alert(this.addItemForm.invalid ? 'Please fill out all required fields.' : 'Please add at least one tag.');
         return;
     }
 
@@ -141,7 +143,12 @@ export class Add {
     this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
   }
 
-  submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
+  cancel() {
+    this.router.navigate(['/home']);
+  }
+
+  // This method is now safe to be called by the default onSubmit()
+  protected submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
     const itemPayload: ItemPayload = {
       name: name,
       type: 'link', 

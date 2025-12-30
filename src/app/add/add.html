@@ -1,10 +1,9 @@
 <div class="add-container">
-    <h2>Add Item</h2>
+    <h2>{{ headerText }}</h2>
 
     <form [formGroup]="addItemForm" (ngSubmit)="onSubmit()">
 
         <section class="form-section tag-section">
-            <!-- <h3>Tags</h3> -->
             <div class="tag-input-group">
                 <input 
                     type="text" 
@@ -28,7 +27,7 @@
                 @for (tag of tags; track tag) {
                     <span class="tag-pill">
                         {{ tag }}
-                        <span class="remove-tag" (click)="removeTag(tag)">x</span>
+                        <button type="button" class="remove-tag" (click)="removeTag(tag)" title="Remove Tag: {{ tag }}">&times;</button>
                     </span>
                 }
             </div>
@@ -56,7 +55,7 @@
                 @if (loading) {
                     <span>Submitting...</span> 
                 } @else {
-                    <span>Submit Item</span>
+                    <span>{{ submitButtonText }}</span>
                 }
             </button>
         </section>

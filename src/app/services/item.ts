@@ -23,8 +23,20 @@ export class Item {
     private logger: Logger
   ) {}
 
-  getItems(page: number): Observable<ItemInterface[]> {
-    const url = this.nextUrl || `${this.baseUrl}/items/?page=${page}`;
+  getItems(page: number, tags: string[] = []): Observable<ItemInterface[]> {
+    let url: string;
+
+    if (this.nextUrl) {
+      url = this.nextUrl;
+    } else {
+      let params = [`page=${page}`];
+      if (tags && tags.length > 0) {
+        // Join tags with a comma, as per your API update
+        params.push(`tag_names=${tags.join(',')}`); 
+      }
+      url = `${this.baseUrl}/items/?${params.join('&')}`;
+    }
+
     this.logger.log(`Fetching items from URL: ${url}`);
 
     return this.http.get<PagedItems>(url).pipe(
@@ -39,7 +51,13 @@ export class Item {
   resetPagination() {
     this.nextUrl = null;
     this.logger.log('ItemService: Pagination state reset.');
-}
+  }
+
+  getItem(itemId: number): Observable<ItemInterface> { {
+    const url = `${this.baseUrl}/items/${itemId}/`;
+    this.logger.log('Fetching item from URL:', url);
+    return this.http.get<ItemInterface>(url);
+  }}
 
   getLink(linkId: number): Observable<Link> {
     const url = `${this.baseUrl}/links/${linkId}/`;
@@ -63,6 +81,18 @@ export class Item {
     const url = `${this.baseUrl}/links/`;
     this.logger.log('Creating link at URL:', url, 'with payload:', payload);
     return this.http.post(url, payload);
+  }
+
+  updateItem(itemId: number, payload: ItemPayload): Observable<any> {
+    const url = `${this.baseUrl}/items/${itemId}/`;
+    this.logger.log('Updating item at URL:', url, 'with payload:', payload);
+    return this.http.put(url, payload);
+  }
+
+  updateLink(linkId: number, payload: LinkPayload): Observable<any> {
+    const url = `${this.baseUrl}/links/${linkId}/`;
+    this.logger.log('Updating link at URL:', url, 'with payload:', payload);
+    return this.http.put(url, payload);
   }
 
   deleteItem(itemId: number): Observable<any> {
