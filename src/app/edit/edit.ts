@@ -1,35 +1,33 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { mergeMap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs'; // For the mergeMap error handling
+import { of } from 'rxjs'; // For the mergeMap error handling
 
 // Re-use interfaces and services
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
-// 🚨 Import necessary interfaces for the item object 🚨
 import { Item as ItemInterface, Tag, Link } from '../interfaces/item'; 
 import { Add } from '../add/add';
 
 @Component({
   selector: 'app-edit',
   standalone: true,
-  // 🚨 Re-use Add's template and styles 🚨
   templateUrl: '../add/add.html', 
   styleUrl: '../add/add.scss',
-  // Make sure to include all necessary imports for the template
   imports: [CommonModule, FormsModule, ReactiveFormsModule], 
   providers: [ItemService] 
 })
-// 🚨 Extend the Add class and implement OnInit 🚨
-export class Edit extends Add implements OnInit { 
+// Extend the Add class and implement OnInit
+export class Edit extends Add implements OnInit {
 
-  // NEW: Variable to hold the original Item data being edited
-  private editedItem!: ItemInterface; 
+  // Variable to hold the original Item data being edited
+  private editedItem!: ItemInterface;
+  // Store the original URL for comparison during update
+  private originalUrl: string = '';
 
-  // 🚨 OVERRIDE: Set custom values for the parent's protected properties 🚨
-  // These will update the h2 and button text in add.html
+  // Set custom values for the parent's protected properties
   protected override isEditing: boolean = true;
   protected override headerText: string = 'Edit Item';
   protected override submitButtonText: string = 'Update Item';
@@ -40,7 +38,8 @@ export class Edit extends Add implements OnInit {
     protected override fb: FormBuilder, // 'override' is necessary when property is used in super()
     protected override itemService: ItemService,
     protected override router: Router,
-    protected override route: ActivatedRoute
+    protected override route: ActivatedRoute,
+    private cdr: ChangeDetectorRef
   ) {
     // Call the parent (Add) constructor with inherited services
     super(fb, itemService, router, route);
@@ -76,7 +75,7 @@ export class Edit extends Add implements OnInit {
         this.editedItem = item;
 
         // 2. Check if it's a link and has a link_id
-        if (item.type === 'link' && item.link_id) {
+        if (item.link_id) {
           // If yes, fetch the Link record, which contains the exact URL.
           return this.itemService.getLink(item.link_id).pipe(
              // Map the result to an object containing both the item and the link
@@ -90,16 +89,20 @@ export class Edit extends Add implements OnInit {
     ).subscribe({
       next: ({ item, link }) => {
         // 3. Pre-fill the form fields using the collected data
+        const itemUrl = link?.url || (item as any).url || '';
+        this.originalUrl = itemUrl
         this.addItemForm.patchValue({
           name: item.name,
           // Use the URL from the Link record if available, otherwise assume URL is on Item or empty
-          url: link?.url || (item as any).url || '', 
+          url: itemUrl, 
           dateOfOrigin: item.date_of_origin 
         });
 
         // 4. Pre-fill and manage tags
         this.tags = item.tags.sort() || [];
-        this.filterSuggestions(); 
+        console.log(this.allTags, this.tags);
+        this.filterSuggestions();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load item data for editing:', err);
@@ -132,28 +135,52 @@ export class Edit extends Add implements OnInit {
   private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: ItemInterface): void {
     const itemId = originalItem.id;
     const linkId = originalItem.link_id; 
+    const itemType = originalItem.type; 
 
     const itemPayload: ItemPayload = {
       name: name,
-      type: 'link', 
+      type: itemType, 
       date_of_origin: dateOfOrigin,
       tag_names: tags
     };
+
+    // CHECK: Has the URL changed?
+    const urlChanged = url !== this.originalUrl;
+
+    // CHECK: Is the URL field empty now, but it had a link before? (Means delete)
+    const urlRemoved = linkId && url === '';
 
     // 1. Update the Item record (tags, name, date)
     this.itemService.updateItem(itemId, itemPayload).pipe(
       // 2. If item update succeeds, update the Link record (required for URL changes)
       mergeMap(() => {
         if (linkId) {
+          // A. Link exists: check if it needs updating or removal
+          if (urlChanged && url) {
+            // URL has changed and is NOT empty: UPDATE link
+            const linkPayload: LinkPayload = {
+              item: itemId,
+              url: url
+            };
+            return this.itemService.updateLink(linkId, linkPayload);
+          } else if (urlRemoved) {
+            // URL is now empty: DELETE link
+            return this.itemService.deleteLink(linkId);
+          }
+          // URL hasn't changed or was just removed: no API call needed.
+          return of(null); 
+
+        } else if (url) {
+          // B. Link did NOT exist: but form now has a URL: CREATE link
           const linkPayload: LinkPayload = {
             item: itemId,
             url: url
           };
-          // Call the service method to update the link
-          return this.itemService.updateLink(linkId, linkPayload);
+          return this.itemService.createLink(linkPayload);
         }
-        // If no link data exists, complete the observable chain
-        return new Observable(observer => observer.complete());
+
+        // If no link action is needed, complete the observable chain
+        return of(null);
       })
     ).subscribe({
       next: () => {

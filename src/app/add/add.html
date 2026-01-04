@@ -34,15 +34,69 @@
         </section>
 
         <section class="form-section item-section">
-            <!-- <h3>Item Details (Type: Link)</h3> -->
-
-            <div class="form-group">
-                <input id="url" type="url" formControlName="url" placeholder="URL" required>
-            </div>
 
             <div class="form-group">
                 <input id="dateOfOrigin" type="date" formControlName="dateOfOrigin" required>
             </div>
+
+            <div class="form-group">
+                <input id="url" type="url" formControlName="url" placeholder="URL (Required if no files are uploaded)">
+            </div>
+
+            <div class="form-group file-upload-group">
+                <label for="files">Optional File Upload (Overrides URL if present)</label>
+                <input 
+                    id="files" 
+                    type="file" 
+                    (change)="onFileSelected($event)" 
+                    multiple 
+                >
+            </div>
+
+            @if (selectedFiles.length > 0) {
+                <div class="file-list-container">
+                    <h3>Uploaded Files ({{ selectedFiles.length }})</h3>
+                    <ul class="file-list">
+                        @for (file of selectedFiles; track $index) {
+                            <li class="file-item">
+                                <span class="file-order">{{ $index + 1 }}.</span>
+                                <span class="file-name">{{ file.name }}</span>
+                                
+                                <div class="file-actions">
+                                    <button 
+                                        type="button" 
+                                        class="move-up" 
+                                        (click)="moveFileUp($index)" 
+                                        [disabled]="$index === 0"
+                                        title="Move Up"
+                                    >
+                                        &uarr;
+                                    </button>
+                                    
+                                    <button 
+                                        type="button" 
+                                        class="move-down" 
+                                        (click)="moveFileDown($index)" 
+                                        [disabled]="$index === selectedFiles.length - 1"
+                                        title="Move Down"
+                                    >
+                                        &darr;
+                                    </button>
+
+                                    <button 
+                                        type="button" 
+                                        class="remove-file" 
+                                        (click)="removeFile($index)"
+                                        title="Remove File"
+                                    >
+                                        &times;
+                                    </button>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
 
             <input type="hidden" formControlName="name">
         </section>

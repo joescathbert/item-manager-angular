@@ -50,13 +50,6 @@ input[type="url"], input[type="date"] {
   width: 100%
 }
 
-// Mobile tweaks
-@media (max-width: 600px) {
-  .add-container {
-    margin: 2rem auto;
-  }
-}
-
 /* --- Tag Specific Styles --- */
 .tag-input-group {
   display: flex;
@@ -120,6 +113,112 @@ input[type="url"], input[type="date"] {
   }
 }
 
+/* --- File Upload Styles --- */
+
+.file-upload-group {
+  // Adding some separation to distinguish it from the URL input above it.
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px dashed $color-neutral-border;
+}
+
+input[type="file"] {
+  // Style the file input to occupy the full width, especially for mobile
+  width: 100%; 
+  padding: 10px 0; /* Add vertical padding */
+  // Since file inputs are notoriously difficult to style uniformly, 
+  // we focus on making the container clean.
+}
+
+/* --- Interactive File List Styles --- */
+
+.file-list-container {
+  margin-top: 1.5rem;
+  padding: 10px;
+
+  h3 {
+    font-size: 1.1rem;
+    margin-top: 0;
+    padding-bottom: 5px;
+    border-bottom: none; // Remove the default separator
+  }
+}
+
+.file-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px dashed $color-neutral-border;
+  font-size: 0.95rem;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+.file-order {
+  font-weight: bold;
+  margin-right: 10px;
+  color: $focus-color; // Highlight the order number
+}
+
+.file-name {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-actions {
+  display: flex;
+  gap: 5px;
+  margin-left: 10px;
+}
+
+.file-actions button {
+  // Resetting button styles to match action icons
+  background: $color-neutral-bg-hover;
+  border: 1px solid $color-neutral-border-medium;
+  color: $color-text-light;
+  padding: 5px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  height: 30px; // Ensure uniform size
+
+  &:hover:not(:disabled) {
+    background-color: #4a4a4f;
+  }
+  
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.remove-file {
+  background-color: #dc3545; // Red for removal
+  border-color: #dc3545;
+  font-size: 1.2rem !important;
+  padding: 2px 8px;
+
+  &:hover:not(:disabled) {
+    background-color: #c82333;
+  }
+}
+
 /* --- Button Section --- */
 .button-section {
   display: flex;
@@ -152,6 +251,29 @@ input[type="url"], input[type="date"] {
     &:disabled {
       background-color: #555;
       cursor: not-allowed;
+    }
+  }
+}
+
+// Mobile tweaks
+@media (max-width: 600px) {
+  .add-container {
+    margin: 2rem auto;
+  }
+  .file-item {
+    flex-wrap: wrap; // Allow file name to wrap on mobile
+    .file-name {
+      flex-basis: 100%; // File name takes full width
+      margin-top: 5px;
+      font-size: 0.9rem;
+      white-space: normal; // Allow text wrapping
+    }
+    .file-order {
+      flex-grow: 0;
+    }
+    .file-actions {
+      margin-left: auto; // Push actions to the right
+      margin-top: 5px;
     }
   }
 }

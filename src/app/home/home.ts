@@ -108,7 +108,7 @@ export class Home {
     this.itemService.getItems(this.page, this.activeFilters).pipe(
       mergeMap((data: ItemInterface[]) => {
         const itemObservables = data.map(item => {
-          if (item.type === 'link' && item.link_id) {
+          if (item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
               map(link => ({ ...item,
                 url: link.url, url_domain: link.url_domain,

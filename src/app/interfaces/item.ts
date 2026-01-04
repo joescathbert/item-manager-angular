@@ -12,7 +12,7 @@ export interface Item {
   tags: string[];
   created_at: string;
   link_id: number | null;
-  file_id: number | null;
+  file_group_id: number | null;
   url?: string;
   url_domain?: string;
   media_url?: string;
