@@ -1,0 +1,66 @@
+@use 'theme_variables.scss' as *;
+
+.toast-container {
+  /* CONTAINER CENTERING FIX */
+  position: fixed;
+  bottom: 30px; 
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: center;
+  max-width: 90%; 
+}
+
+.toast-base {
+  padding: 14px 25px;
+  border-radius: 99px;
+  font-weight: 400;
+  font-size: .95rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 300px;
+  max-width: 400px;
+  color: #F5F5F5;
+
+  /* TRANSITION: Bouncing in, fading out */
+  transition: transform $animation-speed $bounce-timing, opacity $animation-speed ease-out;
+
+  /* INITIAL/OFF-SCREEN STATE (STARTING POINT) */
+  transform: translateY(100px);
+  opacity: 0;
+}
+
+.toast-success {
+  background-color: $color-dark-success;
+}
+.toast-error {
+  background-color: $color-dark-error;
+}
+.toast-info {
+  background-color: $color-dark-info;
+}
+
+// .icon {
+//   margin-right: 12px;
+//   font-size: 1.3em;
+// }
+
+/* VISIBLE STATE (Entrance Animation) */
+.toast-base:not(.is-hiding) {
+  transform: translateY(0); 
+  opacity: 1;
+}
+
+/* EXIT STATE (Exit Animation) */
+.is-hiding {
+  transform: translateY(100px); 
+  opacity: 0;
+  
+  /* Simple ease-in for clean disappearance */
+  transition: transform $animation-speed ease-in, opacity $animation-speed ease-in; 
+}

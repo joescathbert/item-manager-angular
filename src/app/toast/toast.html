@@ -1,0 +1,8 @@
+<div class="toast-container">
+  @for (toast of toasts$ | async; track toast.id) {
+    <div [class]="getClass(toast)" [class.is-hiding]="toast.isHiding">
+      <!-- <span class="icon">{{ toast.type === 'success' ? '✔' : toast.type === 'error' ? '✖' : 'ℹ' }}</span> -->
+      <span class="message">{{ toast.message }}</span>
+    </div>
+  }
+</div>

@@ -9,6 +9,7 @@ import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angu
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
+import { Toast as ToastService } from '../services/toast';
 import { Item as ItemInterface } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 
@@ -50,6 +51,7 @@ export class Home {
     private cdRef: ChangeDetectorRef, 
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
+    private toastService: ToastService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -184,6 +186,7 @@ export class Home {
         this.items = this.items.filter(item => item.id !== itemToDeleteId);
 
         // Close overlay and reset state after successful deletion
+        this.toastService.showSuccess('Item deleted.')
         this.cancelDelete();
 
         this.cdRef.markForCheck();
@@ -191,7 +194,7 @@ export class Home {
       },
       error: (err) => {
         console.error(`Failed to delete item ${itemToDeleteId}:`, err);
-        alert('Failed to delete item. Please try again.');
+        this.toastService.showError('Failed to delete item. Please try again.');
         this.cancelDelete(); // Also close on error
       }
     });

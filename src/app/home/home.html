@@ -42,11 +42,11 @@
 
           @if (activeOptionsMenuId === item.id) {
             <div class="options-dropdown" (click)="$event.stopPropagation()">
-              <button class="menu-item" (click)="useAsTemplate(item)">
-                Use as Template
-              </button>
               <button class="menu-item" (click)="editItem(item)">
                 Edit Item
+              </button>
+              <button class="menu-item" (click)="useAsTemplate(item)">
+                Use as Template
               </button>
               <button class="menu-item" (click)="openMediaUrl(item.media_url)">
                 Open Media

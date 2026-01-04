@@ -3,12 +3,13 @@ import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { mergeMap } from 'rxjs/operators';
-import { of } from 'rxjs'; // For the mergeMap error handling
+import { of } from 'rxjs';
 
 // Re-use interfaces and services
 import { ItemPayload, LinkPayload } from '../interfaces/item';
+import { Item as ItemInterface, Link } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
-import { Item as ItemInterface, Tag, Link } from '../interfaces/item'; 
+import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
 
 @Component({
@@ -39,10 +40,11 @@ export class Edit extends Add implements OnInit {
     protected override itemService: ItemService,
     protected override router: Router,
     protected override route: ActivatedRoute,
+    protected override toastService: ToastService,
     private cdr: ChangeDetectorRef
   ) {
     // Call the parent (Add) constructor with inherited services
-    super(fb, itemService, router, route);
+    super(fb, itemService, router, route, toastService);
   }
 
   // Override ngOnInit to handle fetching existing data
@@ -185,13 +187,14 @@ export class Edit extends Add implements OnInit {
     ).subscribe({
       next: () => {
         this.loading = false;
-        alert('Success! Item updated.'); 
+        this.toastService.showSuccess('Item updated.');
         this.router.navigate(['/home']);
       },
       error: (err) => {
         this.loading = false;
         console.error('Update failed:', err);
-        alert('Error: Failed to update item. Check console for details.');
+        this.toastService.showError('Failed to update item.');
+        this.router.navigate(['/home']);
       }
     });
   }
