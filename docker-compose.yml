@@ -1,0 +1,17 @@
+services:
+  angular-app:
+    # 1. Tells Docker Compose to build the image using the Dockerfile in the current directory
+    build:
+      context: . 
+      dockerfile: Dockerfile
+
+    # 2. Assigns a clean name to the container
+    container_name: item-manager-frontend
+
+    # 3. Maps the container port 80 to your local machine's port 4200 (or any other free port)
+    # You will access the app at http://localhost:4200
+    ports:
+      - "4200:80"
+
+    # 4. Restarts the container if it stops, unless manually stopped
+    restart: always
