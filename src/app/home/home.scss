@@ -20,6 +20,38 @@
   gap: 8px;
 }
 
+.select-filter-tag-list {
+    /* * These three lines enable horizontal scrolling.
+    * 1. overflow-x: auto - allows horizontal scrolling when content exceeds the container's width.
+    * 2. flex-wrap: nowrap - forces all flex items (the tags) onto a single line.
+    * 3. width: 100% - ensures the list takes up the full width of the container.
+    */
+    overflow-x: auto;
+    flex-wrap: nowrap; /* Forces tags onto one line for horizontal scrolling */
+    width: 100%;
+
+    display: flex;
+    /* Removed flex-wrap: wrap; as it conflicts with horizontal scrolling */
+    gap: 8px;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid $color-neutral-border-weak;
+
+    /* * Properties to hide the scrollbar, while keeping the scrolling functionality.
+    */
+
+    /* For WebKit browsers (Chrome, Safari) */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* For IE and Edge */
+    -ms-overflow-style: none;
+
+    /* For Firefox */
+    scrollbar-width: none;
+}
+
 .filter-label {
   color: #aaa;
   font-size: 0.9rem;

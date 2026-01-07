@@ -1,3 +1,15 @@
+<div class="filter-pills-container">
+  <div class="select-filter-tag-list">
+    @for (tag of allTags.sort(); track $index) {
+      <span
+        class="tag-pill clickable-tag"
+        [class.active-filter]="activeFilters.includes(tag)"
+        (click)="addFilterTag(tag)">
+        {{ tag }}
+      </span>
+    }
+  </div>
+</div>
 @if (activeFilters.length > 0) {
   <div class="filter-pills-container">
     <span class="filter-label">Filtering by:</span>
@@ -48,7 +60,7 @@
               <button class="menu-item" (click)="useAsTemplate(item)">
                 Use as Template
               </button>
-              <button class="menu-item" (click)="openMediaUrl(item.media_url)">
+              <button class="menu-item" (click)="openMediaUrl(item.safe_media_url)">
                 Open Media
               </button>
             </div>
@@ -92,6 +104,8 @@
   @if (loading && items.length === 0) {
     @for (i of [1, 2, 3, 4, 5]; track i) {
       <div class="item-card skeleton-card">
+        <div class="skeleton-line skeleton-header"></div>
+        <div class="skeleton-line skeleton-header"></div>
         <div class="skeleton-line skeleton-header"></div>
 
         <div class="skeleton-image"></div>

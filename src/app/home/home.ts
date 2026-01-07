@@ -10,7 +10,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
-import { Item as ItemInterface } from '../interfaces/item';
+import { Item as ItemInterface, Tag } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 
 
@@ -42,8 +42,8 @@ export class Home {
   // Variable to track which item's menu is currently open
   activeOptionsMenuId: number | null = null;
 
-  // Variable store the tags currently being filtered
-  activeFilters: string[] = [];
+  allTags: string[] = []; // Variable to store all the available tags
+  activeFilters: string[] = []; // Variable to store the tags currently being filtered
 
   constructor(
     private itemService: ItemService, 
@@ -69,6 +69,7 @@ export class Home {
 
       // Load Items
       this.loadItems();
+      this.loadAllTags();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
         this.hasNextPage = !!nextUrl;
         this.cdRef.markForCheck();
@@ -85,9 +86,8 @@ export class Home {
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
 
-    if (item.media_url && item.media_url_domain === 'media.redgifs.com') {
-      // 🚨 CRITICAL: Construct the local proxy URL 🚨
-      // Ensure this path matches the Django URL pattern you defined
+    if (item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+      // Construct the local proxy URL
       const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
 
       // Sanitize the local proxy URL (which is safe)
@@ -161,6 +161,7 @@ export class Home {
   }
 
   // -------- Item Deletion Methods --------
+
   confirmDelete(item: ItemInterface): void {
     this.itemToDelete = item;
     this.showDeleteConfirmation = true;
@@ -201,6 +202,7 @@ export class Home {
   }
 
   // -------- Item Option Methods --------
+
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {
     console.log(`Toggling options menu for item ID: ${itemId}`);
@@ -268,6 +270,18 @@ export class Home {
   }
 
   // -------- Tag Filter Methods --------
+
+  // loads all tags from the API
+  loadAllTags(): void {
+    this.itemService.getTags().subscribe({
+      next: (tags: Tag[]) => {
+        this.allTags = tags.map(tag => tag.name);
+      },
+      error: (err) => {
+        console.error('Failed to load tags for suggestions:', err);
+      }
+    });
+  }
 
   // Adds a tag to the active filters if not present and triggers a fresh item load.
   addFilterTag(tag: string): void {
