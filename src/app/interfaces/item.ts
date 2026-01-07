@@ -1,3 +1,5 @@
+import { SafeResourceUrl } from "@angular/platform-browser";
+
 export interface Tag {
   id: number;
   name: string;
@@ -17,6 +19,10 @@ export interface Item {
   url_domain?: string;
   media_url?: string;
   media_url_domain?: string;
+}
+
+export interface SafeItem extends Item {
+  safe_media_url?: SafeResourceUrl;
 }
 
 export interface PagedItems {

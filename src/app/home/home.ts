@@ -6,20 +6,17 @@ import { Inject } from '@angular/core';
 import { map, mergeMap } from 'rxjs/operators';
 import { of, forkJoin, Subscription} from 'rxjs';
 import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
-import { Item as ItemInterface, Tag } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
 
 declare var twttr: any;
 
-interface SafeItemInterface extends ItemInterface {
-    safe_media_url?: SafeResourceUrl;
-}
 
 @Component({
   selector: 'app-home',
