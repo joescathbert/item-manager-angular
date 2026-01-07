@@ -77,7 +77,7 @@
       }
       @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
         <div class="item-content-video">
-          <video controls loop muted >
+          <video controls loop muted appVideoObserver>
             <source [src]="item.safe_media_url">
             <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
           </video>
@@ -85,7 +85,7 @@
       }
       @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
         <div class="item-content-video">
-          <video controls loop muted >
+          <video controls loop muted appVideoObserver>
             <source [src]="item.media_url">
             <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
           </video>

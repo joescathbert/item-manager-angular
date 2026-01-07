@@ -12,6 +12,7 @@ import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Item as ItemInterface, Tag } from '../interfaces/item';
 import { environment } from '../../environments/environment';
+import { VideoObserver } from '../directives/video-observer';
 
 
 declare var twttr: any;
@@ -22,7 +23,7 @@ interface SafeItemInterface extends ItemInterface {
 
 @Component({
   selector: 'app-home',
-  imports: [InfiniteScrollDirective],
+  imports: [InfiniteScrollDirective, VideoObserver],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
