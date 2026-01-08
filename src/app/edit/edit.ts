@@ -74,18 +74,22 @@ export class Edit extends Add implements OnInit {
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
 
-    if (item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
       // Construct the local proxy URL
       const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
 
       // Sanitize the local proxy URL (which is safe)
       (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl);
+        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl); // bypassSecurityTrustResourceUrl for <video src>
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
     }
-    else if (item.media_url) {
-      // For other media URLs, sanitize them directly
+    else if (item.url && item.media_url) {
       (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url);
+      this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url); // bypassSecurityTrustResourceUrl for <video src>
+
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
     }
 
     return item as SafeItemInterface;

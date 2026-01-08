@@ -34,7 +34,7 @@ export class VideoObserver {
         if (entry.isIntersecting) {
           // Video is visible: Play
           // Using .catch() is important for handling browser autoplay policies
-          video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
+          // video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
         } else {
           // Video is scrolled away: Pause
           video.pause();

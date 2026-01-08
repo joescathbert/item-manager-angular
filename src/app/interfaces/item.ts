@@ -22,6 +22,7 @@ export interface Item {
 }
 
 export interface SafeItem extends Item {
+  safe_url?: SafeResourceUrl;
   safe_media_url?: SafeResourceUrl;
 }
 

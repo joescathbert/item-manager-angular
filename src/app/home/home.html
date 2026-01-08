@@ -60,8 +60,11 @@
               <button class="menu-item" (click)="useAsTemplate(item)">
                 Use as Template
               </button>
-              <button class="menu-item" (click)="openMediaUrl(item.safe_media_url)">
+              <button class="menu-item" (click)="openSafeUrl(item.safe_media_url)">
                 Open Media
+              </button>
+              <button class="menu-item" (click)="openSafeUrl(item.url)">
+                Open Source
               </button>
             </div>
           }
