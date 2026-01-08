@@ -318,6 +318,11 @@
     max-width: unset;
     margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
   }
+  .item-content-video {
+    video {
+      max-height: unset;
+    }
+  }
 }
 
 /* --- 1. Loading Spinner Keyframes --- */

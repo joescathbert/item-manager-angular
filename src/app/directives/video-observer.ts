@@ -31,7 +31,11 @@ export class VideoObserver {
       entries.forEach(entry => {
         const video = this.el.nativeElement;
 
-        if (!entry.isIntersecting) {
+        if (entry.isIntersecting) {
+          // Video is visible: Play
+          // Using .catch() is important for handling browser autoplay policies
+          video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
+        } else {
           // Video is scrolled away: Pause
           video.pause();
         }

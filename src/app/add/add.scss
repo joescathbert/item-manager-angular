@@ -1,8 +1,25 @@
 @use 'theme_variables.scss' as *;
 
 .add-container {
+  display: flex;
+  flex-direction: row;
+  margin: 2rem 2rem 0rem 2rem;
+  border-radius: 10px;
+  color: #f6f7f8;
+  min-height: 83vh;
+}
+
+.add-form {
   max-width: 600px;
-  margin: 2rem auto 0rem 2rem;
+  margin: 0rem auto 0rem 2rem;
+  border-radius: 10px;
+  color: #f6f7f8;
+  min-height: 83vh;
+}
+
+.add-preview {
+  max-width: 600px;
+  margin: 0rem auto 0rem 2rem;
   border-radius: 10px;
   color: #f6f7f8;
   min-height: 83vh;
@@ -255,10 +272,35 @@ input[type="file"] {
   }
 }
 
+/* --- Video Embed Container Styles (New for v.redd.it and RedGifs) --- */
+
+.item-content-video {
+  width: 100%;
+  margin: 10px 0;
+
+  video {
+    display: block;
+    width: 100%;
+    max-height: 500px;
+    border-radius: 4px;
+    object-fit: contain;
+    background-color: black;
+  }
+}
+
 // Mobile tweaks
 @media (max-width: 600px) {
   .add-container {
-    margin: 2rem auto;
+    flex-direction: column;
+    margin: 0rem;
+  }
+  .add-form {
+    margin: 0rem 0rem 2rem 0rem;
+    min-height: unset;
+  }
+  .add-preview {
+    margin: 0rem 0rem auto 0rem;
+    min-height: unset;
   }
   .file-item {
     flex-wrap: wrap; // Allow file name to wrap on mobile

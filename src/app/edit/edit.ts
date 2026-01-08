@@ -2,15 +2,18 @@ import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { mergeMap } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { DomSanitizer } from '@angular/platform-browser';
 
 // Re-use interfaces and services
 import { ItemPayload, LinkPayload } from '../interfaces/item';
-import { Item as ItemInterface, Link } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface} from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
+
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-edit',
@@ -24,7 +27,6 @@ import { Add } from '../add/add';
 export class Edit extends Add implements OnInit {
 
   // Variable to hold the original Item data being edited
-  private editedItem!: ItemInterface;
   // Store the original URL for comparison during update
   private originalUrl: string = '';
 
@@ -41,7 +43,8 @@ export class Edit extends Add implements OnInit {
     protected override router: Router,
     protected override route: ActivatedRoute,
     protected override toastService: ToastService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {
     // Call the parent (Add) constructor with inherited services
     super(fb, itemService, router, route, toastService);
@@ -69,6 +72,25 @@ export class Edit extends Add implements OnInit {
     // if template functionality is not desired on the Edit page.
   }
 
+  private processItemUrls(item: ItemInterface): SafeItemInterface {
+
+    if (item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+      // Construct the local proxy URL
+      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
+
+      // Sanitize the local proxy URL (which is safe)
+      (item as SafeItemInterface).safe_media_url = 
+        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl);
+    }
+    else if (item.media_url) {
+      // For other media URLs, sanitize them directly
+      (item as SafeItemInterface).safe_media_url = 
+        this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url);
+    }
+
+    return item as SafeItemInterface;
+  }
+
   // 🚨 NEW: Method to fetch and pre-fill the form 🚨
   private loadItemData(itemId: number): void {
     this.itemService.getItem(itemId).pipe(
@@ -80,28 +102,30 @@ export class Edit extends Add implements OnInit {
         if (item.link_id) {
           // If yes, fetch the Link record, which contains the exact URL.
           return this.itemService.getLink(item.link_id).pipe(
-             // Map the result to an object containing both the item and the link
-            mergeMap((link: Link) => of({ item, link })) 
+            map(link => ({ ...item,
+              url: link.url, url_domain: link.url_domain,
+              media_url: link.media_url, media_url_domain: link.media_url_domain }))
           );
         }
 
         // If no link, just return the item object.
-        return of({ item, link: null }); 
+        return of(item); 
       })
     ).subscribe({
-      next: ({ item, link }) => {
+      next: (processedItem: (ItemInterface & { url?: string })) => {
         // 3. Pre-fill the form fields using the collected data
-        const itemUrl = link?.url || (item as any).url || '';
+        this.editedItem = this.processItemUrls(processedItem);
+        const itemUrl = (processedItem as any).url || '';
         this.originalUrl = itemUrl
         this.addItemForm.patchValue({
-          name: item.name,
+          name: this.editedItem.name,
           // Use the URL from the Link record if available, otherwise assume URL is on Item or empty
           url: itemUrl, 
-          dateOfOrigin: item.date_of_origin 
+          dateOfOrigin: this.editedItem.date_of_origin 
         });
 
         // 4. Pre-fill and manage tags
-        this.tags = item.tags.sort() || [];
+        this.tags = this.editedItem.tags.sort() || [];
         console.log(this.allTags, this.tags);
         this.filterSuggestions();
         this.cdr.detectChanges();
@@ -133,8 +157,8 @@ export class Edit extends Add implements OnInit {
     this.updateItemAndLink(name, url, dateOfOrigin, this.tags, this.editedItem);
   }
 
-  // 🚨 NEW: Update API method 🚨
-  private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: ItemInterface): void {
+  // Update API method
+  private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: SafeItemInterface): void {
     const itemId = originalItem.id;
     const linkId = originalItem.link_id; 
     const itemType = originalItem.type; 

@@ -4,7 +4,7 @@ import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, A
 import { of } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common'; // Needed for Common features like NgIf, NgFor
-import { ItemPayload, LinkPayload } from '../interfaces/item';
+import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Tag } from '../interfaces/item';
@@ -34,6 +34,17 @@ export class Add {
   protected headerText: string = 'Add New Item';
   protected submitButtonText: string = 'Add Item';
 
+  protected editedItem: SafeItemInterface = {
+    id: 0, // Placeholder ID
+    owner: '',
+    name: '',
+    type: '',
+    date_of_origin: '',
+    tags: [],
+    created_at: '',
+    link_id: null,
+    file_group_id: null
+  };
 
   constructor(
     protected fb: FormBuilder,
