@@ -10,6 +10,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
+import { TagFilter as TagFilterService } from '../services/tag-filter';
 import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
@@ -42,6 +43,7 @@ export class Home {
 
   allTags: string[] = []; // Variable to store all the available tags
   activeFilters: string[] = []; // Variable to store the tags currently being filtered
+  private tagFilterSubscription!: Subscription;
 
   constructor(
     private itemService: ItemService, 
@@ -50,6 +52,7 @@ export class Home {
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
     private toastService: ToastService,
+    private tagFilterService: TagFilterService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -65,7 +68,11 @@ export class Home {
       this.hasNextPage = true; 
       this.activeFilters = [];
 
-      // Load Items
+      // Subscribe to filter changes
+      this.tagFilterSubscription = this.tagFilterService.activeFilters$.subscribe(filters => {
+        this.activeFilters = filters; // Update the local component state used in the template
+        this.cdRef.markForCheck(); // Notify change detection
+      });
       this.loadItems();
       this.loadAllTags();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
@@ -79,6 +86,7 @@ export class Home {
     // Clean up the subscription when the component is destroyed
     if (isPlatformBrowser(this.platformId)) {
       this.nextUrlSubscription.unsubscribe();
+      this.tagFilterSubscription.unsubscribe(); // Unsubscribe from the filter changes
     }
   }
 
@@ -273,7 +281,9 @@ export class Home {
 
   // -------- Tag Filter Methods --------
 
-  // loads all tags from the API
+  /**
+   * Loads all tags from the API
+   */
   loadAllTags(): void {
     this.itemService.getTags().subscribe({
       next: (tags: Tag[]) => {
@@ -285,26 +295,33 @@ export class Home {
     });
   }
 
-  // Adds a tag to the active filters if not present and triggers a fresh item load.
-  addFilterTag(tag: string): void {
-    if (!this.activeFilters.includes(tag)) {
-      this.activeFilters = [...this.activeFilters, tag];
+  /**
+   * Adds a tag to the active filters if not present and triggers a fresh item load.
+   * @param tag 
+   */
+  addTagFilter(tag: string): void {
+    if (!this.tagFilterService.currentFilters.includes(tag)) {
+      this.tagFilterService.addFilter(tag); 
       this.resetAndLoadItems();
-      // Close any open options menu when filtering starts
       this.activeOptionsMenuId = null; 
     }
   }
 
-  // Removes a tag from the active filters and triggers a fresh item load.
-  removeFilterTag(tag: string): void {
-    this.activeFilters = this.activeFilters.filter(t => t !== tag);
+  /**
+   * Removes a tag from the active filters and triggers a fresh item load.
+   * @param tag 
+   */
+  removeTagFilter(tag: string): void {
+    this.tagFilterService.removeFilter(tag);
     this.resetAndLoadItems();
   }
 
-  // Clears all active filters and triggers a fresh item load.
-  clearFilters(): void {
-    if (this.activeFilters.length > 0) {
-      this.activeFilters = [];
+  /**
+   * Clears all active filters and triggers a fresh item load.
+   */
+  clearTagFilters(): void {
+    if (this.tagFilterService.currentFilters.length > 0) {
+      this.tagFilterService.clearFilters(); 
       this.resetAndLoadItems();
     }
   }

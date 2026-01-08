@@ -1,4 +1,4 @@
-import { Directive, ElementRef, OnInit, OnDestroy, Input } from '@angular/core';
+import { Directive, ElementRef, Input } from '@angular/core';
 import { Logger } from '../services/logger';
 
 @Directive({

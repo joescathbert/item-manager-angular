@@ -4,7 +4,7 @@
       <span
         class="tag-pill clickable-tag"
         [class.active-filter]="activeFilters.includes(tag)"
-        (click)="addFilterTag(tag)">
+        (click)="addTagFilter(tag)">
         {{ tag }}
       </span>
     }
@@ -16,12 +16,12 @@
     @for (tag of activeFilters; track tag) {
       <span class="filter-pill">
         {{ tag }}
-        <button class="remove-filter-button" (click)="removeFilterTag(tag)" title="Remove filter: {{ tag }}">
+        <button class="remove-filter-button" (click)="removeTagFilter(tag)" title="Remove filter: {{ tag }}">
           &times;
         </button>
       </span>
     }
-    <button class="clear-filters-button" (click)="clearFilters()">
+    <button class="clear-filters-button" (click)="clearTagFilters()">
       &times;
     </button>
   </div>
@@ -38,7 +38,7 @@
               <span
                 class="tag-pill clickable-tag"
                 [class.active-filter]="activeFilters.includes(tag)"
-                (click)="addFilterTag(tag)">
+                (click)="addTagFilter(tag)">
                 {{ tag }}
               </span>
             }
