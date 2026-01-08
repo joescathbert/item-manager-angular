@@ -1,35 +1,36 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit,ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { mergeMap } from 'rxjs/operators';
-import { Observable, of } from 'rxjs'; // For the mergeMap error handling
+import { map, mergeMap } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { DomSanitizer } from '@angular/platform-browser';
 
 // Re-use interfaces and services
 import { ItemPayload, LinkPayload } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface} from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
-// 🚨 Import necessary interfaces for the item object 🚨
-import { Item as ItemInterface, Tag, Link } from '../interfaces/item'; 
+import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
+
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-edit',
   standalone: true,
-  // 🚨 Re-use Add's template and styles 🚨
   templateUrl: '../add/add.html', 
   styleUrl: '../add/add.scss',
-  // Make sure to include all necessary imports for the template
   imports: [CommonModule, FormsModule, ReactiveFormsModule], 
   providers: [ItemService] 
 })
-// 🚨 Extend the Add class and implement OnInit 🚨
-export class Edit extends Add implements OnInit { 
+// Extend the Add class and implement OnInit
+export class Edit extends Add implements OnInit {
 
-  // NEW: Variable to hold the original Item data being edited
-  private editedItem!: ItemInterface; 
+  // Variable to hold the original Item data being edited
+  // Store the original URL for comparison during update
+  private originalUrl: string = '';
 
-  // 🚨 OVERRIDE: Set custom values for the parent's protected properties 🚨
-  // These will update the h2 and button text in add.html
+  // Set custom values for the parent's protected properties
   protected override isEditing: boolean = true;
   protected override headerText: string = 'Edit Item';
   protected override submitButtonText: string = 'Update Item';
@@ -40,10 +41,13 @@ export class Edit extends Add implements OnInit {
     protected override fb: FormBuilder, // 'override' is necessary when property is used in super()
     protected override itemService: ItemService,
     protected override router: Router,
-    protected override route: ActivatedRoute
+    protected override route: ActivatedRoute,
+    protected override toastService: ToastService,
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {
     // Call the parent (Add) constructor with inherited services
-    super(fb, itemService, router, route);
+    super(fb, itemService, router, route, toastService);
   }
 
   // Override ngOnInit to handle fetching existing data
@@ -68,6 +72,29 @@ export class Edit extends Add implements OnInit {
     // if template functionality is not desired on the Edit page.
   }
 
+  private processItemUrls(item: ItemInterface): SafeItemInterface {
+
+    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+      // Construct the local proxy URL
+      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
+
+      // Sanitize the local proxy URL (which is safe)
+      (item as SafeItemInterface).safe_media_url = 
+        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl); // bypassSecurityTrustResourceUrl for <video src>
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+    }
+    else if (item.url && item.media_url) {
+      (item as SafeItemInterface).safe_media_url = 
+      this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url); // bypassSecurityTrustResourceUrl for <video src>
+
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+    }
+
+    return item as SafeItemInterface;
+  }
+
   // 🚨 NEW: Method to fetch and pre-fill the form 🚨
   private loadItemData(itemId: number): void {
     this.itemService.getItem(itemId).pipe(
@@ -76,30 +103,36 @@ export class Edit extends Add implements OnInit {
         this.editedItem = item;
 
         // 2. Check if it's a link and has a link_id
-        if (item.type === 'link' && item.link_id) {
+        if (item.link_id) {
           // If yes, fetch the Link record, which contains the exact URL.
           return this.itemService.getLink(item.link_id).pipe(
-             // Map the result to an object containing both the item and the link
-            mergeMap((link: Link) => of({ item, link })) 
+            map(link => ({ ...item,
+              url: link.url, url_domain: link.url_domain,
+              media_url: link.media_url, media_url_domain: link.media_url_domain }))
           );
         }
 
         // If no link, just return the item object.
-        return of({ item, link: null }); 
+        return of(item); 
       })
     ).subscribe({
-      next: ({ item, link }) => {
+      next: (processedItem: (ItemInterface & { url?: string })) => {
         // 3. Pre-fill the form fields using the collected data
+        this.editedItem = this.processItemUrls(processedItem);
+        const itemUrl = (processedItem as any).url || '';
+        this.originalUrl = itemUrl
         this.addItemForm.patchValue({
-          name: item.name,
+          name: this.editedItem.name,
           // Use the URL from the Link record if available, otherwise assume URL is on Item or empty
-          url: link?.url || (item as any).url || '', 
-          dateOfOrigin: item.date_of_origin 
+          url: itemUrl, 
+          dateOfOrigin: this.editedItem.date_of_origin 
         });
 
         // 4. Pre-fill and manage tags
-        this.tags = item.tags.sort() || [];
-        this.filterSuggestions(); 
+        this.tags = this.editedItem.tags.sort() || [];
+        console.log(this.allTags, this.tags);
+        this.filterSuggestions();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Failed to load item data for editing:', err);
@@ -128,43 +161,68 @@ export class Edit extends Add implements OnInit {
     this.updateItemAndLink(name, url, dateOfOrigin, this.tags, this.editedItem);
   }
 
-  // 🚨 NEW: Update API method 🚨
-  private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: ItemInterface): void {
+  // Update API method
+  private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: SafeItemInterface): void {
     const itemId = originalItem.id;
     const linkId = originalItem.link_id; 
+    const itemType = originalItem.type; 
 
     const itemPayload: ItemPayload = {
       name: name,
-      type: 'link', 
+      type: itemType, 
       date_of_origin: dateOfOrigin,
       tag_names: tags
     };
+
+    // CHECK: Has the URL changed?
+    const urlChanged = url !== this.originalUrl;
+
+    // CHECK: Is the URL field empty now, but it had a link before? (Means delete)
+    const urlRemoved = linkId && url === '';
 
     // 1. Update the Item record (tags, name, date)
     this.itemService.updateItem(itemId, itemPayload).pipe(
       // 2. If item update succeeds, update the Link record (required for URL changes)
       mergeMap(() => {
         if (linkId) {
+          // A. Link exists: check if it needs updating or removal
+          if (urlChanged && url) {
+            // URL has changed and is NOT empty: UPDATE link
+            const linkPayload: LinkPayload = {
+              item: itemId,
+              url: url
+            };
+            return this.itemService.updateLink(linkId, linkPayload);
+          } else if (urlRemoved) {
+            // URL is now empty: DELETE link
+            return this.itemService.deleteLink(linkId);
+          }
+          // URL hasn't changed or was just removed: no API call needed.
+          return of(null); 
+
+        } else if (url) {
+          // B. Link did NOT exist: but form now has a URL: CREATE link
           const linkPayload: LinkPayload = {
             item: itemId,
             url: url
           };
-          // Call the service method to update the link
-          return this.itemService.updateLink(linkId, linkPayload);
+          return this.itemService.createLink(linkPayload);
         }
-        // If no link data exists, complete the observable chain
-        return new Observable(observer => observer.complete());
+
+        // If no link action is needed, complete the observable chain
+        return of(null);
       })
     ).subscribe({
       next: () => {
         this.loading = false;
-        alert('Success! Item updated.'); 
+        this.toastService.showSuccess('Item updated.');
         this.router.navigate(['/home']);
       },
       error: (err) => {
         this.loading = false;
         console.error('Update failed:', err);
-        alert('Error: Failed to update item. Check console for details.');
+        this.toastService.showError('Failed to update item.');
+        this.router.navigate(['/home']);
       }
     });
   }

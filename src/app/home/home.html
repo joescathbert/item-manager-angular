@@ -1,3 +1,15 @@
+<div class="filter-pills-container">
+  <div class="select-filter-tag-list">
+    @for (tag of allTags.sort(); track $index) {
+      <span
+        class="tag-pill clickable-tag"
+        [class.active-filter]="activeFilters.includes(tag)"
+        (click)="addFilterTag(tag)">
+        {{ tag }}
+      </span>
+    }
+  </div>
+</div>
 @if (activeFilters.length > 0) {
   <div class="filter-pills-container">
     <span class="filter-label">Filtering by:</span>
@@ -42,47 +54,45 @@
 
           @if (activeOptionsMenuId === item.id) {
             <div class="options-dropdown" (click)="$event.stopPropagation()">
-              <button class="menu-item" (click)="useAsTemplate(item)">
-                Use as Template
-              </button>
               <button class="menu-item" (click)="editItem(item)">
                 Edit Item
               </button>
-              <button class="menu-item" (click)="openMediaUrl(item.media_url)">
+              <button class="menu-item" (click)="useAsTemplate(item)">
+                Use as Template
+              </button>
+              <button class="menu-item" (click)="openSafeUrl(item.safe_media_url)">
                 Open Media
+              </button>
+              <button class="menu-item" (click)="openSafeUrl(item.url)">
+                Open Source
               </button>
             </div>
           }
         </div>
     </div>
-      @if (item.type === 'link') {
-        @if (item.url_domain === 'twitter.com') {
-          <blockquote 
-              class="twitter-tweet"
-              data-media-max-width="560"
-              data-width="450">
-            <a [href]="item.url"></a>
-          </blockquote>
-        }
-        @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
-          <div class="item-content-video">
-            <video controls loop muted >
-              <source [src]="item.safe_media_url">
-              <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
-            </video>
-          </div>
-        }
-        @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
-          <div class="item-content-video">
-            <video controls loop muted >
-              <source [src]="item.media_url">
-              <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
-            </video>
-          </div>
-        }
+      @if (item.url_domain === 'twitter.com') {
+        <blockquote 
+            class="twitter-tweet"
+            data-media-max-width="560"
+            data-width="450">
+          <a [href]="item.url"></a>
+        </blockquote>
       }
-      @if (item.type === 'file') {
-        <p>File ID: {{ item.file_id }}</p>
+      @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
+        <div class="item-content-video">
+          <video controls loop muted appVideoObserver>
+            <source [src]="item.safe_media_url">
+            <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
+          </video>
+        </div>
+      }
+      @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
+        <div class="item-content-video">
+          <video controls loop muted appVideoObserver>
+            <source [src]="item.media_url">
+            <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
+          </video>
+        </div>
       }
       <div class="card-actions">
         <button class="delete-button" type="button" (click)="confirmDelete(item)" title="Delete Item">
@@ -97,6 +107,8 @@
   @if (loading && items.length === 0) {
     @for (i of [1, 2, 3, 4, 5]; track i) {
       <div class="item-card skeleton-card">
+        <div class="skeleton-line skeleton-header"></div>
+        <div class="skeleton-line skeleton-header"></div>
         <div class="skeleton-line skeleton-header"></div>
 
         <div class="skeleton-image"></div>

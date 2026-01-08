@@ -6,22 +6,21 @@ import { Inject } from '@angular/core';
 import { map, mergeMap } from 'rxjs/operators';
 import { of, forkJoin, Subscription} from 'rxjs';
 import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { Item as ItemService } from '../services/item';
-import { Item as ItemInterface } from '../interfaces/item';
+import { Toast as ToastService } from '../services/toast';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag } from '../interfaces/item';
 import { environment } from '../../environments/environment';
+import { VideoObserver } from '../directives/video-observer';
 
 
 declare var twttr: any;
 
-interface SafeItemInterface extends ItemInterface {
-    safe_media_url?: SafeResourceUrl;
-}
 
 @Component({
   selector: 'app-home',
-  imports: [InfiniteScrollDirective],
+  imports: [InfiniteScrollDirective, VideoObserver],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,8 +40,8 @@ export class Home {
   // Variable to track which item's menu is currently open
   activeOptionsMenuId: number | null = null;
 
-  // Variable store the tags currently being filtered
-  activeFilters: string[] = [];
+  allTags: string[] = []; // Variable to store all the available tags
+  activeFilters: string[] = []; // Variable to store the tags currently being filtered
 
   constructor(
     private itemService: ItemService, 
@@ -50,6 +49,7 @@ export class Home {
     private cdRef: ChangeDetectorRef, 
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
+    private toastService: ToastService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -67,6 +67,7 @@ export class Home {
 
       // Load Items
       this.loadItems();
+      this.loadAllTags();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
         this.hasNextPage = !!nextUrl;
         this.cdRef.markForCheck();
@@ -83,19 +84,22 @@ export class Home {
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
 
-    if (item.media_url && item.media_url_domain === 'media.redgifs.com') {
-      // 🚨 CRITICAL: Construct the local proxy URL 🚨
-      // Ensure this path matches the Django URL pattern you defined
+    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+      // Construct the local proxy URL
       const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
 
       // Sanitize the local proxy URL (which is safe)
       (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl);
+        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl); // bypassSecurityTrustResourceUrl for <video src>
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
     }
-    else if (item.media_url) {
-      // For other media URLs, sanitize them directly
+    else if (item.url && item.media_url) {
       (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url);
+      this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url); // bypassSecurityTrustResourceUrl for <video src>
+
+      (item as SafeItemInterface).safe_url = 
+        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
     }
 
     return item as SafeItemInterface;
@@ -108,7 +112,7 @@ export class Home {
     this.itemService.getItems(this.page, this.activeFilters).pipe(
       mergeMap((data: ItemInterface[]) => {
         const itemObservables = data.map(item => {
-          if (item.type === 'link' && item.link_id) {
+          if (item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
               map(link => ({ ...item,
                 url: link.url, url_domain: link.url_domain,
@@ -159,6 +163,7 @@ export class Home {
   }
 
   // -------- Item Deletion Methods --------
+
   confirmDelete(item: ItemInterface): void {
     this.itemToDelete = item;
     this.showDeleteConfirmation = true;
@@ -184,6 +189,7 @@ export class Home {
         this.items = this.items.filter(item => item.id !== itemToDeleteId);
 
         // Close overlay and reset state after successful deletion
+        this.toastService.showSuccess('Item deleted.')
         this.cancelDelete();
 
         this.cdRef.markForCheck();
@@ -191,13 +197,14 @@ export class Home {
       },
       error: (err) => {
         console.error(`Failed to delete item ${itemToDeleteId}:`, err);
-        alert('Failed to delete item. Please try again.');
+        this.toastService.showError('Failed to delete item. Please try again.');
         this.cancelDelete(); // Also close on error
       }
     });
   }
 
   // -------- Item Option Methods --------
+
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {
     console.log(`Toggling options menu for item ID: ${itemId}`);
@@ -239,7 +246,7 @@ export class Home {
   }
 
   // Method to safely opens the external URL in a new tab
-  openMediaUrl(safeUrl: any): void {
+  openSafeUrl(safeUrl: any): void {
     this.activeOptionsMenuId = null; // Close the menu
 
     if (!safeUrl) {
@@ -260,11 +267,23 @@ export class Home {
 
     // Open the URL in a new window/tab
     window.open(urlString, '_blank');
-    
+
     this.cdRef.markForCheck();
   }
 
   // -------- Tag Filter Methods --------
+
+  // loads all tags from the API
+  loadAllTags(): void {
+    this.itemService.getTags().subscribe({
+      next: (tags: Tag[]) => {
+        this.allTags = tags.map(tag => tag.name);
+      },
+      error: (err) => {
+        console.error('Failed to load tags for suggestions:', err);
+      }
+    });
+  }
 
   // Adds a tag to the active filters if not present and triggers a fresh item load.
   addFilterTag(tag: string): void {

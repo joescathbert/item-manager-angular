@@ -1,63 +1,142 @@
 <div class="add-container">
-    <h2>{{ headerText }}</h2>
 
-    <form [formGroup]="addItemForm" (ngSubmit)="onSubmit()">
+    <div class="add-form">
+        <h2>{{ headerText }}</h2>
 
-        <section class="form-section tag-section">
-            <div class="tag-input-group">
-                <input 
-                    type="text" 
-                    placeholder="Enter tag name (e.g., angular, rxjs)"
-                    [(ngModel)]="tagInput"
-                    [ngModelOptions]="{standalone: true}"
-                    (keydown.enter)="$event.preventDefault(); addTag()"
-                    (input)="filterSuggestions()"  list="tag-suggestions"
-                    autocapitalize="off"
-                />
-                <button type="button" (click)="addTag()">Add Tag</button>
-            </div>
+        <form [formGroup]="addItemForm" (ngSubmit)="onSubmit()">
 
-            <datalist id="tag-suggestions">
-                @for (tag of suggestionTags; track tag.id) {
-                    <option [value]="tag.name"></option>
+            <section class="form-section tag-section">
+                <div class="tag-input-group">
+                    <input 
+                        type="text" 
+                        placeholder="Enter tag name (e.g., angular, rxjs)"
+                        [(ngModel)]="tagInput"
+                        [ngModelOptions]="{standalone: true}"
+                        (keydown.enter)="$event.preventDefault(); addTag()"
+                        (input)="filterSuggestions()"  list="tag-suggestions"
+                        autocapitalize="off"
+                    />
+                    <button type="button" (click)="addTag()">Add Tag</button>
+                </div>
+
+                <datalist id="tag-suggestions">
+                    @for (tag of suggestionTags; track tag.id) {
+                        <option [value]="tag.name"></option>
+                    }
+                </datalist>
+
+                <div class="tag-pills">
+                    @for (tag of tags; track tag) {
+                        <span class="tag-pill">
+                            {{ tag }}
+                            <button type="button" class="remove-tag" (click)="removeTag(tag)" title="Remove Tag: {{ tag }}">&times;</button>
+                        </span>
+                    }
+                </div>
+            </section>
+
+            <section class="form-section item-section">
+
+                <div class="form-group">
+                    <input id="dateOfOrigin" type="date" formControlName="dateOfOrigin" required>
+                </div>
+
+                <div class="form-group">
+                    <input id="url" type="url" formControlName="url" placeholder="URL (Required if no files are uploaded)">
+                </div>
+
+                <div class="form-group file-upload-group">
+                    <label for="files">File Upload</label>
+                    <input 
+                        id="files" 
+                        type="file" 
+                        (change)="onFileSelected($event)" 
+                        multiple 
+                    >
+                </div>
+
+                @if (selectedFiles.length > 0) {
+                    <div class="file-list-container">
+                        <h3>Uploaded Files ({{ selectedFiles.length }})</h3>
+                        <ul class="file-list">
+                            @for (file of selectedFiles; track $index) {
+                                <li class="file-item">
+                                    <span class="file-order">{{ $index + 1 }}.</span>
+                                    <span class="file-name">{{ file.name }}</span>
+                                    
+                                    <div class="file-actions">
+                                        <button 
+                                            type="button" 
+                                            class="move-up" 
+                                            (click)="moveFileUp($index)" 
+                                            [disabled]="$index === 0"
+                                            title="Move Up"
+                                        >
+                                            &uarr;
+                                        </button>
+                                        
+                                        <button 
+                                            type="button" 
+                                            class="move-down" 
+                                            (click)="moveFileDown($index)" 
+                                            [disabled]="$index === selectedFiles.length - 1"
+                                            title="Move Down"
+                                        >
+                                            &darr;
+                                        </button>
+
+                                        <button 
+                                            type="button" 
+                                            class="remove-file" 
+                                            (click)="removeFile($index)"
+                                            title="Remove File"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
                 }
-            </datalist>
 
-            <div class="tag-pills">
-                @for (tag of tags; track tag) {
-                    <span class="tag-pill">
-                        {{ tag }}
-                        <button type="button" class="remove-tag" (click)="removeTag(tag)" title="Remove Tag: {{ tag }}">&times;</button>
-                    </span>
-                }
+                <input type="hidden" formControlName="name">
+            </section>
+
+            <section class="button-section">
+                <button type="button" class="cancel-button" (click)="cancel()">
+                    Cancel
+                </button>
+                <button type="submit" class="submit-button" [disabled]="addItemForm.invalid || loading">
+                    @if (loading) {
+                        <span>Submitting...</span> 
+                    } @else {
+                        <span>{{ submitButtonText }}</span>
+                    }
+                </button>
+            </section>
+        </form>
+    </div>
+
+    <div class="add-preview">
+        @if (isEditing) {
+            <h2>Preview</h2>
+            @if (editedItem.url_domain === 'www.reddit.com' && editedItem.media_url_domain === 'media.redgifs.com') {
+            <div class="item-content-video">
+            <video controls loop muted>
+                <source [src]="editedItem.safe_media_url">
+                <p>Your browser does not support the HTML5 video tag. View item: <a [href]="editedItem.safe_media_url">Link</a></p>
+            </video>
             </div>
-        </section>
-
-        <section class="form-section item-section">
-            <!-- <h3>Item Details (Type: Link)</h3> -->
-
-            <div class="form-group">
-                <input id="url" type="url" formControlName="url" placeholder="URL" required>
-            </div>
-
-            <div class="form-group">
-                <input id="dateOfOrigin" type="date" formControlName="dateOfOrigin" required>
-            </div>
-
-            <input type="hidden" formControlName="name">
-        </section>
-
-        <section class="button-section">
-            <button type="button" class="cancel-button" (click)="cancel()">
-                Cancel
-            </button>
-            <button type="submit" class="submit-button" [disabled]="addItemForm.invalid || loading">
-                @if (loading) {
-                    <span>Submitting...</span> 
-                } @else {
-                    <span>{{ submitButtonText }}</span>
-                }
-            </button>
-        </section>
-    </form>
+        }
+            @if (editedItem.url_domain === 'www.reddit.com' && editedItem.media_url_domain === 'v.redd.it') {
+                <div class="item-content-video">
+                <video controls loop muted>
+                    <source [src]="editedItem.media_url">
+                    <p>Your browser does not support the HTML5 video tag. View item: <a [href]="editedItem.media_url">Link</a></p>
+                </video>
+                </div>
+            }
+        }
+    </div>
 </div>

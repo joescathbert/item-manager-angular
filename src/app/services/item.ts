@@ -100,4 +100,34 @@ export class Item {
     this.logger.log('Deleting item at URL:', url);
     return this.http.delete(url);
   }
+
+  deleteLink(linkId: number): Observable<any> {
+    const url = `${this.baseUrl}/links/${linkId}/`;
+    this.logger.log('Deleting link at URL:', url);
+    return this.http.delete(url);
+  }
+
+  uploadFilesToItem(itemId: number, files: File[]): Observable<any> {
+    // 1. Define the target URL for your Django endpoint
+    const url = `${this.baseUrl}/file-groups/upload-multiple/`;
+
+    // 2. Create the FormData object to hold binary and text data
+    const formData: FormData = new FormData();
+
+    // 3. Append the Item ID (as specified in your curl example)
+    formData.append('item', itemId.toString());
+
+    // 4. Append all selected files using the key 'files' (as specified in your curl example)
+    files.forEach((file) => {
+      // The third argument is the filename, which helps the backend process the file
+      formData.append('files', file, file.name); 
+    });
+
+    this.logger.log('Uploading files to URL:', url, 'for Item ID:', itemId);
+
+    // 5. Perform the POST request
+    // The Angular HttpClient handles the 'Content-Type: multipart/form-data' header automatically 
+    // when sending a FormData object, which is correct.
+    return this.http.post(url, formData);
+  }
 }
