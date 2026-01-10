@@ -1,19 +1,36 @@
 <div class="filter-pills-container">
+  <div class="tag-input-group">
+    <input 
+        type="text" 
+        placeholder="Enter tag name (e.g., angular, rxjs)"
+        [(ngModel)]="tagInput"
+        [ngModelOptions]="{standalone: true}"
+        (keydown.enter)="$event.preventDefault(); addTagFilter()"
+        (input)="filterSuggestions()"  list="tag-suggestions"
+        autocapitalize="off"
+    />
+    <button type="button" (click)="addTagFilter()">Add Tag</button>
+  </div>
   <div class="select-filter-tag-list">
     @for (tag of allTags.sort(); track $index) {
       <span
         class="tag-pill clickable-tag"
-        [class.active-filter]="activeFilters.includes(tag)"
+        [class.active-filter]="activeTagFilters.includes(tag)"
         (click)="addTagFilter(tag)">
         {{ tag }}
       </span>
     }
   </div>
+  <datalist id="tag-suggestions">
+    @for (tag of suggestionTagFilters; track $index) {
+        <option [value]="tag"></option>
+    }
+  </datalist>
 </div>
-@if (activeFilters.length > 0) {
+@if (activeTagFilters.length > 0) {
   <div class="filter-pills-container">
     <span class="filter-label">Filtering by:</span>
-    @for (tag of activeFilters; track tag) {
+    @for (tag of activeTagFilters; track tag) {
       <span class="filter-pill">
         {{ tag }}
         <button class="remove-filter-button" (click)="removeTagFilter(tag)" title="Remove filter: {{ tag }}">
@@ -37,7 +54,7 @@
             @for (tag of item.tags.sort(); track $index) {
               <span
                 class="tag-pill clickable-tag"
-                [class.active-filter]="activeFilters.includes(tag)"
+                [class.active-filter]="activeTagFilters.includes(tag)"
                 (click)="addTagFilter(tag)">
                 {{ tag }}
               </span>
@@ -80,7 +97,7 @@
       }
       @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
         <div class="item-content-video">
-          <video controls loop muted appVideoObserver>
+          <video #mediaElement controls loop [muted]="true" appVideoObserver>
             <source [src]="item.safe_media_url">
             <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
           </video>
@@ -88,7 +105,7 @@
       }
       @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
         <div class="item-content-video">
-          <video controls loop muted appVideoObserver>
+          <video #mediaElement controls loop [muted]="true" appVideoObserver>
             <source [src]="item.media_url">
             <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
           </video>

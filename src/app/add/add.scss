@@ -10,7 +10,7 @@
 }
 
 .add-form {
-  max-width: 600px;
+  width: 40rem;
   margin: 0rem auto 0rem 2rem;
   border-radius: 10px;
   color: #f6f7f8;
@@ -293,9 +293,11 @@ input[type="file"] {
   .add-container {
     flex-direction: column;
     margin: 0rem;
+    min-height: 90vh;
   }
   .add-form {
     margin: 0rem 0rem 2rem 0rem;
+    width: unset;
     min-height: unset;
   }
   .add-preview {

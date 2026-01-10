@@ -8,6 +8,7 @@ import { of, forkJoin, Subscription} from 'rxjs';
 import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
+import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
@@ -21,7 +22,8 @@ declare var twttr: any;
 
 @Component({
   selector: 'app-home',
-  imports: [InfiniteScrollDirective, VideoObserver],
+  standalone: true,
+  imports: [FormsModule, InfiniteScrollDirective, VideoObserver],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,7 +44,9 @@ export class Home {
   activeOptionsMenuId: number | null = null;
 
   allTags: string[] = []; // Variable to store all the available tags
-  activeFilters: string[] = []; // Variable to store the tags currently being filtered
+  activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
+  suggestionTagFilters: string[] = []; // Variable to store the tags suggested for filter
+  tagInput: string = '';
   private tagFilterSubscription!: Subscription;
 
   constructor(
@@ -66,11 +70,11 @@ export class Home {
       this.page = 1;
       this.loading = false;
       this.hasNextPage = true; 
-      this.activeFilters = [];
+      this.activeTagFilters = [];
 
       // Subscribe to filter changes
       this.tagFilterSubscription = this.tagFilterService.activeFilters$.subscribe(filters => {
-        this.activeFilters = filters; // Update the local component state used in the template
+        this.activeTagFilters = filters; // Update the local component state used in the template
         this.cdRef.markForCheck(); // Notify change detection
       });
       this.loadItems();
@@ -117,7 +121,7 @@ export class Home {
     if (this.loading || !this.hasNextPage) return;
     this.loading = true;
 
-    this.itemService.getItems(this.page, this.activeFilters).pipe(
+    this.itemService.getItems(this.page, this.activeTagFilters).pipe(
       mergeMap((data: ItemInterface[]) => {
         const itemObservables = data.map(item => {
           if (item.link_id) {
@@ -247,6 +251,9 @@ export class Home {
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
         this.router.navigate(['/edit', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
     } else {
         console.error('Cannot edit item: ID is missing.', item);
         // Optional: Show a user-friendly error message
@@ -299,11 +306,21 @@ export class Home {
    * Adds a tag to the active filters if not present and triggers a fresh item load.
    * @param tag 
    */
-  addTagFilter(tag: string): void {
-    if (!this.tagFilterService.currentFilters.includes(tag)) {
-      this.tagFilterService.addFilter(tag); 
-      this.resetAndLoadItems();
-      this.activeOptionsMenuId = null; 
+  addTagFilter(tag?: string): void {
+    const srcTag: string = tag ?? this.tagInput.trim();
+    this.tagInput = ''; // Clear the input after adding
+    // Only add if the tag is not already in the filters
+    if (!this.tagFilterService.currentFilters.includes(srcTag)) {
+      // If the tag exists in allTags, use it; otherwise, use the first suggestion if available
+      if (this.allTags.includes(srcTag)){
+        this.tagFilterService.addFilter(srcTag);
+        this.resetAndLoadItems();
+        this.activeOptionsMenuId = null; // Close any open menus
+      } else if (this.suggestionTagFilters.length > 0) {
+        this.tagFilterService.addFilter(this.suggestionTagFilters[0]);
+        this.resetAndLoadItems();
+        this.activeOptionsMenuId = null; // Close any open menus
+      }
     }
   }
 
@@ -323,6 +340,20 @@ export class Home {
     if (this.tagFilterService.currentFilters.length > 0) {
       this.tagFilterService.clearFilters(); 
       this.resetAndLoadItems();
+    }
+  }
+
+  // Filters the suggestions based on user input
+  filterSuggestions(): void {
+    const input = this.tagInput.trim().toLowerCase();
+    if (!input) {
+        // If input is empty, show all available tags that haven't been selected
+        this.suggestionTagFilters = this.allTags.filter(tag_name => !this.activeTagFilters.includes(tag_name));
+    } else {
+        // Filter tags that match the input AND haven't been selected
+        this.suggestionTagFilters = this.allTags.filter(tag_name => 
+            tag_name.toLowerCase().includes(input) && !this.activeTagFilters.includes(tag_name)
+        );
     }
   }
 
