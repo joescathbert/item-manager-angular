@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems, Tag } from '../interfaces/item';
+import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
@@ -31,7 +31,7 @@ export class Item {
     } else {
       let params = [`page=${page}`];
       if (tags && tags.length > 0) {
-        // Join tags with a comma, as per your API update
+        // Join tags with a comma, as per API
         params.push(`tag_names=${tags.join(',')}`); 
       }
       url = `${this.baseUrl}/items/?${params.join('&')}`;
@@ -53,11 +53,24 @@ export class Item {
     this.logger.log('ItemService: Pagination state reset.');
   }
 
-  getItem(itemId: number): Observable<ItemInterface> { {
+  getItem(itemId: number): Observable<ItemInterface> {
     const url = `${this.baseUrl}/items/${itemId}/`;
     this.logger.log('Fetching item from URL:', url);
     return this.http.get<ItemInterface>(url);
-  }}
+  }
+
+  getItemNeighbors(itemId: number, tagFilters: string[]): Observable<ItemNeighbors> {
+    let url: string;
+    let params: string[] = [];
+    if (tagFilters && tagFilters.length > 0) {
+      // Join tags with a comma, as per API
+      params.push(`tag_names=${tagFilters.join(',')}`); 
+    }
+    console.log('ItemService: Fetching item neighbors with tag filters:', tagFilters);
+    url = `${this.baseUrl}/items/${itemId}/neighbors/?${params.join('&')}`;
+    this.logger.log('Fetching item neighbors from URL:', url);
+    return this.http.get<ItemNeighbors>(url);
+  }
 
   getLink(linkId: number): Observable<Link> {
     const url = `${this.baseUrl}/links/${linkId}/`;

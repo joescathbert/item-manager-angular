@@ -33,6 +33,11 @@ export interface PagedItems {
   results: Item[];
 }
 
+export interface ItemNeighbors {
+  prev_id: number | null;
+  next_id: number | null;
+}
+
 export interface Link {
   id: number;
   item: number;

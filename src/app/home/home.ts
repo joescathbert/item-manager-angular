@@ -243,11 +243,28 @@ export class Home {
     });
   }
 
+  // Method to handle "Open Item" action
+  openItem(item: ItemInterface): void {
+    // 1. Close the dropdown menu
+    this.activeOptionsMenuId = null; 
+
+    // 2. Navigate to the edit route using the item's ID
+    if (item.id) {
+        this.router.navigate(['/item', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
+    } else {
+        console.error('Cannot open item: ID is missing.', item);
+        // Optional: Show a user-friendly error message
+    }
+  }
+
   // Method to handle "Edit Item" action
   editItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
     this.activeOptionsMenuId = null; 
-    
+
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
         this.router.navigate(['/edit', item.id]);

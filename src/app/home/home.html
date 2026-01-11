@@ -12,7 +12,7 @@
     <button type="button" (click)="addTagFilter()">Add Tag</button>
   </div>
   <div class="select-filter-tag-list">
-    @for (tag of allTags.sort(); track $index) {
+    @for (tag of allTags; track $index) {
       <span
         class="tag-pill clickable-tag"
         [class.active-filter]="activeTagFilters.includes(tag)"
@@ -71,6 +71,9 @@
 
           @if (activeOptionsMenuId === item.id) {
             <div class="options-dropdown" (click)="$event.stopPropagation()">
+              <button class="menu-item" (click)="openItem(item)">
+                Open Item
+              </button>
               <button class="menu-item" (click)="editItem(item)">
                 Edit Item
               </button>

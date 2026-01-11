@@ -1,0 +1,95 @@
+<div class="item-detail-container">
+  @if (loading) {
+    <div class="navigation-bar">
+      <button 
+        class="nav-button"
+        title="Previous Item">
+        &larr;
+      </button>
+      <button 
+        class="nav-button"
+        title="Next Item">
+        &rarr;
+      </button>
+    </div>
+    <div class="skeleton-card">
+        <div class="skeleton-title"></div>
+          <div class="skeleton-tag-container">
+          <div class="skeleton-tag-line w-small"></div>
+          <div class="skeleton-tag-line w-medium"></div>
+          <div class="skeleton-tag-line w-large"></div>
+          <div class="skeleton-tag-line w-small"></div>
+          <div class="skeleton-tag-line w-medium"></div>
+        </div>
+        <div class="skeleton-image-detail"></div>
+        <div class="skeleton-source-line"></div>
+    </div>
+  } @else if (item) {
+    <div class="navigation-bar">
+      <button 
+        class="nav-button" 
+        [disabled]="prevId === null" 
+        (click)="goToPrev()"
+        title="Previous Item">
+        &larr;
+      </button>
+      <button 
+        class="nav-button" 
+        [disabled]="nextId === null" 
+        (click)="goToNext()"
+        title="Next Item">
+        &rarr;
+      </button>
+    </div>
+
+    <div class="item-card">
+      
+      @if (item.tags && item.tags.length > 0) {
+        <div class="tag-list">
+          @for (tag of item.tags.sort(); track $index) {
+            <span
+              class="tag-pill clickable-tag"
+              [class.active-filter]="activeTagFilters.includes(tag)">
+              {{ tag }}
+            </span>
+          }
+        </div>
+      }
+
+      <div class="item-media-section">
+        @if (item.url_domain === 'twitter.com') {
+          <div class="item-content-video">
+          <video #mediaElement controls loop [muted]="true" autoplay>
+            <source [src]="item.safe_media_url">
+            <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
+          </video>
+          </div>
+        }
+        @if (item.url_domain === 'www.reddit.com' && (item.media_url_domain === 'media.redgifs.com' || item.media_url_domain === 'i.imgur.com')) {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="item.safe_media_url">
+              <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
+            </video>
+          </div>
+        }
+        @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="item.media_url">
+              <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
+            </video>
+          </div>
+        }
+
+        <p class="item-source-link">Source: 
+          <a [href]="item.safe_url" target="_blank" rel="noopener noreferrer">
+            {{ item.url_domain }}
+          </a>
+        </p>
+      </div>
+    </div>
+  } @else {
+    <p class="error-message">Item not found or an error occurred.</p>
+  }
+</div>

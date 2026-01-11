@@ -95,7 +95,7 @@ export class Edit extends Add implements OnInit {
     return item as SafeItemInterface;
   }
 
-  // 🚨 NEW: Method to fetch and pre-fill the form 🚨
+  // Method to fetch and pre-fill the form
   private loadItemData(itemId: number): void {
     this.itemService.getItem(itemId).pipe(
       // 1. Get the Item.
@@ -116,7 +116,7 @@ export class Edit extends Add implements OnInit {
         return of(item); 
       })
     ).subscribe({
-      next: (processedItem: (ItemInterface & { url?: string })) => {
+      next: (processedItem: (ItemInterface)) => {
         // 3. Pre-fill the form fields using the collected data
         this.editedItem = this.processItemUrls(processedItem);
         const itemUrl = (processedItem as any).url || '';
