@@ -95,7 +95,7 @@
           <a [href]="item.url"></a>
         </blockquote>
       }
-      @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
+      @if (item.url_domain === 'www.reddit.com' && (item.media_url_domain === 'media.redgifs.com' || item.media_url_domain === 'i.imgur.com')) {
         <div class="item-content-video">
           <video #mediaElement controls loop [muted]="true" appVideoObserver>
             <source [src]="item.safe_media_url">

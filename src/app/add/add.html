@@ -129,11 +129,11 @@
       </video>
       </div>
       }
-      @if (editedItem.url_domain === 'www.reddit.com' && editedItem.media_url_domain === 'v.redd.it') {
+      @if (editedItem.url_domain === 'www.reddit.com' && (editedItem.media_url_domain === 'media.redgifs.com' || editedItem.media_url_domain === 'i.imgur.com')) {
         <div class="item-content-video">
         <video #mediaElement controls loop [muted]="true" autoplay>
-          <source [src]="editedItem.media_url">
-          <p>Your browser does not support the HTML5 video tag. View item: <a [href]="editedItem.media_url">Link</a></p>
+          <source [src]="editedItem.safe_media_url">
+          <p>Your browser does not support the HTML5 video tag. View item: <a [href]="editedItem.safe_media_url">Link</a></p>
         </video>
         </div>
       }

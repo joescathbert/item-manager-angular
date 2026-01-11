@@ -96,7 +96,7 @@ export class Home {
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
 
-    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'].includes(item.media_url_domain ?? "")) {
       // Construct the local proxy URL
       const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
 

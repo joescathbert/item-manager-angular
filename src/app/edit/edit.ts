@@ -74,7 +74,7 @@ export class Edit extends Add implements OnInit {
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
 
-    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
+    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'].includes(item.media_url_domain ?? "")) {
       // Construct the local proxy URL
       const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
 
@@ -130,7 +130,6 @@ export class Edit extends Add implements OnInit {
 
         // 4. Pre-fill and manage tags
         this.tags = this.editedItem.tags.sort() || [];
-        console.log(this.allTags, this.tags);
         this.filterSuggestions();
         this.cdr.detectChanges();
       },
