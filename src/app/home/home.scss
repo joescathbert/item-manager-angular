@@ -150,6 +150,8 @@
   }
 }
 
+/* --- Item Styles --- */
+
 .items-container {
   display: flex;
   flex-direction: column;
@@ -168,22 +170,6 @@
 
 .item-card:hover {
   background: $color-item-hover-bg;
-}
-
-/* --- Video Embed Container Styles (New for v.redd.it and RedGifs) --- */
-
-.item-content-video {
-  width: 100%;
-  margin: 10px 0;
-
-  video {
-    display: block;
-    width: 100%;
-    max-height: 500px;
-    border-radius: 4px;
-    object-fit: contain;
-    background-color: black;
-  }
 }
 
 /* --- Tag List and Pill Styles --- */
@@ -347,27 +333,9 @@
   fill: currentColor; /* Inherit the white color from the button */
 }
 
-// Mobile tweaks
-@media (max-width: 600px) {
-  .items-container {
-    align-items: unset;
-  }
-  .item-card {
-    width: unset;
-  }
-  .filter-pills-container {
-    width: unset; 
-    max-width: unset;
-    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
-  }
-  .item-content-video {
-    video {
-      max-height: unset;
-    }
-  }
-}
 
-/* --- 1. Loading Spinner Keyframes --- */
+/* --- Loading Spinner & End of Page Styles --- */
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -377,7 +345,6 @@
   }
 }
 
-/* --- 2. Loading and Status Styles --- */
 .scroll-status-footer {
   width: 100%;
   display: flex;
@@ -386,7 +353,6 @@
   padding: 20px 0;
 }
 
-/* --- 3. Loading Spinner Container (No text, just centering) --- */
 .loading-spinner-container {
   display: flex;
   justify-content: center; /* Center the spinner horizontally */
@@ -405,8 +371,6 @@
   animation: spin 1s linear infinite;
 }
 
-/* --- 4. End of Page Message Styles --- */
-/* Keyframes for a subtle entrance/fade in */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -517,7 +481,6 @@
 
 /* --- SKELETON LOADING STYLES --- */
 
-// Define the shimmer animation
 @keyframes shimmer {
   0% { background-position: -468px 0; }
   100% { background-position: 468px 0; }
@@ -581,4 +544,142 @@
   width: 60px;
   border-radius: 50px;
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Carousel System --- */
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden; // Critical: Hides the slides to the left and right
+  background-color: #000; // Solid background for mixed aspect ratios
+  border-radius: 8px;
+  margin: 10px 0;
+  box-sizing: border-box;
+
+  height: auto; 
+  transition: height 0.3s ease;
+}
+
+.carousel-wrapper {
+  display: flex;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); // Smooth "snap" feel
+  width: 100%;
+  align-items: flex-start;
+}
+
+.carousel-slide {
+  min-width: 100%; // Each slide takes exactly one container width
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+
+  &:not(.is-active) {
+    height: 0;
+    overflow: hidden;
+  }
+  
+  &.is-active {
+    height: auto;
+  }
+
+  img, .item-content-video video {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: contain; 
+    background-color: #000;
+  }
+}
+
+/* --- Carousel Navigation Controls --- */
+
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: none;
+  font-size: 1.5rem;
+  padding: 15px 10px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  &:disabled {
+    opacity: 0; // Hide buttons when they can't be used
+    pointer-events: none;
+  }
+
+  &.prev {
+    left: 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  &.next {
+    right: 0;
+    border-radius: 4px 0 0 4px;
+  }
+}
+
+/* --- Pagination Dots --- */
+
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none; // Let clicks pass through to video controls
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transition: background-color 0.3s, transform 0.3s;
+
+    &.active {
+      background-color: #fff;
+      transform: scale(1.3);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (max-width: 600px) {
+  .items-container {
+    align-items: unset;
+  }
+
+  .item-card {
+    width: unset;
+  }
+
+  .filter-pills-container {
+    width: unset; 
+    max-width: unset;
+    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
+  }
+
+  .carousel-slide {
+    img, .item-content-video video {
+      max-height: 80vh; // Give more room on mobile portrait
+    }
+  }
+
+  .carousel-control {
+    padding: 10px 5px; // Smaller buttons for thumbs
+    font-size: 1.2rem;
+  }
 }

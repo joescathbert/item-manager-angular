@@ -19,11 +19,14 @@ export interface Item {
   url_domain?: string;
   media_url?: string;
   media_url_domain?: string;
+  media_urls: MediaURL[];
 }
 
 export interface SafeItem extends Item {
   safe_url?: SafeResourceUrl;
   safe_media_url?: SafeResourceUrl;
+  safe_media_urls?: SafeMediaURL[];
+  currentIndex?: number;
 }
 
 export interface PagedItems {
@@ -45,6 +48,23 @@ export interface Link {
   url_domain: string;
   media_url: string;
   media_url_domain: string;
+  media_urls: MediaURL[];
+}
+
+export interface MediaURL {
+  id: number;
+  url: string;
+  hd_url: string;
+  hd_url_domain: string;
+  sd_url: string;
+  sd_url_domain: string;
+  media_type: 'image' | 'video';
+  order: number;
+}
+
+export interface SafeMediaURL extends MediaURL {
+  safe_hd_url?: SafeResourceUrl;
+  safe_sd_url?: SafeResourceUrl;
 }
 
 

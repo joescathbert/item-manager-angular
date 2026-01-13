@@ -4,7 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Item as ItemService } from '../services/item';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 import { switchMap, catchError, mergeMap, map, finalize } from 'rxjs/operators';
@@ -93,7 +93,7 @@ export class ItemDetail implements OnInit {
             map(link => ({ 
               ...item,
               url: link.url, url_domain: link.url_domain,
-              media_url: link.media_url, media_url_domain: link.media_url_domain 
+              media_url: link.media_url, media_url_domain: link.media_url_domain, media_urls: link.media_urls
             }))
           );
         } else {
@@ -131,16 +131,43 @@ export class ItemDetail implements OnInit {
   // --- Utility Methods ---
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
-    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'].includes(item.media_url_domain ?? "")) {
-      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
-      (item as SafeItemInterface).safe_media_url = this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl);
-      (item as SafeItemInterface).safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
+    const safeItem = item as SafeItemInterface;
+    // 1. Initialize Carousel State
+    safeItem.currentIndex = 0;
+
+    // 2. Process the main Item Source URL (The "Open Source" link)
+    if (item.url) {
+      safeItem.safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
     }
-    else if (item.url && item.media_url) {
-      (item as SafeItemInterface).safe_media_url = this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url);
-      (item as SafeItemInterface).safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
+    // 3. Process the Multiple Media URLs array
+    if (item.media_urls && item.media_urls.length > 0) {
+      safeItem.safe_media_urls = item.media_urls.map((m: MediaURL) => {
+        const safeMedia: SafeMediaURL = { ...m };
+
+        let hdUrl = m.hd_url
+        let sdUrl = m.sd_url
+
+        // Apply Proxy Logic for specific video domains
+        const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
+        if (m.media_type === 'video' && proxyDomains.includes(m.hd_url_domain)) {
+          hdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(hdUrl)}`;
+        }
+        if (m.media_type === 'video' && proxyDomains.includes(m.sd_url_domain)) {
+          sdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(sdUrl)}`;
+        }
+
+        // Sanitize both HD and SD versions
+        safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
+        safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
+
+        return safeMedia;
+      });
+
+      // Fallback for legacy: set the first media as the primary safe_media_url
+      safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
     }
-    return item as SafeItemInterface;
+
+    return safeItem
   }
 
   goToPrev(): void {
@@ -163,6 +190,24 @@ export class ItemDetail implements OnInit {
   toggleTags(): void {
     this.showAllTags = !this.showAllTags;
     this.cdRef.markForCheck(); 
+  }
+
+  // Navigate to the next media item
+  nextSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdRef.markForCheck();
+    }
+  }
+
+  // Navigate to the previous media item
+  prevSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (idx > 0) {
+      item.currentIndex = idx - 1;
+      this.cdRef.markForCheck();
+    }
   }
 
 }

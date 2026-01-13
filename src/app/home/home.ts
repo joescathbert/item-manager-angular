@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
@@ -95,26 +95,43 @@ export class Home {
   }
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
+    const safeItem = item as SafeItemInterface;
+    // 1. Initialize Carousel State
+    safeItem.currentIndex = 0;
 
-    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'].includes(item.media_url_domain ?? "")) {
-      // Construct the local proxy URL
-      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
-
-      // Sanitize the local proxy URL (which is safe)
-      (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl); // bypassSecurityTrustResourceUrl for <video src>
-      (item as SafeItemInterface).safe_url = 
-        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+    // 2. Process the main Item Source URL (The "Open Source" link)
+    if (item.url) {
+      safeItem.safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
     }
-    else if (item.url && item.media_url) {
-      (item as SafeItemInterface).safe_media_url = 
-      this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url); // bypassSecurityTrustResourceUrl for <video src>
+    // 3. Process the Multiple Media URLs array
+    if (item.media_urls && item.media_urls.length > 0) {
+      safeItem.safe_media_urls = item.media_urls.map((m: MediaURL) => {
+        const safeMedia: SafeMediaURL = { ...m };
 
-      (item as SafeItemInterface).safe_url = 
-        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+        let hdUrl = m.hd_url
+        let sdUrl = m.sd_url
+
+        // Apply Proxy Logic for specific video domains
+        const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
+        if (m.media_type === 'video' && proxyDomains.includes(m.hd_url_domain)) {
+          hdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(hdUrl)}`;
+        }
+        if (m.media_type === 'video' && proxyDomains.includes(m.sd_url_domain)) {
+          sdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(sdUrl)}`;
+        }
+
+        // Sanitize both HD and SD versions
+        safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
+        safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
+
+        return safeMedia;
+      });
+
+      // Fallback for legacy: set the first media as the primary safe_media_url
+      safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
     }
 
-    return item as SafeItemInterface;
+    return safeItem
   }
 
   loadItems() {
@@ -128,7 +145,7 @@ export class Home {
             return this.itemService.getLink(item.link_id).pipe(
               map(link => ({ ...item,
                 url: link.url, url_domain: link.url_domain,
-                media_url: link.media_url, media_url_domain: link.media_url_domain }))
+                media_url: link.media_url, media_url_domain: link.media_url_domain, media_urls: link.media_urls }))
             );
           } else {
             return of(item);
@@ -388,6 +405,24 @@ export class Home {
     // 3. Load items with the new filter
     this.loadItems();
     this.cdRef.markForCheck(); // Ensure the view updates
+  }
+
+  // Navigate to the next media item
+  nextSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdRef.markForCheck();
+    }
+  }
+
+  // Navigate to the previous media item
+  prevSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (idx > 0) {
+      item.currentIndex = idx - 1;
+      this.cdRef.markForCheck();
+    }
   }
 
   testPrint() {

@@ -21,6 +21,8 @@
   }
 }
 
+/* --- Nav Bar Styles --- */
+
 .navigation-bar {
   display: flex;
   justify-content: space-between;
@@ -53,7 +55,6 @@
   }
 }
 
-
 /* --- Tag List and Pill Styles --- */
 
 .tag-control-container {
@@ -76,20 +77,23 @@
   overflow: hidden;
 
   // Initial, expanded state (large enough to show all tags)
-  max-height: 500px; /* A large enough value to accommodate all tags when expanded */
+  max-height: 500px;
+  /* A large enough value to accommodate all tags when expanded */
 }
 
-// Class to collapse the tag list
 .tag-list-collapsed {
   // Adjust this value based on how many rows you want to show when collapsed (e.g., 2 tag rows high)
-  max-height: 0px; /* Example: Height for about one or two rows of pills */
+  max-height: 0px;
+  /* Example: Height for about one or two rows of pills */
 }
 
 .toggle-tags-button {
-  align-self: flex-end; /* Aligns the button to the left */
+  align-self: flex-end;
+  /* Aligns the button to the left */
   background: none;
   border: none;
-  color: #007bff; /* Use an accent color for interactivity */
+  color: #007bff;
+  /* Use an accent color for interactivity */
   cursor: pointer;
   font-size: 0.85rem;
   padding: 5px 0 0 0;
@@ -102,7 +106,6 @@
 }
 
 .tag-pill {
-  // Pill styling
   background-color: #007bff;
   color: $color-text-light;
   font-size: 0.75rem;
@@ -110,19 +113,13 @@
   padding: 4px 10px;
   border-radius: 50px;
   white-space: nowrap;
-}
-
-/* --- Clicakble Tag Pills (Inside Item Card) --- */
-
-.tag-pill {
-  // Inherits base pill styling
   transition: background-color 0.15s, border-color 0.15s;
 
   &.clickable-tag {
     cursor: pointer;
     // Revert base background for neutral interactive look
-    background-color: #007bff; 
-    border: 2px solid transparent; 
+    background-color: #007bff;
+    border: 2px solid transparent;
     // padding: 4px 10px; /* Base padding */
   }
 
@@ -133,26 +130,19 @@
 
   // Style when a tag is currently active as a filter
   &.active-filter {
-    border-color: #e53935; /* Highlight the active filter with the red accent */
-    background-color: #1e1e1e; /* Darken background to show selection */
-    color: $color-text-light; 
+    border-color: #e53935;
+    /* Highlight the active filter with the red accent */
+    background-color: #1e1e1e;
+    /* Darken background to show selection */
+    color: $color-text-light;
     // padding: 2px 8px; /* Adjust padding to accommodate the 2px border */
   }
 }
 
+/* --- Item Content Styles --- */
+
 .item-media-section {
   width: 100%;
-
-  // Reuse video styles from home.scss
-  .item-content-video {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    video {
-      max-height: 80vh; // Give it more vertical space
-      max-width: 110%;
-    }
-  }
 }
 
 .item-source-link {
@@ -176,22 +166,137 @@
   margin-top: 50px;
 }
 
+/* --- Carousel System --- */
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden; // Critical: Hides the slides to the left and right
+  background-color: #000; // Solid background for mixed aspect ratios
+  border-radius: 8px;
+  margin: 10px 0;
+  box-sizing: border-box;
+
+  height: auto;
+  transition: height 0.3s ease;
+}
+
+.carousel-wrapper {
+  display: flex;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); // Smooth "snap" feel
+  width: 100%;
+  align-items: flex-start;
+}
+
+.carousel-slide {
+  min-width: 100%; // Each slide takes exactly one container width
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+
+  &:not(.is-active) {
+    height: 0;
+    overflow: hidden;
+  }
+
+  &.is-active {
+    height: auto;
+  }
+
+  img,
+  .item-content-video video {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: contain;
+    background-color: #000;
+  }
+}
+
+/* --- Carousel Navigation Controls --- */
+
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: none;
+  font-size: 1.5rem;
+  padding: 15px 10px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  &:disabled {
+    opacity: 0; // Hide buttons when they can't be used
+    pointer-events: none;
+  }
+
+  &.prev {
+    left: 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  &.next {
+    right: 0;
+    border-radius: 4px 0 0 4px;
+  }
+}
+
+/* --- Pagination Dots --- */
+
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none; // Let clicks pass through to video controls
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transition: background-color 0.3s, transform 0.3s;
+
+    &.active {
+      background-color: #fff;
+      transform: scale(1.3);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
 /* --- SKELETON LOADING STYLES --- */
 
-// Define the shimmer animation
 @keyframes shimmer {
-  0% { background-position: -468px 0; }
-  100% { background-position: 468px 0; }
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
 }
 
 .skeleton-card {
   // Style to contain the shimmering effect
   margin-top: 20px;
-  background-color: #3c3c40; /* Slightly darker base for skeleton */
-  width: 45%; 
+  background-color: #3c3c40;
+  /* Slightly darker base for skeleton */
+  width: 45%;
   padding: 1rem;
   border-radius: 8px;
-  overflow: hidden; 
+  overflow: hidden;
 
   // Apply shimmer effect background
   background: linear-gradient(to right, #3c3c40 8%, #4e4e52 18%, #3c3c40 33%);
@@ -199,61 +304,68 @@
   animation: shimmer 2s infinite linear;
 }
 
-// Base style for all placeholder lines
 .skeleton-title,
 .skeleton-tag-line,
 .skeleton-image-detail,
 .skeleton-source-line {
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1); 
+  background-color: rgba(255, 255, 255, 0.1);
   margin-bottom: 10px;
 }
 
-// 1. Title/Name Placeholder
 .skeleton-title {
   height: 24px;
-  width: 60%; 
+  width: 60%;
   margin-bottom: 20px;
 }
 
-// 2. Tag List Placeholder
 .skeleton-tag-container {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05); /* Mimics the border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Mimics the border */
   margin-bottom: 1rem;
 }
 
 .skeleton-tag-line {
-  height: 18px; /* Height of a tag pill */
+  height: 18px;
+  /* Height of a tag pill */
   border-radius: 50px;
 }
 
-// Variable widths for tags to look natural
-.w-small { width: 50px; }
-.w-medium { width: 80px; }
-.w-large { width: 110px; }
+.w-small {
+  width: 50px;
+}
+
+.w-medium {
+  width: 80px;
+}
+
+.w-large {
+  width: 110px;
+}
 
 
-// 3. Main Media Placeholder (Larger than the previous .skeleton-image)
 .skeleton-image-detail {
   width: 100%;
-  padding-top: 55%; /* Aspect ratio for media area */
-  background-color: rgba(255, 255, 255, 0.15); /* Slightly darker for main media area */
+  padding-top: 55%;
+  /* Aspect ratio for media area */
+  background-color: rgba(255, 255, 255, 0.15);
+  /* Slightly darker for main media area */
   border-radius: 4px;
   margin-bottom: 15px;
 }
 
-// 4. Source Link Placeholder
 .skeleton-source-line {
   height: 14px;
   width: 25%;
   margin-top: 15px;
 }
 
-// Media Query for mobile
+/* --- Responsive Adjustments --- */
+
 @media (max-width: 600px) {
   .item-card,
   .navigation-bar {
@@ -263,19 +375,24 @@
     padding-right: 0;
   }
 
-  .item-media-section {
-    .item-content-video {
-      video {
-        max-width: 100% ;
-        max-height: unset; // Give it more vertical space
-      }
-    }
-  }
-
   .skeleton-card {
     width: 100%;
   }
+
   .skeleton-image-detail {
-    padding-top: 100%; /* Make the media skeleton square or taller on mobile */
+    padding-top: 100%;
+    /* Make the media skeleton square or taller on mobile */
+  }
+
+  .carousel-slide {
+    img,
+    .item-content-video video {
+      max-height: 80vh; // Give more room on mobile portrait
+    }
+  }
+
+  .carousel-control {
+    padding: 10px 5px; // Smaller buttons for thumbs
+    font-size: 1.2rem;
   }
 }

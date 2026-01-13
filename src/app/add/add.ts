@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidatorFn } from '@angular/forms';
 import { of } from 'rxjs';
@@ -43,7 +43,8 @@ export class Add {
     tags: [],
     created_at: '',
     link_id: null,
-    file_group_id: null
+    file_group_id: null,
+    media_urls: [],
   };
 
   constructor(
@@ -51,7 +52,8 @@ export class Add {
     protected itemService: ItemService,
     protected router: Router,
     protected route: ActivatedRoute,
-    protected toastService: ToastService
+    protected toastService: ToastService,
+    protected cdr: ChangeDetectorRef
   ) {}
 
   // 🚨 NEW: Custom Validator function to enforce URL OR File
@@ -339,6 +341,24 @@ export class Add {
         this.router.navigate(['/home']);
       }
     });
+  }
+
+  // Navigate to the next media item
+  public nextSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // Navigate to the previous media item
+  public prevSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (idx > 0) {
+      item.currentIndex = idx - 1;
+      this.cdr.markForCheck();
+    }
   }
 
 }
