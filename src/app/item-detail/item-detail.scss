@@ -26,7 +26,6 @@
   justify-content: space-between;
   width: 100%;
   max-width: 45%;
-  margin-bottom: 20px;
 }
 
 .nav-button {
@@ -57,13 +56,49 @@
 
 /* --- Tag List and Pill Styles --- */
 
+.tag-control-container {
+  // Uses Flexbox to align the button beneath or to the side of the tags
+  display: flex;
+  flex-direction: column;
+  margin-bottom: .5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid $color-neutral-border-weak;
+}
+
 .tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid $color-neutral-border-weak;
+  // Removed border-bottom and margin-bottom as the container now handles the spacing/divider
+
+  // Add smooth transition for height change
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+
+  // Initial, expanded state (large enough to show all tags)
+  max-height: 500px; /* A large enough value to accommodate all tags when expanded */
+}
+
+// Class to collapse the tag list
+.tag-list-collapsed {
+  // Adjust this value based on how many rows you want to show when collapsed (e.g., 2 tag rows high)
+  max-height: 0px; /* Example: Height for about one or two rows of pills */
+}
+
+.toggle-tags-button {
+  align-self: flex-end; /* Aligns the button to the left */
+  background: none;
+  border: none;
+  color: #007bff; /* Use an accent color for interactivity */
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 5px 0 0 0;
+  margin-top: 5px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 .tag-pill {
@@ -151,6 +186,7 @@
 
 .skeleton-card {
   // Style to contain the shimmering effect
+  margin-top: 20px;
   background-color: #3c3c40; /* Slightly darker base for skeleton */
   width: 45%; 
   padding: 1rem;

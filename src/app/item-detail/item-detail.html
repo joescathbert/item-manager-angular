@@ -43,18 +43,29 @@
     </div>
 
     <div class="item-card">
-      
-      @if (item.tags && item.tags.length > 0) {
-        <div class="tag-list">
-          @for (tag of item.tags.sort(); track $index) {
-            <span
-              class="tag-pill clickable-tag"
-              [class.active-filter]="activeTagFilters.includes(tag)">
-              {{ tag }}
-            </span>
-          }
-        </div>
-      }
+      <div class="tag-control-container">
+        @if (item.tags && item.tags.length > 0) {
+          <div 
+            class="tag-list"
+            [class.tag-list-collapsed]="!showAllTags">
+            @for (tag of item.tags.sort(); track $index) {
+              <span
+                class="tag-pill clickable-tag"
+                [class.active-filter]="activeTagFilters.includes(tag)">
+                {{ tag }}
+              </span>
+            }
+          </div>
+        }
+        @if (item.tags && item.tags.length > 5) { 
+          <button 
+            class="toggle-tags-button" 
+            (click)="toggleTags()" 
+            [title]="showAllTags ? 'Close Tags' : 'Show Tags'">
+            {{ showAllTags ? 'Close Tags' : 'Show Tags' }}
+          </button>
+        }
+      </div>
 
       <div class="item-media-section">
         @if (item.url_domain === 'twitter.com') {

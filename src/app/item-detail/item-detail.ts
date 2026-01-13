@@ -20,9 +20,9 @@ import { of, forkJoin } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush, 
 })
 export class ItemDetail implements OnInit {
-  // Current Item data
-  item: SafeItemInterface | null = null;
+  item: SafeItemInterface | null = null; // Variable to hold current Item data
   loading = true; // Initialize to true to show loading state
+  showAllTags: boolean = false; // Start collapsed, or true for expanded
 
   activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
 
@@ -158,6 +158,11 @@ export class ItemDetail implements OnInit {
   private navigateToItem(itemId: number): void {
     console.log(`Navigating to item ID: ${itemId}`);
     this.router.navigate(['/item', itemId]);
+  }
+
+  toggleTags(): void {
+    this.showAllTags = !this.showAllTags;
+    this.cdRef.markForCheck(); 
   }
 
 }
