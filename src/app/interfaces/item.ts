@@ -20,6 +20,7 @@ export interface Item {
   media_url?: string;
   media_url_domain?: string;
   media_urls: MediaURL[];
+  files?: File[];
 }
 
 export interface SafeItem extends Item {
@@ -27,6 +28,7 @@ export interface SafeItem extends Item {
   safe_media_url?: SafeResourceUrl;
   safe_media_urls?: SafeMediaURL[];
   currentIndex?: number;
+  safe_files?: SafeFile[];
 }
 
 export interface PagedItems {
@@ -67,15 +69,33 @@ export interface SafeMediaURL extends MediaURL {
   safe_sd_url?: SafeResourceUrl;
 }
 
+export interface FileGroup {
+  id: number;
+  item: number;
+  description: string;
+  files: File[];
+}
+
+export interface File {
+  id: number;
+  file_name: string;
+  file_type: string;
+  file_origin: string;
+  file_url: string;
+}
+
+export interface SafeFile extends File {
+  safe_file_serve_url?: SafeResourceUrl;
+}
 
 export interface ItemPayload {
   name: string;
   type: string;
-  date_of_origin: string; // Django expects snake_case
+  date_of_origin: string;
   tag_names: string[];
 }
 
 export interface LinkPayload {
-  item: number; // The ID of the newly created item
+  item: number;
   url: string;
 }

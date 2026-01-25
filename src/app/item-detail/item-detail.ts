@@ -1,23 +1,24 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { isPlatformBrowser } from '@angular/common';
+import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Item as ItemService } from '../services/item';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File, SafeFile } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 import { switchMap, catchError, mergeMap, map, finalize } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
 
+type MediaMode = 'media' | 'files';
 
 @Component({
   selector: 'app-item-detail',
   standalone: true,
-  imports: [RouterModule, VideoObserver],
+  imports: [RouterModule, VideoObserver, CommonModule],
   templateUrl: './item-detail.html',
   styleUrl: './item-detail.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush, 
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ItemDetail implements OnInit {
   item: SafeItemInterface | null = null; // Variable to hold current Item data
@@ -27,6 +28,8 @@ export class ItemDetail implements OnInit {
   activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
 
   activeOptionsMenuId: number | null = null; // Variable to track which item's menu is currently open
+
+  activeMediaMode: MediaMode = 'media';
 
   // Neighbor IDs
   prevId: number | null = null;
@@ -40,7 +43,7 @@ export class ItemDetail implements OnInit {
     private cdRef: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
@@ -70,13 +73,13 @@ export class ItemDetail implements OnInit {
           ]).pipe(
             catchError(err => {
               console.error('Error loading item or neighbors:', err);
-              return of(null); 
+              return of(null);
             }),
             // Step 4: Ensure loading is set to false and view is checked after all API calls complete
             finalize(() => {
               this.loading = false;
               console.log(this.nextId, this.prevId);
-              this.cdRef.markForCheck(); 
+              this.cdRef.markForCheck();
             })
           );
         })
@@ -88,26 +91,44 @@ export class ItemDetail implements OnInit {
 
   private loadItemDetails(itemId: number) {
     return this.itemService.getItem(itemId).pipe(
-      // Maps to fetch Link details if needed
+      // 1. Handle Link
       mergeMap((item: ItemInterface) => {
         if (item.link_id) {
           return this.itemService.getLink(item.link_id).pipe(
-            map(link => ({ 
+            map(link => ({
               ...item,
-              url: link.url, url_domain: link.url_domain,
-              media_url: link.media_url, media_url_domain: link.media_url_domain, media_urls: link.media_urls
+              url: link.url,
+              url_domain: link.url_domain,
+              media_url: link.media_url,
+              media_url_domain: link.media_url_domain,
+              media_urls: link.media_urls
             }))
           );
-        } else {
-          return of(item);
         }
+        return of(item);
       }),
-      // Final processing and side effects
+
+      // 2. Handle FileGroup
+      mergeMap((item: ItemInterface) => {
+        if (item.file_group_id) {
+          return this.itemService.getFileGroup(item.file_group_id).pipe(
+            map(group => {
+              return {
+                ...item,
+                files: group.files
+              };
+            })
+          );
+        }
+        return of(item);
+      }),
+
+      // 3. Final processing and side effects
       map((processedItem: ItemInterface) => this.processItemUrls(processedItem)),
       map((safeItem: SafeItemInterface) => {
         this.item = safeItem;
         this.cdRef.markForCheck();
-        return safeItem; 
+        return safeItem;
       })
     );
   }
@@ -168,6 +189,18 @@ export class ItemDetail implements OnInit {
       // Fallback for legacy: set the first media as the primary safe_media_url
       safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
     }
+    // 4. Process file url
+    if (item.files && item.files.length > 0) {
+      safeItem.safe_files = item.files.map((f: File) => {
+        const safeFile: SafeFile = { ...f };
+
+        const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
+        safeFile.safe_file_serve_url = this.sanitizer.bypassSecurityTrustUrl(fileUrl);
+
+        return safeFile;
+      });
+
+    }
 
     return safeItem
   }
@@ -191,7 +224,7 @@ export class ItemDetail implements OnInit {
 
   toggleTags(): void {
     this.showAllTags = !this.showAllTags;
-    this.cdRef.markForCheck(); 
+    this.cdRef.markForCheck();
   }
 
   // -------- Carousel Methods --------
@@ -200,6 +233,10 @@ export class ItemDetail implements OnInit {
   nextSlide(item: SafeItemInterface): void {
     const idx = item.currentIndex ?? 0;
     if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdRef.markForCheck();
+    }
+    if (item.safe_files && idx < item.safe_files.length - 1) {
       item.currentIndex = idx + 1;
       this.cdRef.markForCheck();
     }
@@ -245,34 +282,54 @@ export class ItemDetail implements OnInit {
   // Method to handle "Open Item" action
   openItem(item: ItemInterface): void {
     // Closes the menu
-    this.activeOptionsMenuId = null; 
+    this.activeOptionsMenuId = null;
 
     // Navigates to the edit route using the item's ID
     if (item.id) {
-        this.router.navigate(['/item', item.id]);
-        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
-        // const url = this.router.serializeUrl(urlSegments);
-        // window.open(url, '_blank')
+      this.router.navigate(['/item', item.id]);
+      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+      // const url = this.router.serializeUrl(urlSegments);
+      // window.open(url, '_blank')
     } else {
-        console.error('Cannot open item: ID is missing.', item);
-        // Optional: Show a user-friendly error message
+      console.error('Cannot open item: ID is missing.', item);
+      // Optional: Show a user-friendly error message
     }
   }
 
   // Method to handle "Edit Item" action
   editItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
-    this.activeOptionsMenuId = null; 
+    this.activeOptionsMenuId = null;
 
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
-        this.router.navigate(['/edit', item.id]);
-        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
-        // const url = this.router.serializeUrl(urlSegments);
-        // window.open(url, '_blank')
+      this.router.navigate(['/edit', item.id]);
+      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+      // const url = this.router.serializeUrl(urlSegments);
+      // window.open(url, '_blank')
     } else {
-        console.error('Cannot edit item: ID is missing.', item);
-        // Optional: Show a user-friendly error message
+      console.error('Cannot edit item: ID is missing.', item);
+      // Optional: Show a user-friendly error message
+    }
+  }
+
+  // Method to open current media
+  openCurrentMedia(item: SafeItemInterface) {
+    const index = item.currentIndex ?? 0;
+    let url: any;
+
+    if (this.activeMediaMode === 'media') {
+      url = item.safe_media_urls?.[index]?.safe_hd_url;
+    } else {
+      url = item.safe_files?.[index]?.safe_file_serve_url;
+    }
+
+    if (url) {
+      this.openSafeUrl(url);
+    }
+    else {
+      this.activeOptionsMenuId = null; // Close the menu
+      this.cdRef.markForCheck();
     }
   }
 
@@ -292,5 +349,18 @@ export class ItemDetail implements OnInit {
 
     this.cdRef.markForCheck();
   }
+
+  // Method to toggle media mode
+  toggleMediaMode() {
+    this.activeMediaMode = this.activeMediaMode === 'media' ? 'files' : 'media';
+    // Reset index to 0 so we don't end up on a non-existent slide in the other mode
+    if (this.item) {
+      this.item.currentIndex = 0;
+    }
+
+    // Closes the menu
+    this.activeOptionsMenuId = null;
+    this.cdRef.markForCheck();
+}
 
 }

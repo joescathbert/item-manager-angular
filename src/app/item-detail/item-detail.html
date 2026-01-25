@@ -1,12 +1,8 @@
 <div class="item-detail-container">
   @if (loading) {
   <div class="navigation-bar">
-    <button class="nav-button" title="Previous Item">
-      &larr;
-    </button>
-    <button class="nav-button" title="Next Item">
-      &rarr;
-    </button>
+    <button class="nav-button" title="Previous Item">&larr;</button>
+    <button class="nav-button" title="Next Item">&rarr;</button>
   </div>
   <div class="skeleton-card">
     <div class="skeleton-title"></div>
@@ -34,18 +30,15 @@
       </button>
       @if (activeOptionsMenuId === item.id) {
       <div class="options-dropdown" (click)="$event.stopPropagation()">
-        <button class="menu-item" (click)="editItem(item)">
-          Edit Item
+        <button class="menu-item" (click)="toggleMediaMode()">
+          Switch to {{ activeMediaMode === 'media' ? 'Files' : 'Media' }}
         </button>
-        <button class="menu-item" (click)="useAsTemplate(item)">
-          Use as Template
+        <button class="menu-item" (click)="editItem(item)">Edit Item</button>
+        <button class="menu-item" (click)="useAsTemplate(item)">Use as Template</button>
+        <button class="menu-item" (click)="openCurrentMedia(item)">
+          Open {{ activeMediaMode === 'media' ? 'Media' : 'File' }}
         </button>
-        <button class="menu-item" (click)="openSafeUrl(item.safe_media_urls?.[item.currentIndex ?? 0]?.safe_hd_url)">
-          Open Media
-        </button>
-        <button class="menu-item" (click)="openSafeUrl(item.safe_url)">
-          Open Source
-        </button>
+        <button class="menu-item" (click)="openSafeUrl(item.safe_url)">Open Source</button>
       </div>
       }
     </div>
@@ -74,6 +67,8 @@
 
     <div class="item-media-section">
       <div class="carousel-container">
+
+        @if (activeMediaMode === 'media') {
         @if (item.safe_media_urls && item.safe_media_urls.length > 0) {
         <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
           @for (media of item.safe_media_urls; track media.id) {
@@ -92,41 +87,65 @@
           </div>
           }
         </div>
+        <ng-container
+          *ngTemplateOutlet="carouselControls; context: { $implicit: item.safe_media_urls, item: item }"></ng-container>
+        } @else {
+        <div class="empty-media-placeholder">
+          <p>No external media available.</p>
+        </div>
+        }
+        }
 
-        @if (item.safe_media_urls.length > 1) {
-        <button class="carousel-control prev" (click)="prevSlide(item)"
-          [disabled]="!item.currentIndex || item.currentIndex === 0">
-          &#10094;
-        </button>
-        <button class="carousel-control next" (click)="nextSlide(item)"
-          [disabled]="item.currentIndex === item.safe_media_urls.length - 1">
-          &#10095;
-        </button>
-
-        <div class="carousel-dots">
-          @for (m of item.safe_media_urls; track $index) {
-          <span class="dot" [class.active]="$index === (item.currentIndex || 0)"></span>
+        @if (activeMediaMode === 'files') {
+        @if (item.safe_files && item.safe_files.length > 0) {
+        <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
+          @for (file of item.safe_files; track file.id) {
+          <div class="carousel-slide" [class.is-active]="$index === (item.currentIndex || 0)">
+            <div class="item-content-video">
+              @if (file.file_type.includes('IMG')) {
+              <div class="item-content-image">
+                <img [src]="file.safe_file_serve_url" alt="File content" loading="lazy">
+              </div>
+              } @else {
+              <video #mediaElement controls loop [muted]="true" appVideoObserver>
+                <source [src]="file.safe_file_serve_url">
+              </video>
+              }
+            </div>
+          </div>
           }
         </div>
-        }
-
-        } @else if (item.safe_media_urls && item.safe_media_urls.length == 1) {
-        <div class="item-content-video">
-          <video #mediaElement controls loop [muted]="true" appVideoObserver>
-            <source [src]="item.safe_media_urls[0].safe_hd_url">
-          </video>
+        <ng-container
+          *ngTemplateOutlet="carouselControls; context: { $implicit: item.safe_files, item: item }"></ng-container>
+        } @else {
+        <div class="empty-media-placeholder">
+          <p>No uploaded files available.</p>
         </div>
         }
+        }
       </div>
-
-      <p class="item-source-link">Source:
-        <a [href]="item.safe_url" target="_blank" rel="noopener noreferrer">
-          {{ item.url_domain }}
-        </a>
-      </p>
     </div>
   </div>
   } @else {
   <p class="error-message">Item not found or an error occurred.</p>
   }
 </div>
+
+<ng-template #carouselControls let-mediaList let-item="item">
+  @if (item && mediaList && mediaList.length > 1) {
+  <button type="button" class="carousel-control prev" (click)="prevSlide(item)"
+    [disabled]="!item.currentIndex || item.currentIndex === 0">
+    &#10094;
+  </button>
+  <button type="button" class="carousel-control next" (click)="nextSlide(item)"
+    [disabled]="item.currentIndex === (mediaList.length - 1)">
+    &#10095;
+  </button>
+
+  <div class="carousel-dots">
+    @for (m of mediaList; track $index) {
+    <span class="dot" [class.active]="$index === (item.currentIndex || 0)"></span>
+    }
+  </div>
+  }
+</ng-template>

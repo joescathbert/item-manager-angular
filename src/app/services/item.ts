@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors } from '../interfaces/item';
+import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors, FileGroup } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
@@ -82,6 +82,12 @@ export class Item {
     const url = `${this.baseUrl}/tags/`
     this.logger.log('Fetching tags from URL:', url);
     return this.http.get<Tag[]>(url);
+  }
+
+  getFileGroup(fileGroupId: number): Observable<FileGroup> {
+    const url = `${this.baseUrl}/file-groups/${fileGroupId}/`;
+    this.logger.log('Fetching file group from URL:', url);
+    return this.http.get<FileGroup>(url);
   }
 
   createItem(payload: ItemPayload): Observable<any> {
