@@ -55,6 +55,76 @@
   }
 }
 
+/* --- Item Options Menu Styles --- */
+
+.item-options-menu {
+  position: relative;
+}
+
+.options-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-color, #aaa);
+
+  &:hover {
+      color: var(--primary-color, #007bff);
+  }
+}
+
+.options-icon {
+  width: 20px;
+  height: 20px;
+  display: block; /* Ensure the SVG fills the button area nicely */
+}
+
+.options-dropdown {
+  position: absolute;
+  top: 100%; /* Position it right below the button */
+  right: 0;
+  z-index: 10; /* Ensure it floats above other content */
+
+  min-width: 150px;
+  margin-top: 4px;
+
+  background-color: var(--background-secondary, #222); /* Dark background for dropdown */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  animation: fadeInSlide 0.2s ease-out forwards;
+
+
+  .menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-color, #ccc);
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      background-color: var(--primary-color-hover, #0056b3); /* Highlight the selected action */
+      color: white;
+    }
+  }
+}
+
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* --- Tag List and Pill Styles --- */
 
 .tag-control-container {

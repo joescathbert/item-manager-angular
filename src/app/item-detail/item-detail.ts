@@ -26,6 +26,8 @@ export class ItemDetail implements OnInit {
 
   activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
 
+  activeOptionsMenuId: number | null = null; // Variable to track which item's menu is currently open
+
   // Neighbor IDs
   prevId: number | null = null;
   nextId: number | null = null;
@@ -192,6 +194,8 @@ export class ItemDetail implements OnInit {
     this.cdRef.markForCheck(); 
   }
 
+  // -------- Carousel Methods --------
+
   // Navigate to the next media item
   nextSlide(item: SafeItemInterface): void {
     const idx = item.currentIndex ?? 0;
@@ -208,6 +212,85 @@ export class ItemDetail implements OnInit {
       item.currentIndex = idx - 1;
       this.cdRef.markForCheck();
     }
+  }
+
+  // -------- Item Option Methods --------
+
+  // Method to toggle the options menu
+  toggleOptions(itemId: number, event: Event): void {
+    console.log(`Toggling options menu for item ID: ${itemId}`);
+    // Prevent the click from propagating and closing the menu immediately
+    event.stopPropagation();
+
+    // Toggle the state: If the same menu is clicked, close it. Otherwise, open it.
+    this.activeOptionsMenuId = this.activeOptionsMenuId === itemId ? null : itemId;
+    this.cdRef.markForCheck();
+  }
+
+  // Method to handle "Use as Template" action
+  useAsTemplate(item: ItemInterface): void {
+    // Ensure the tags exist and join them into a comma-separated string for URL passing
+    const tagsString = item.tags ? item.tags.join(',') : '';
+
+    // Closes the menu
+    this.activeOptionsMenuId = null;
+    this.cdRef.markForCheck();
+
+    // Navigates to the add page, passing the tags as a query parameter
+    this.router.navigate(['/add'], {
+      queryParams: { templateTags: tagsString, dateOfOrigin: item.date_of_origin }
+    });
+  }
+
+  // Method to handle "Open Item" action
+  openItem(item: ItemInterface): void {
+    // Closes the menu
+    this.activeOptionsMenuId = null; 
+
+    // Navigates to the edit route using the item's ID
+    if (item.id) {
+        this.router.navigate(['/item', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
+    } else {
+        console.error('Cannot open item: ID is missing.', item);
+        // Optional: Show a user-friendly error message
+    }
+  }
+
+  // Method to handle "Edit Item" action
+  editItem(item: ItemInterface): void {
+    // 1. Close the dropdown menu
+    this.activeOptionsMenuId = null; 
+
+    // 2. Navigate to the edit route using the item's ID
+    if (item.id) {
+        this.router.navigate(['/edit', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
+    } else {
+        console.error('Cannot edit item: ID is missing.', item);
+        // Optional: Show a user-friendly error message
+    }
+  }
+
+  // Method to safely opens the external URL in a new tab
+  openSafeUrl(safeUrl: any): void {
+    this.activeOptionsMenuId = null; // Close the menu
+
+    if (!safeUrl) {
+      console.error('URL is missing or unsafe.');
+      return;
+    }
+
+    const urlString = safeUrl.changingThisBreaksApplicationSecurity || safeUrl.toString();
+
+    // Opens the URL in a new window/tab
+    window.open(urlString, '_blank');
+
+    this.cdRef.markForCheck();
   }
 
 }

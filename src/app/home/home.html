@@ -21,7 +21,7 @@
 </div>
 @if (activeTagFilters.length > 0) {
 <div class="filter-pills-container">
-  <span class="filter-label">Filtering by:</span>
+  <span class="filter-label">Showing {{ totalItemCount }} results for:</span>
   @for (tag of activeTagFilters; track tag) {
   <span class="filter-pill">
     {{ tag }}
@@ -118,12 +118,6 @@
       </div>
       }
 
-      } @else if (item.safe_media_urls && item.safe_media_urls.length == 1) {
-      <div class="item-content-video">
-        <video #mediaElement controls loop [muted]="true" appVideoObserver>
-          <source [src]="item.safe_media_urls[0].safe_hd_url">
-        </video>
-      </div>
       }
     </div>
     <div class="card-actions">

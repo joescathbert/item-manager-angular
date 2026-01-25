@@ -23,7 +23,7 @@ export class Item {
     private logger: Logger
   ) {}
 
-  getItems(page: number, tags: string[] = []): Observable<ItemInterface[]> {
+  getItems(page: number, tags: string[] = []): Observable<PagedItems> {
     let url: string;
 
     if (this.nextUrl) {
@@ -43,7 +43,7 @@ export class Item {
       map(response => {
         this.nextUrl = response.next;
         this.nextUrlSubject.next(response.next);
-        return response.results;
+        return response;
       })
     );
   }
@@ -122,7 +122,7 @@ export class Item {
 
   uploadFilesToItem(itemId: number, files: File[]): Observable<any> {
     // 1. Define the target URL for your Django endpoint
-    const url = `${this.baseUrl}/file-groups/upload-multiple/`;
+    const url = `${this.baseUrl}/file-groups/upload-to-gdrive/`;
 
     // 2. Create the FormData object to hold binary and text data
     const formData: FormData = new FormData();

@@ -25,6 +25,30 @@
     <button class="nav-button" [disabled]="prevId === null" (click)="goToPrev()" title="Previous Item">
       &larr;
     </button>
+    <div class="item-options-menu">
+      <button class="options-button" (click)="toggleOptions(item.id, $event)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
+          <path
+            d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+      </button>
+      @if (activeOptionsMenuId === item.id) {
+      <div class="options-dropdown" (click)="$event.stopPropagation()">
+        <button class="menu-item" (click)="editItem(item)">
+          Edit Item
+        </button>
+        <button class="menu-item" (click)="useAsTemplate(item)">
+          Use as Template
+        </button>
+        <button class="menu-item" (click)="openSafeUrl(item.safe_media_urls?.[item.currentIndex ?? 0]?.safe_hd_url)">
+          Open Media
+        </button>
+        <button class="menu-item" (click)="openSafeUrl(item.safe_url)">
+          Open Source
+        </button>
+      </div>
+      }
+    </div>
     <button class="nav-button" [disabled]="nextId === null" (click)="goToNext()" title="Next Item">
       &rarr;
     </button>
@@ -41,7 +65,7 @@
         }
       </div>
       }
-      @if (item.tags && item.tags.length > 5) {
+      @if (item.tags && item.tags.length > 0) {
       <button class="toggle-tags-button" (click)="toggleTags()" [title]="showAllTags ? 'Close Tags' : 'Show Tags'">
         {{ showAllTags ? 'Close Tags' : 'Show Tags' }}
       </button>

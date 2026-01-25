@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
@@ -31,6 +31,7 @@ declare var twttr: any;
 export class Home {
   // Page and Item Variables
   items: SafeItemInterface[] = [];
+  totalItemCount: number = 0;
   page = 1;
   loading = false;
   hasNextPage: boolean = true; // Tracks if the 'next' link is present
@@ -40,8 +41,7 @@ export class Home {
   showDeleteConfirmation: boolean = false;
   itemToDelete: ItemInterface | null = null; // Stores the item awaiting confirmation
 
-  // Variable to track which item's menu is currently open
-  activeOptionsMenuId: number | null = null;
+  activeOptionsMenuId: number | null = null; // Variable to track which item's menu is currently open
 
   allTags: string[] = []; // Variable to store all the available tags
   activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
@@ -139,8 +139,9 @@ export class Home {
     this.loading = true;
 
     this.itemService.getItems(this.page, this.activeTagFilters).pipe(
-      mergeMap((data: ItemInterface[]) => {
-        const itemObservables = data.map(item => {
+      mergeMap((data: PagedItems) => {
+        this.totalItemCount = data.count
+        const itemObservables = data.results.map(item => {
           if (item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
               map(link => ({ ...item,
