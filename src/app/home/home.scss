@@ -657,6 +657,22 @@
 
 /* --- Responsive Adjustments --- */
 
+@media (max-width: 800px) {
+  .items-container {
+    align-items: unset;
+  }
+
+  .item-card {
+    width: unset;
+  }
+
+  .filter-pills-container {
+    width: unset; 
+    max-width: unset;
+    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
+  }
+}
+
 @media (max-width: 600px) {
   .items-container {
     align-items: unset;

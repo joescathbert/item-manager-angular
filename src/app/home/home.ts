@@ -16,10 +16,6 @@ import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, Sa
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
-
-declare var twttr: any;
-
-
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -174,14 +170,6 @@ export class Home {
       complete: () => {
         this.loading = false;
         console.log('Finished loading items.');
-        if (typeof twttr !== 'undefined') {
-          setTimeout(() => {
-            twttr.ready(() => {
-              twttr.widgets.load();
-            });
-          }, 150);
-          console.log('Twitter widgets reloaded.');
-        }
       }
     });
   }

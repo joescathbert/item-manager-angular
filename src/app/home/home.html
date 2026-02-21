@@ -89,7 +89,7 @@
           @if (media.media_type === 'video') {
           <div class="item-content-video">
             <video #mediaElement controls loop [muted]="true" appVideoObserver>
-              <source [src]="media.safe_hd_url">
+              <source [src]="media.safe_sd_url">
             </video>
           </div>
           } @else {

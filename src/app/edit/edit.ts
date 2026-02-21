@@ -232,7 +232,7 @@ export class Edit extends Add implements OnInit {
       next: () => {
         this.loading = false;
         this.toastService.showSuccess('Item updated.');
-        this.router.navigate(['/home']);
+        this.router.navigate(['/item', itemId]);
       },
       error: (err) => {
         this.loading = false;
