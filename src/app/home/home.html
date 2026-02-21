@@ -1,158 +1,184 @@
 <div class="filter-pills-container">
+  <div class="tag-input-group">
+    <input type="text" placeholder="Enter tag name (e.g., angular, rxjs)" [(ngModel)]="tagInput"
+      [ngModelOptions]="{standalone: true}" (keydown.enter)="$event.preventDefault(); addTagFilter()"
+      (input)="filterSuggestions()" list="tag-suggestions" autocapitalize="off" />
+    <button type="button" (click)="addTagFilter()">Add Tag</button>
+  </div>
   <div class="select-filter-tag-list">
-    @for (tag of allTags.sort(); track $index) {
-      <span
-        class="tag-pill clickable-tag"
-        [class.active-filter]="activeFilters.includes(tag)"
-        (click)="addFilterTag(tag)">
-        {{ tag }}
-      </span>
+    @for (tag of allTags; track $index) {
+    <span class="tag-pill clickable-tag" [class.active-filter]="activeTagFilters.includes(tag)"
+      (click)="addTagFilter(tag)">
+      {{ tag }}
+    </span>
     }
   </div>
-</div>
-@if (activeFilters.length > 0) {
-  <div class="filter-pills-container">
-    <span class="filter-label">Filtering by:</span>
-    @for (tag of activeFilters; track tag) {
-      <span class="filter-pill">
-        {{ tag }}
-        <button class="remove-filter-button" (click)="removeFilterTag(tag)" title="Remove filter: {{ tag }}">
-          &times;
-        </button>
-      </span>
+  <datalist id="tag-suggestions">
+    @for (tag of suggestionTagFilters; track $index) {
+    <option [value]="tag"></option>
     }
-    <button class="clear-filters-button" (click)="clearFilters()">
+  </datalist>
+</div>
+@if (activeTagFilters.length > 0) {
+<div class="filter-pills-container">
+  <span class="filter-label">Showing {{ totalItemCount }} results for:</span>
+  @for (tag of activeTagFilters; track tag) {
+  <span class="filter-pill">
+    {{ tag }}
+    <button class="remove-filter-button" (click)="removeTagFilter(tag)" title="Remove filter: {{ tag }}">
       &times;
     </button>
-  </div>
+  </span>
+  }
+  <button class="clear-filters-button" (click)="clearTagFilters()">
+    &times;
+  </button>
+</div>
 }
 
 <div class="items-container" infinite-scroll (scrolled)="onScroll()">
   <!-- <button (click)="testPrint()">Test Print</button> -->
   @for (item of items; track item.id) {
-    <div class="item-card">
-      <div class="item-header-row">
-        @if (item.tags && item.tags.length > 0) {
-          <div class="tag-list">
-            @for (tag of item.tags.sort(); track $index) {
-              <span
-                class="tag-pill clickable-tag"
-                [class.active-filter]="activeFilters.includes(tag)"
-                (click)="addFilterTag(tag)">
-                {{ tag }}
-              </span>
-            }
-          </div>
+  <div class="item-card">
+    <div class="item-header-row">
+      @if (item.tags && item.tags.length > 0) {
+      <div class="tag-list">
+        @for (tag of item.tags.sort(); track $index) {
+        <span class="tag-pill clickable-tag" [class.active-filter]="activeTagFilters.includes(tag)"
+          (click)="addTagFilter(tag)">
+          {{ tag }}
+        </span>
         }
+      </div>
+      }
 
-        <div class="item-options-menu">
-          <button class="options-button" (click)="toggleOptions(item.id, $event)">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
-              <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-            </svg>
-          </button>
-
-          @if (activeOptionsMenuId === item.id) {
-            <div class="options-dropdown" (click)="$event.stopPropagation()">
-              <button class="menu-item" (click)="editItem(item)">
-                Edit Item
-              </button>
-              <button class="menu-item" (click)="useAsTemplate(item)">
-                Use as Template
-              </button>
-              <button class="menu-item" (click)="openSafeUrl(item.safe_media_url)">
-                Open Media
-              </button>
-              <button class="menu-item" (click)="openSafeUrl(item.url)">
-                Open Source
-              </button>
-            </div>
-          }
-        </div>
-    </div>
-      @if (item.url_domain === 'twitter.com') {
-        <blockquote 
-            class="twitter-tweet"
-            data-media-max-width="560"
-            data-width="450">
-          <a [href]="item.url"></a>
-        </blockquote>
-      }
-      @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'media.redgifs.com') {
-        <div class="item-content-video">
-          <video controls loop muted appVideoObserver>
-            <source [src]="item.safe_media_url">
-            <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.safe_media_url">Link</a></p>
-          </video>
-        </div>
-      }
-      @if (item.url_domain === 'www.reddit.com' && item.media_url_domain === 'v.redd.it') {
-        <div class="item-content-video">
-          <video controls loop muted appVideoObserver>
-            <source [src]="item.media_url">
-            <p>Your browser does not support the HTML5 video tag. View item: <a [href]="item.media_url">Link</a></p>
-          </video>
-        </div>
-      }
-      <div class="card-actions">
-        <button class="delete-button" type="button" (click)="confirmDelete(item)" title="Delete Item">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="delete-icon">
-            <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z"/>
+      <div class="item-options-menu">
+        <button class="options-button" (click)="toggleOptions(item.id, $event)">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
+            <path
+              d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
           </svg>
         </button>
+
+        @if (activeOptionsMenuId === item.id) {
+        <div class="options-dropdown" (click)="$event.stopPropagation()">
+          <button class="menu-item" (click)="openItem(item)">
+            Open Item
+          </button>
+          <button class="menu-item" (click)="editItem(item)">
+            Edit Item
+          </button>
+          <button class="menu-item" (click)="useAsTemplate(item)">
+            Use as Template
+          </button>
+          <button class="menu-item" (click)="openSafeUrl(item.safe_media_urls?.[item.currentIndex ?? 0]?.safe_hd_url)">
+            Open Media
+          </button>
+          <button class="menu-item" (click)="openSafeUrl(item.url)">
+            Open Source
+          </button>
+        </div>
+        }
       </div>
     </div>
+    <div class="carousel-container">
+      @if (item.safe_media_urls && item.safe_media_urls.length > 0) {
+      <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
+        @for (media of item.safe_media_urls; track media.id) {
+        <div class="carousel-slide" [class.is-active]="$index === (item.currentIndex || 0)">
+          @if (media.media_type === 'video') {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="media.safe_sd_url">
+            </video>
+          </div>
+          } @else {
+          <div class="item-content-image">
+            <img [src]="media.safe_hd_url" alt="Media content" loading="lazy">
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      @if (item.safe_media_urls.length > 1) {
+      <button class="carousel-control prev" (click)="prevSlide(item)"
+        [disabled]="!item.currentIndex || item.currentIndex === 0">
+        &#10094;
+      </button>
+      <button class="carousel-control next" (click)="nextSlide(item)"
+        [disabled]="item.currentIndex === item.safe_media_urls.length - 1">
+        &#10095;
+      </button>
+
+      <div class="carousel-dots">
+        @for (m of item.safe_media_urls; track $index) {
+        <span class="dot" [class.active]="$index === (item.currentIndex || 0)"></span>
+        }
+      </div>
+      }
+
+      }
+    </div>
+    <div class="card-actions">
+      <button class="delete-button" type="button" (click)="confirmDelete(item)" title="Delete Item">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="delete-icon">
+          <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-4.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z" />
+        </svg>
+      </button>
+    </div>
+  </div>
   }
 
   @if (loading && items.length === 0) {
-    @for (i of [1, 2, 3, 4, 5]; track i) {
-      <div class="item-card skeleton-card">
-        <div class="skeleton-line skeleton-header"></div>
-        <div class="skeleton-line skeleton-header"></div>
-        <div class="skeleton-line skeleton-header"></div>
+  @for (i of [1, 2, 3, 4, 5]; track i) {
+  <div class="item-card skeleton-card">
+    <div class="skeleton-line skeleton-header"></div>
+    <div class="skeleton-line skeleton-header"></div>
+    <div class="skeleton-line skeleton-header"></div>
 
-        <div class="skeleton-image"></div>
+    <div class="skeleton-image"></div>
 
-        <div class="skeleton-line skeleton-body-short"></div>
-        <div class="skeleton-line skeleton-body-long"></div>
+    <div class="skeleton-line skeleton-body-short"></div>
+    <div class="skeleton-line skeleton-body-long"></div>
 
-        <div class="skeleton-footer-section">
-          <div class="skeleton-tag"></div>
-          <div class="skeleton-tag"></div>
-        </div>
-      </div>
-    }
+    <div class="skeleton-footer-section">
+      <div class="skeleton-tag"></div>
+      <div class="skeleton-tag"></div>
+    </div>
+  </div>
+  }
   }
 
   <div class="scroll-status-footer">
     @if (loading) {
-      <div class="loading-spinner-container">
-        <div class="spinner"></div>
-      </div>
+    <div class="loading-spinner-container">
+      <div class="spinner"></div>
+    </div>
     } @else if (!hasNextPage && items.length > 0) {
-      <div class="end-of-page-message">
-        <p>--- You've reached the end of the line! ---</p>
-      </div>
+    <div class="end-of-page-message">
+      <p>--- You've reached the end of the line! ---</p>
+    </div>
     }
   </div>
 </div>
 
 @if (showDeleteConfirmation) {
-  <div class="modal-backdrop" (click)="cancelDelete()"></div>
-  <div class="modal-dialog">
-    <div class="modal-header">
-      <h3>Confirm Deletion</h3>
-    </div>
-    <div class="modal-body">
-      <p>Are you sure you want to delete this item? This action cannot be undone.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-button modal-cancel-button" (click)="cancelDelete()">
-        Cancel
-      </button>
-      <button class="modal-button modal-confirm-button" (click)="deleteItem()">
-        Delete
-      </button>
-    </div>
+<div class="modal-backdrop" (click)="cancelDelete()"></div>
+<div class="modal-dialog">
+  <div class="modal-header">
+    <h3>Confirm Deletion</h3>
   </div>
+  <div class="modal-body">
+    <p>Are you sure you want to delete this item? This action cannot be undone.</p>
+  </div>
+  <div class="modal-footer">
+    <button class="modal-button modal-cancel-button" (click)="cancelDelete()">
+      Cancel
+    </button>
+    <button class="modal-button modal-confirm-button" (click)="deleteItem()">
+      Delete
+    </button>
+  </div>
+</div>
 }

@@ -1,0 +1,468 @@
+@use 'theme_variables.scss' as *;
+
+.item-detail-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 87vh;
+}
+
+.item-card {
+  // Reuse main item card styling
+  color: #f6f7f8;
+  padding: 1rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 45%; // Make it slightly wider than the home card for better viewing
+
+  // Remove the hover effect since this is a dedicated view
+  &:hover {
+    background: none;
+  }
+}
+
+/* --- Nav Bar Styles --- */
+
+.navigation-bar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 45%;
+}
+
+.nav-button {
+  background-color: $color-button-bg;
+  color: $color-text-light;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 99px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+
+  &:first-child {
+    margin-right: 10px;
+  }
+
+  &:hover:enabled {
+    background-color: $color-button-bg-hover;
+  }
+
+  &:disabled {
+    background-color: #3c3c40; // Disabled color
+    color: #777;
+    cursor: not-allowed;
+  }
+}
+
+/* --- Item Options Menu Styles --- */
+
+.item-options-menu {
+  position: relative;
+}
+
+.options-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: var(--text-color, #aaa);
+
+  &:hover {
+      color: var(--primary-color, #007bff);
+  }
+}
+
+.options-icon {
+  width: 20px;
+  height: 20px;
+  display: block; /* Ensure the SVG fills the button area nicely */
+}
+
+.options-dropdown {
+  position: absolute;
+  top: 100%; /* Position it right below the button */
+  right: 0;
+  z-index: 10; /* Ensure it floats above other content */
+
+  min-width: 150px;
+  margin-top: 4px;
+
+  background-color: var(--background-secondary, #222); /* Dark background for dropdown */
+  border: 1px solid var(--border-color, #333);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+  animation: fadeInSlide 0.2s ease-out forwards;
+
+
+  .menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 15px;
+    background: none;
+    border: none;
+    text-align: left;
+    color: var(--text-color, #ccc);
+    cursor: pointer;
+    font-size: 14px;
+
+    &:hover {
+      background-color: var(--primary-color-hover, #0056b3); /* Highlight the selected action */
+      color: white;
+    }
+  }
+}
+
+@keyframes fadeInSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- Tag List and Pill Styles --- */
+
+.tag-control-container {
+  // Uses Flexbox to align the button beneath or to the side of the tags
+  display: flex;
+  flex-direction: column;
+  margin-bottom: .5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid $color-neutral-border-weak;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  // Removed border-bottom and margin-bottom as the container now handles the spacing/divider
+
+  // Add smooth transition for height change
+  transition: max-height 0.3s ease-in-out;
+  overflow: hidden;
+
+  // Initial, expanded state (large enough to show all tags)
+  max-height: 500px;
+  /* A large enough value to accommodate all tags when expanded */
+}
+
+.tag-list-collapsed {
+  // Adjust this value based on how many rows you want to show when collapsed (e.g., 2 tag rows high)
+  max-height: 0px;
+  /* Example: Height for about one or two rows of pills */
+}
+
+.toggle-tags-button {
+  align-self: flex-end;
+  /* Aligns the button to the left */
+  background: none;
+  border: none;
+  color: #007bff;
+  /* Use an accent color for interactivity */
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 5px 0 0 0;
+  margin-top: 5px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.tag-pill {
+  background-color: #007bff;
+  color: $color-text-light;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 50px;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s;
+
+  &.clickable-tag {
+    cursor: pointer;
+    // Revert base background for neutral interactive look
+    background-color: #007bff;
+    border: 2px solid transparent;
+    // padding: 4px 10px; /* Base padding */
+  }
+
+  &.clickable-tag:hover {
+    opacity: 0.9;
+    background-color: #0056b3;
+  }
+
+  // Style when a tag is currently active as a filter
+  &.active-filter {
+    border-color: #e53935;
+    /* Highlight the active filter with the red accent */
+    background-color: #1e1e1e;
+    /* Darken background to show selection */
+    color: $color-text-light;
+    // padding: 2px 8px; /* Adjust padding to accommodate the 2px border */
+  }
+}
+
+/* --- Item Content Styles --- */
+
+.item-media-section {
+  width: 100%;
+}
+
+.item-source-link {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-top: 15px;
+
+  a {
+    color: blue;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.error-message {
+  color: #e53935;
+  font-size: 1.2rem;
+  margin-top: 50px;
+}
+
+/* --- Carousel System --- */
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden; // Critical: Hides the slides to the left and right
+  background-color: #000; // Solid background for mixed aspect ratios
+  border-radius: 8px;
+  margin: 10px 0;
+  box-sizing: border-box;
+
+  height: auto;
+  transition: height 0.3s ease;
+}
+
+.carousel-wrapper {
+  display: flex;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); // Smooth "snap" feel
+  width: 100%;
+  align-items: flex-start;
+}
+
+.carousel-slide {
+  min-width: 100%; // Each slide takes exactly one container width
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+
+  &:not(.is-active) {
+    height: 0;
+    overflow: hidden;
+  }
+
+  &.is-active {
+    height: auto;
+  }
+
+  img,
+  .item-content-video video {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 85vh;
+    object-fit: contain;
+    background-color: #000;
+  }
+}
+
+/* --- Carousel Navigation Controls --- */
+
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  border: none;
+  font-size: 1.5rem;
+  padding: 15px 10px;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+
+  &:disabled {
+    opacity: 0; // Hide buttons when they can't be used
+    pointer-events: none;
+  }
+
+  &.prev {
+    left: 0;
+    border-radius: 0 4px 4px 0;
+  }
+
+  &.next {
+    right: 0;
+    border-radius: 4px 0 0 4px;
+  }
+}
+
+/* --- Pagination Dots --- */
+
+.carousel-dots {
+  position: absolute;
+  bottom: 12px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none; // Let clicks pass through to video controls
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    transition: background-color 0.3s, transform 0.3s;
+
+    &.active {
+      background-color: #fff;
+      transform: scale(1.3);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+/* --- SKELETON LOADING STYLES --- */
+
+@keyframes shimmer {
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
+}
+
+.skeleton-card {
+  // Style to contain the shimmering effect
+  margin-top: 20px;
+  background-color: #3c3c40;
+  /* Slightly darker base for skeleton */
+  width: 45%;
+  padding: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+
+  // Apply shimmer effect background
+  background: linear-gradient(to right, #3c3c40 8%, #4e4e52 18%, #3c3c40 33%);
+  background-size: 800px 104px;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-title,
+.skeleton-tag-line,
+.skeleton-image-detail,
+.skeleton-source-line {
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 10px;
+}
+
+.skeleton-title {
+  height: 24px;
+  width: 60%;
+  margin-bottom: 20px;
+}
+
+.skeleton-tag-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Mimics the border */
+  margin-bottom: 1rem;
+}
+
+.skeleton-tag-line {
+  height: 18px;
+  /* Height of a tag pill */
+  border-radius: 50px;
+}
+
+.w-small {
+  width: 50px;
+}
+
+.w-medium {
+  width: 80px;
+}
+
+.w-large {
+  width: 110px;
+}
+
+
+.skeleton-image-detail {
+  width: 100%;
+  padding-top: 55%;
+  /* Aspect ratio for media area */
+  background-color: rgba(255, 255, 255, 0.15);
+  /* Slightly darker for main media area */
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.skeleton-source-line {
+  height: 14px;
+  width: 25%;
+  margin-top: 15px;
+}
+
+/* --- Responsive Adjustments --- */
+
+@media (max-width: 600px) {
+  .item-card,
+  .navigation-bar {
+    max-width: 100%;
+    width: 100%;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .skeleton-card {
+    width: 100%;
+  }
+
+  .skeleton-image-detail {
+    padding-top: 100%;
+    /* Make the media skeleton square or taller on mobile */
+  }
+
+  .carousel-slide {
+    img,
+    .item-content-video video {
+      max-height: 80vh; // Give more room on mobile portrait
+    }
+  }
+
+  .carousel-control {
+    padding: 10px 5px; // Smaller buttons for thumbs
+    font-size: 1.2rem;
+  }
+}

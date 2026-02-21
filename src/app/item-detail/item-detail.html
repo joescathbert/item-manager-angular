@@ -1,0 +1,151 @@
+<div class="item-detail-container">
+  @if (loading) {
+  <div class="navigation-bar">
+    <button class="nav-button" title="Previous Item">&larr;</button>
+    <button class="nav-button" title="Next Item">&rarr;</button>
+  </div>
+  <div class="skeleton-card">
+    <div class="skeleton-title"></div>
+    <div class="skeleton-tag-container">
+      <div class="skeleton-tag-line w-small"></div>
+      <div class="skeleton-tag-line w-medium"></div>
+      <div class="skeleton-tag-line w-large"></div>
+      <div class="skeleton-tag-line w-small"></div>
+      <div class="skeleton-tag-line w-medium"></div>
+    </div>
+    <div class="skeleton-image-detail"></div>
+    <div class="skeleton-source-line"></div>
+  </div>
+  } @else if (item) {
+  <div class="navigation-bar">
+    <button class="nav-button" [disabled]="prevId === null" (click)="goToPrev()" title="Previous Item">
+      &larr;
+    </button>
+    <div class="item-options-menu">
+      <button class="options-button" (click)="toggleOptions(item.id, $event)">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
+          <path
+            d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+      </button>
+      @if (activeOptionsMenuId === item.id) {
+      <div class="options-dropdown" (click)="$event.stopPropagation()">
+        <button class="menu-item" (click)="toggleMediaMode()">
+          Switch to {{ activeMediaMode === 'media' ? 'Files' : 'Media' }}
+        </button>
+        <button class="menu-item" (click)="editItem(item)">Edit Item</button>
+        <button class="menu-item" (click)="useAsTemplate(item)">Use as Template</button>
+        <button class="menu-item" (click)="openCurrentMedia(item)">
+          Open {{ activeMediaMode === 'media' ? 'Media' : 'File' }}
+        </button>
+        <button class="menu-item" (click)="openSafeUrl(item.safe_url)">Open Source</button>
+      </div>
+      }
+    </div>
+    <button class="nav-button" [disabled]="nextId === null" (click)="goToNext()" title="Next Item">
+      &rarr;
+    </button>
+  </div>
+
+  <div class="item-card">
+    <div class="tag-control-container">
+      @if (item.tags && item.tags.length > 0) {
+      <div class="tag-list" [class.tag-list-collapsed]="!showAllTags">
+        @for (tag of item.tags.sort(); track $index) {
+        <span class="tag-pill clickable-tag" [class.active-filter]="activeTagFilters.includes(tag)">
+          {{ tag }}
+        </span>
+        }
+      </div>
+      }
+      @if (item.tags && item.tags.length > 0) {
+      <button class="toggle-tags-button" (click)="toggleTags()" [title]="showAllTags ? 'Close Tags' : 'Show Tags'">
+        {{ showAllTags ? 'Close Tags' : 'Show Tags' }}
+      </button>
+      }
+    </div>
+
+    <div class="item-media-section">
+      <div class="carousel-container">
+
+        @if (activeMediaMode === 'media') {
+        @if (item.safe_media_urls && item.safe_media_urls.length > 0) {
+        <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
+          @for (media of item.safe_media_urls; track media.id) {
+          <div class="carousel-slide" [class.is-active]="$index === (item.currentIndex || 0)">
+            @if (media.media_type === 'video') {
+            <div class="item-content-video">
+              <video #mediaElement controls loop [muted]="true" appVideoObserver>
+                <source [src]="media.safe_hd_url">
+              </video>
+            </div>
+            } @else {
+            <div class="item-content-image">
+              <img [src]="media.safe_hd_url" alt="Media content" loading="lazy">
+            </div>
+            }
+          </div>
+          }
+        </div>
+        <ng-container
+          *ngTemplateOutlet="carouselControls; context: { $implicit: item.safe_media_urls, item: item }"></ng-container>
+        } @else {
+        <div class="empty-media-placeholder">
+          <p>No external media available.</p>
+        </div>
+        }
+        }
+
+        @if (activeMediaMode === 'files') {
+        @if (item.safe_files && item.safe_files.length > 0) {
+        <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
+          @for (file of item.safe_files; track file.id) {
+          <div class="carousel-slide" [class.is-active]="$index === (item.currentIndex || 0)">
+            <div class="item-content-video">
+              @if (file.file_type.includes('IMG')) {
+              <div class="item-content-image">
+                <img [src]="file.safe_file_serve_url" alt="File content" loading="lazy">
+              </div>
+              } @else {
+              <video #mediaElement controls loop [muted]="true" appVideoObserver>
+                <source [src]="file.safe_file_serve_url">
+              </video>
+              }
+            </div>
+          </div>
+          }
+        </div>
+        <ng-container
+          *ngTemplateOutlet="carouselControls; context: { $implicit: item.safe_files, item: item }"></ng-container>
+        } @else {
+        <div class="empty-media-placeholder">
+          <p>No uploaded files available.</p>
+        </div>
+        }
+        }
+      </div>
+    </div>
+  </div>
+  } @else {
+  <p class="error-message">Item not found or an error occurred.</p>
+  }
+</div>
+
+<ng-template #carouselControls let-mediaList let-item="item">
+  @if (item && mediaList && mediaList.length > 1) {
+  <button type="button" class="carousel-control prev" (click)="prevSlide(item)"
+    [disabled]="!item.currentIndex || item.currentIndex === 0">
+    &#10094;
+  </button>
+  <button type="button" class="carousel-control next" (click)="nextSlide(item)"
+    [disabled]="item.currentIndex === (mediaList.length - 1)">
+    &#10095;
+  </button>
+
+  <div class="carousel-dots">
+    @for (m of mediaList; track $index) {
+    <span class="dot" [class.active]="$index === (item.currentIndex || 0)"></span>
+    }
+  </div>
+  }
+</ng-template>

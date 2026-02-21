@@ -1,4 +1,4 @@
-import { Directive, ElementRef, OnInit, OnDestroy, Input } from '@angular/core';
+import { Directive, ElementRef, Input } from '@angular/core';
 import { Logger } from '../services/logger';
 
 @Directive({
@@ -34,7 +34,7 @@ export class VideoObserver {
         if (entry.isIntersecting) {
           // Video is visible: Play
           // Using .catch() is important for handling browser autoplay policies
-          // video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
+          video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
         } else {
           // Video is scrolled away: Pause
           video.pause();

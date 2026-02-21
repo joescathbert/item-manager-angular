@@ -8,19 +8,18 @@ import { of, forkJoin, Subscription} from 'rxjs';
 import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
+import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag } from '../interfaces/item';
+import { TagFilter as TagFilterService } from '../services/tag-filter';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
-
-declare var twttr: any;
-
-
 @Component({
   selector: 'app-home',
-  imports: [InfiniteScrollDirective, VideoObserver],
+  standalone: true,
+  imports: [FormsModule, InfiniteScrollDirective, VideoObserver],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,6 +27,7 @@ declare var twttr: any;
 export class Home {
   // Page and Item Variables
   items: SafeItemInterface[] = [];
+  totalItemCount: number = 0;
   page = 1;
   loading = false;
   hasNextPage: boolean = true; // Tracks if the 'next' link is present
@@ -37,11 +37,13 @@ export class Home {
   showDeleteConfirmation: boolean = false;
   itemToDelete: ItemInterface | null = null; // Stores the item awaiting confirmation
 
-  // Variable to track which item's menu is currently open
-  activeOptionsMenuId: number | null = null;
+  activeOptionsMenuId: number | null = null; // Variable to track which item's menu is currently open
 
   allTags: string[] = []; // Variable to store all the available tags
-  activeFilters: string[] = []; // Variable to store the tags currently being filtered
+  activeTagFilters: string[] = []; // Variable to store the tags currently being filtered
+  suggestionTagFilters: string[] = []; // Variable to store the tags suggested for filter
+  tagInput: string = '';
+  private tagFilterSubscription!: Subscription;
 
   constructor(
     private itemService: ItemService, 
@@ -50,6 +52,7 @@ export class Home {
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
     private toastService: ToastService,
+    private tagFilterService: TagFilterService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
@@ -63,9 +66,13 @@ export class Home {
       this.page = 1;
       this.loading = false;
       this.hasNextPage = true; 
-      this.activeFilters = [];
+      this.activeTagFilters = [];
 
-      // Load Items
+      // Subscribe to filter changes
+      this.tagFilterSubscription = this.tagFilterService.activeFilters$.subscribe(filters => {
+        this.activeTagFilters = filters; // Update the local component state used in the template
+        this.cdRef.markForCheck(); // Notify change detection
+      });
       this.loadItems();
       this.loadAllTags();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
@@ -79,44 +86,63 @@ export class Home {
     // Clean up the subscription when the component is destroyed
     if (isPlatformBrowser(this.platformId)) {
       this.nextUrlSubscription.unsubscribe();
+      this.tagFilterSubscription.unsubscribe(); // Unsubscribe from the filter changes
     }
   }
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
+    const safeItem = item as SafeItemInterface;
+    // 1. Initialize Carousel State
+    safeItem.currentIndex = 0;
 
-    if (item.url && item.media_url && ['media.redgifs.com', 'video.twimg.com'].includes(item.media_url_domain ?? "")) {
-      // Construct the local proxy URL
-      const proxyUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(item.media_url)}`;
-
-      // Sanitize the local proxy URL (which is safe)
-      (item as SafeItemInterface).safe_media_url = 
-        this.sanitizer.bypassSecurityTrustResourceUrl(proxyUrl); // bypassSecurityTrustResourceUrl for <video src>
-      (item as SafeItemInterface).safe_url = 
-        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+    // 2. Process the main Item Source URL (The "Open Source" link)
+    if (item.url) {
+      safeItem.safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
     }
-    else if (item.url && item.media_url) {
-      (item as SafeItemInterface).safe_media_url = 
-      this.sanitizer.bypassSecurityTrustResourceUrl(item.media_url); // bypassSecurityTrustResourceUrl for <video src>
+    // 3. Process the Multiple Media URLs array
+    if (item.media_urls && item.media_urls.length > 0) {
+      safeItem.safe_media_urls = item.media_urls.map((m: MediaURL) => {
+        const safeMedia: SafeMediaURL = { ...m };
 
-      (item as SafeItemInterface).safe_url = 
-        this.sanitizer.bypassSecurityTrustUrl(item.url); // bypassSecurityTrustUrl for href
+        let hdUrl = m.hd_url
+        let sdUrl = m.sd_url
+
+        // Apply Proxy Logic for specific video domains
+        const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
+        if (m.media_type === 'video' && proxyDomains.includes(m.hd_url_domain)) {
+          hdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(hdUrl)}`;
+        }
+        if (m.media_type === 'video' && proxyDomains.includes(m.sd_url_domain)) {
+          sdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(sdUrl)}`;
+        }
+
+        // Sanitize both HD and SD versions
+        safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
+        safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
+
+        return safeMedia;
+      });
+
+      // Fallback for legacy: set the first media as the primary safe_media_url
+      safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
     }
 
-    return item as SafeItemInterface;
+    return safeItem
   }
 
   loadItems() {
     if (this.loading || !this.hasNextPage) return;
     this.loading = true;
 
-    this.itemService.getItems(this.page, this.activeFilters).pipe(
-      mergeMap((data: ItemInterface[]) => {
-        const itemObservables = data.map(item => {
+    this.itemService.getItems(this.page, this.activeTagFilters).pipe(
+      mergeMap((data: PagedItems) => {
+        this.totalItemCount = data.count
+        const itemObservables = data.results.map(item => {
           if (item.link_id) {
             return this.itemService.getLink(item.link_id).pipe(
               map(link => ({ ...item,
                 url: link.url, url_domain: link.url_domain,
-                media_url: link.media_url, media_url_domain: link.media_url_domain }))
+                media_url: link.media_url, media_url_domain: link.media_url_domain, media_urls: link.media_urls }))
             );
           } else {
             return of(item);
@@ -144,14 +170,6 @@ export class Home {
       complete: () => {
         this.loading = false;
         console.log('Finished loading items.');
-        if (typeof twttr !== 'undefined') {
-          setTimeout(() => {
-            twttr.ready(() => {
-              twttr.widgets.load();
-            });
-          }, 150);
-          console.log('Twitter widgets reloaded.');
-        }
       }
     });
   }
@@ -231,14 +249,34 @@ export class Home {
     });
   }
 
+  // Method to handle "Open Item" action
+  openItem(item: ItemInterface): void {
+    // 1. Close the dropdown menu
+    this.activeOptionsMenuId = null; 
+
+    // 2. Navigate to the edit route using the item's ID
+    if (item.id) {
+        this.router.navigate(['/item', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
+    } else {
+        console.error('Cannot open item: ID is missing.', item);
+        // Optional: Show a user-friendly error message
+    }
+  }
+
   // Method to handle "Edit Item" action
   editItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
     this.activeOptionsMenuId = null; 
-    
+
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
         this.router.navigate(['/edit', item.id]);
+        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+        // const url = this.router.serializeUrl(urlSegments);
+        // window.open(url, '_blank')
     } else {
         console.error('Cannot edit item: ID is missing.', item);
         // Optional: Show a user-friendly error message
@@ -273,7 +311,9 @@ export class Home {
 
   // -------- Tag Filter Methods --------
 
-  // loads all tags from the API
+  /**
+   * Loads all tags from the API
+   */
   loadAllTags(): void {
     this.itemService.getTags().subscribe({
       next: (tags: Tag[]) => {
@@ -285,27 +325,58 @@ export class Home {
     });
   }
 
-  // Adds a tag to the active filters if not present and triggers a fresh item load.
-  addFilterTag(tag: string): void {
-    if (!this.activeFilters.includes(tag)) {
-      this.activeFilters = [...this.activeFilters, tag];
-      this.resetAndLoadItems();
-      // Close any open options menu when filtering starts
-      this.activeOptionsMenuId = null; 
+  /**
+   * Adds a tag to the active filters if not present and triggers a fresh item load.
+   * @param tag 
+   */
+  addTagFilter(tag?: string): void {
+    const srcTag: string = tag ?? this.tagInput.trim();
+    this.tagInput = ''; // Clear the input after adding
+    // Only add if the tag is not already in the filters
+    if (!this.tagFilterService.currentFilters.includes(srcTag)) {
+      // If the tag exists in allTags, use it; otherwise, use the first suggestion if available
+      if (this.allTags.includes(srcTag)){
+        this.tagFilterService.addFilter(srcTag);
+        this.resetAndLoadItems();
+        this.activeOptionsMenuId = null; // Close any open menus
+      } else if (this.suggestionTagFilters.length > 0) {
+        this.tagFilterService.addFilter(this.suggestionTagFilters[0]);
+        this.resetAndLoadItems();
+        this.activeOptionsMenuId = null; // Close any open menus
+      }
     }
   }
 
-  // Removes a tag from the active filters and triggers a fresh item load.
-  removeFilterTag(tag: string): void {
-    this.activeFilters = this.activeFilters.filter(t => t !== tag);
+  /**
+   * Removes a tag from the active filters and triggers a fresh item load.
+   * @param tag 
+   */
+  removeTagFilter(tag: string): void {
+    this.tagFilterService.removeFilter(tag);
     this.resetAndLoadItems();
   }
 
-  // Clears all active filters and triggers a fresh item load.
-  clearFilters(): void {
-    if (this.activeFilters.length > 0) {
-      this.activeFilters = [];
+  /**
+   * Clears all active filters and triggers a fresh item load.
+   */
+  clearTagFilters(): void {
+    if (this.tagFilterService.currentFilters.length > 0) {
+      this.tagFilterService.clearFilters(); 
       this.resetAndLoadItems();
+    }
+  }
+
+  // Filters the suggestions based on user input
+  filterSuggestions(): void {
+    const input = this.tagInput.trim().toLowerCase();
+    if (!input) {
+        // If input is empty, show all available tags that haven't been selected
+        this.suggestionTagFilters = this.allTags.filter(tag_name => !this.activeTagFilters.includes(tag_name));
+    } else {
+        // Filter tags that match the input AND haven't been selected
+        this.suggestionTagFilters = this.allTags.filter(tag_name => 
+            tag_name.toLowerCase().includes(input) && !this.activeTagFilters.includes(tag_name)
+        );
     }
   }
 
@@ -323,6 +394,24 @@ export class Home {
     // 3. Load items with the new filter
     this.loadItems();
     this.cdRef.markForCheck(); // Ensure the view updates
+  }
+
+  // Navigate to the next media item
+  nextSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdRef.markForCheck();
+    }
+  }
+
+  // Navigate to the previous media item
+  prevSlide(item: SafeItemInterface): void {
+    const idx = item.currentIndex ?? 0;
+    if (idx > 0) {
+      item.currentIndex = idx - 1;
+      this.cdRef.markForCheck();
+    }
   }
 
   testPrint() {
