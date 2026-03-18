@@ -20,3 +20,19 @@ export const authGuard: CanActivateFn = (route, state) => {
   // On server, allow navigation so SSR doesn’t kick you out
   return true;
 };
+
+export const guestGuard: CanActivateFn = (route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const platformId = inject(PLATFORM_ID);
+
+  if (isPlatformBrowser(platformId)) {
+    if (auth.getToken()) {
+      // User is already logged in! Send them home.
+      router.navigate(['/home']);
+      return false;
+    }
+  }
+
+  return true; // No token? Carry on to the login page.
+};

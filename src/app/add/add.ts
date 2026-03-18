@@ -8,6 +8,7 @@ import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../inte
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Tag } from '../interfaces/item';
+import { Logger } from '../services/logger';
 
 // We need to inject the NgIf/NgFor directives for standalone components
 @Component({
@@ -26,8 +27,8 @@ export class Add {
   allTags: Tag[] = [];
   suggestionTags: Tag[] = [];
 
-  // 🚨 NEW: Property to hold the selected files
-  selectedFiles: File[] = [];
+  selectedFiles: File[] = []; // Property to hold the selected files
+  selectedFileTypes: string[] = []; // Property to hold the file types of selected files
 
   // Protected properties for the child (Edit) component to read/override 🚨
   protected isEditing: boolean = false;
@@ -53,7 +54,8 @@ export class Add {
     protected router: Router,
     protected route: ActivatedRoute,
     protected toastService: ToastService,
-    protected cdr: ChangeDetectorRef
+    protected cdr: ChangeDetectorRef,
+    protected logger: Logger
   ) {}
 
   // 🚨 NEW: Custom Validator function to enforce URL OR File
@@ -167,24 +169,18 @@ export class Add {
 
     // Convert FileList to Array and merge with existing files (if any)
     const newFiles = Array.from(files);
+    const newTypes = newFiles.map(() => 'RAW');
     this.selectedFiles = [...this.selectedFiles, ...newFiles];
+    this.selectedFileTypes = [...this.selectedFileTypes, ...newTypes];
 
     // Reset the input value to allow the user to select the same file(s) again if needed
     event.target.value = null; 
-
-    // If Item Name is default, set it to the first file's name
-    if (this.selectedFiles.length > 0 && this.addItemForm.get('name')?.value === 'New Item') {
-      this.addItemForm.patchValue({ name: this.selectedFiles[0].name });
-    }
   }
 
   // Removes a file from the selectedFiles array by index
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
-    // If the last file was removed, you might want to adjust the form validity/name
-    if (this.selectedFiles.length === 0) {
-        this.addItemForm.patchValue({ name: 'New Item' });
-    }
+    this.selectedFileTypes.splice(index, 1);
   }
 
   // Moves a file up in the list (decreases index)
@@ -193,6 +189,9 @@ export class Add {
       // Standard array swap using destructuring
       [this.selectedFiles[index - 1], this.selectedFiles[index]] = 
       [this.selectedFiles[index], this.selectedFiles[index - 1]];
+
+      [this.selectedFileTypes[index - 1], this.selectedFileTypes[index]] = 
+      [this.selectedFileTypes[index], this.selectedFileTypes[index - 1]];
     }
   }
 
@@ -202,6 +201,9 @@ export class Add {
       // Standard array swap using destructuring
       [this.selectedFiles[index + 1], this.selectedFiles[index]] = 
       [this.selectedFiles[index], this.selectedFiles[index + 1]];
+
+      [this.selectedFileTypes[index + 1], this.selectedFileTypes[index]] = 
+      [this.selectedFileTypes[index], this.selectedFileTypes[index + 1]];
     }
   }
 
@@ -236,7 +238,7 @@ export class Add {
     // CONDITIONAL SUBMISSION LOGIC
     if (hasFiles) {
         // If files are present, use the NEW file group submission logic
-        this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles);
+        this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles, this.selectedFileTypes);
     } else {
         // If no files are present, use the OLD link submission logic
         this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
@@ -287,7 +289,7 @@ export class Add {
   }
 
   // Method for File Upload submission
-  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], files: File[]): void {
+  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], files: File[], fileTypes: string[]): void {
     // Extract URL from the form right before submission
     const url = this.addItemForm.get('url')?.value || '';
     const hasSecondaryLink = !!url;
@@ -303,9 +305,9 @@ export class Add {
       // 1. Create the Item. API returns the new item object, including its ID.
       mergeMap((newItem: any) => {
         const newItemId = newItem.id;
-
+        this.logger.log(files, fileTypes)
         // 2. Upload Files using the new API.
-        return this.itemService.uploadFilesToItem(newItemId, files).pipe(
+        return this.itemService.uploadFilesToItem(newItemId, files, fileTypes).pipe(
           // 3. CONDITIONAL: Create Link if a URL was provided.
           // This nested mergeMap ensures the file upload is complete before trying to create the link.
           mergeMap(() => {

@@ -13,6 +13,7 @@ import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
 
+import { Logger } from '../services/logger';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -44,10 +45,11 @@ export class Edit extends Add implements OnInit {
     protected override route: ActivatedRoute,
     protected override toastService: ToastService,
     protected override cdr: ChangeDetectorRef,
+    protected override logger: Logger,
     private sanitizer: DomSanitizer
   ) {
     // Call the parent (Add) constructor with inherited services
-    super(fb, itemService, router, route, toastService, cdr);
+    super(fb, itemService, router, route, toastService, cdr, logger);
   }
 
   // Override ngOnInit to handle fetching existing data

@@ -126,7 +126,7 @@ export class Item {
     return this.http.delete(url);
   }
 
-  uploadFilesToItem(itemId: number, files: File[]): Observable<any> {
+  uploadFilesToItem(itemId: number, files: File[], fileTypes: string[]): Observable<any> {
     // 1. Define the target URL for your Django endpoint
     const url = `${this.baseUrl}/file-groups/upload-to-gdrive/`;
 
@@ -137,9 +137,12 @@ export class Item {
     formData.append('item', itemId.toString());
 
     // 4. Append all selected files using the key 'files' (as specified in your curl example)
-    files.forEach((file) => {
+    files.forEach((file, index) => {
       // The third argument is the filename, which helps the backend process the file
       formData.append('files', file, file.name); 
+      if (fileTypes && fileTypes[index]) {
+        formData.append('file_types', fileTypes[index]);
+      }
     });
 
     this.logger.log('Uploading files to URL:', url, 'for Item ID:', itemId);

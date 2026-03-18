@@ -55,6 +55,13 @@
               <span class="file-name">{{ file.name }}</span>
 
               <div class="file-actions">
+
+                <select class="file-type-select" [(ngModel)]="selectedFileTypes[$index]"
+                  [ngModelOptions]="{standalone: true}">
+                  <option value="ORG">ORG</option>
+                  <option value="RAW">RAW</option>
+                </select>
+
                 <button type="button" class="move-up" (click)="moveFileUp($index)" [disabled]="$index === 0"
                   title="Move Up">
                   &uarr;
@@ -104,12 +111,12 @@
           @if (media.media_type === 'video') {
           <div class="item-content-video">
             <video #mediaElement controls loop [muted]="true" autoplay>
-              <source [src]="media.safe_hd_url">
+              <source [src]="media.safe_sd_url">
             </video>
           </div>
           } @else {
           <div class="item-content-image">
-            <img [src]="media.safe_hd_url" alt="Media content" loading="lazy">
+            <img [src]="media.safe_sd_url" alt="Media content" loading="lazy">
           </div>
           }
         </div>
