@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors, FileGroup } from '../interfaces/item';
@@ -21,26 +21,31 @@ export class Item {
   constructor(
     private http: HttpClient,
     private logger: Logger
-  ) {}
+  ) { }
 
   getItems(page: number, tags: string[] = []): Observable<PagedItems> {
     let url: string;
+    let options = {};
 
     if (this.nextUrl) {
       url = this.nextUrl;
     } else {
-      let params = [`page=${page}`];
+      url = `${this.baseUrl}/items/`;
+
+      let params = new HttpParams().set('page', page.toString());
+
       if (tags && tags.length > 0) {
-        // Join tags with a comma, as per API
-        params.push(`tag_names=${tags.join(',')}`); 
+        params = params.set('tag_names', tags.join(','));
       }
-      url = `${this.baseUrl}/items/?${params.join('&')}`;
+
+      options = { params };
     }
 
     this.logger.log(`Fetching items from URL: ${url}`);
 
-    return this.http.get<PagedItems>(url).pipe(
+    return this.http.get<PagedItems>(url, options).pipe(
       map(response => {
+        // Update the pagination state
         this.nextUrl = response.next;
         this.nextUrlSubject.next(response.next);
         return response;
@@ -64,7 +69,7 @@ export class Item {
     let params: string[] = [];
     if (tagFilters && tagFilters.length > 0) {
       // Join tags with a comma, as per API
-      params.push(`tag_names=${tagFilters.join(',')}`); 
+      params.push(`tag_names=${tagFilters.join(',')}`);
     }
     console.log('ItemService: Fetching item neighbors with tag filters:', tagFilters);
     url = `${this.baseUrl}/items/${itemId}/neighbors/?${params.join('&')}`;
@@ -139,7 +144,7 @@ export class Item {
     // 4. Append all selected files using the key 'files' (as specified in your curl example)
     files.forEach((file, index) => {
       // The third argument is the filename, which helps the backend process the file
-      formData.append('files', file, file.name); 
+      formData.append('files', file, file.name);
       if (fileTypes && fileTypes[index]) {
         formData.append('file_types', fileTypes[index]);
       }

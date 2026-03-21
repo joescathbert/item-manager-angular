@@ -2,15 +2,16 @@ import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
-import { Item as ItemService } from '../services/item';
-import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File, SafeFile } from '../interfaces/item';
-import { environment } from '../../environments/environment';
-import { VideoObserver } from '../directives/video-observer';
 import { switchMap, catchError, mergeMap, map, finalize } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
 
-type MediaMode = 'media' | 'files';
+import { Item as ItemService } from '../services/item';
+import { TagFilter as TagFilterService } from '../services/tag-filter';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File, SafeFile } from '../interfaces/item';
+import { MediaMode } from '../interfaces/misc';
+
+import { environment } from '../../environments/environment';
+import { VideoObserver } from '../directives/video-observer';
 
 @Component({
   selector: 'app-item-detail',
@@ -89,9 +90,10 @@ export class ItemDetail implements OnInit {
 
   // --- Core Loading Methods ---
 
+  // Method to load item details
   private loadItemDetails(itemId: number) {
     return this.itemService.getItem(itemId).pipe(
-      // 1. Handle Link
+      // Handle Link
       mergeMap((item: ItemInterface) => {
         if (item.link_id) {
           return this.itemService.getLink(item.link_id).pipe(
@@ -108,7 +110,7 @@ export class ItemDetail implements OnInit {
         return of(item);
       }),
 
-      // 2. Handle FileGroup
+      // Handle FileGroup
       mergeMap((item: ItemInterface) => {
         if (item.file_group_id) {
           return this.itemService.getFileGroup(item.file_group_id).pipe(
@@ -123,7 +125,7 @@ export class ItemDetail implements OnInit {
         return of(item);
       }),
 
-      // 3. Final processing and side effects
+      // Final processing and side effects
       map((processedItem: ItemInterface) => this.processItemUrls(processedItem)),
       map((safeItem: SafeItemInterface) => {
         this.item = safeItem;

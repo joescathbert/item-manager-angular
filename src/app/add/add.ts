@@ -3,14 +3,16 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidatorFn } from '@angular/forms';
 import { of } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
-import { CommonModule } from '@angular/common'; // Needed for Common features like NgIf, NgFor
+import { CommonModule } from '@angular/common';
+
 import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Tag } from '../interfaces/item';
+import { MediaMode } from '../interfaces/misc';
+
 import { Logger } from '../services/logger';
 
-// We need to inject the NgIf/NgFor directives for standalone components
 @Component({
   selector: 'app-add',
   standalone: true,
@@ -30,10 +32,11 @@ export class Add {
   selectedFiles: File[] = []; // Property to hold the selected files
   selectedFileTypes: string[] = []; // Property to hold the file types of selected files
 
-  // Protected properties for the child (Edit) component to read/override 🚨
+  // Protected properties for the child (Edit) component
   protected isEditing: boolean = false;
   protected headerText: string = 'Add New Item';
   protected submitButtonText: string = 'Add Item';
+  protected activeMediaMode: MediaMode = 'media';
 
   protected editedItem: SafeItemInterface = {
     id: 0, // Placeholder ID
@@ -58,7 +61,7 @@ export class Add {
     protected logger: Logger
   ) {}
 
-  // 🚨 NEW: Custom Validator function to enforce URL OR File
+  // Custom Validator function to enforce URL OR File
   private urlOrFileRequiredValidator: ValidatorFn = (control: AbstractControl): { [key: string]: any } | null => {
     const url = control.get('url')?.value;
 
@@ -84,7 +87,7 @@ export class Add {
     this.handleTemplateTags();
   }
 
-  // Helper to get today's date in YYYY-MM-DD format for the input default
+  // Helper method to get today's date in YYYY-MM-DD format for the input default
   private getCurrentDate(): string {
     return new Date().toISOString().split('T')[0];
   }
@@ -226,7 +229,6 @@ export class Add {
       let errorMsg = '';
       if (this.addItemForm.invalid) errorMsg = 'Please fill out all required fields.';
       else if (this.tags.length === 0) errorMsg = 'Please add at least one tag.';
-      // CORE LOGIC: Ensure AT LEAST one of URL or Files is present.
       else if (!hasUrl && !hasFiles) errorMsg = 'Please provide a URL OR select at least one file.';
 
       this.toastService.showError(errorMsg);
@@ -248,6 +250,9 @@ export class Add {
   cancel() {
     this.router.navigate(['/home']);
   }
+
+  // Placeholder method for the child (Edit) component
+  toggleMediaMode() {}
 
   // This method is now safe to be called by the default onSubmit()
   protected submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
@@ -276,7 +281,7 @@ export class Add {
       next: () => {
         this.loading = false;
         // 4. Success: Navigate back home.
-        this.toastService.showSuccess('Item added.'); 
+        this.toastService.showSuccess('Link added.'); 
         this.router.navigate(['/home']);
       },
       error: (err) => {
@@ -329,7 +334,7 @@ export class Add {
     ).subscribe({
       next: () => {
         this.loading = false;
-        let successMsg = 'Item added.';
+        let successMsg = 'File uploaded.';
         if (hasSecondaryLink) {
           successMsg += ' A secondary link was also added.';
         }
@@ -349,6 +354,10 @@ export class Add {
   public nextSlide(item: SafeItemInterface): void {
     const idx = item.currentIndex ?? 0;
     if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdr.markForCheck();
+    }
+    if (item.safe_files && idx < item.safe_files.length - 1) {
       item.currentIndex = idx + 1;
       this.cdr.markForCheck();
     }
