@@ -100,25 +100,28 @@
     </form>
   </div>
 
+  @if (isEditing) {
   <div class="add-preview">
-    @if (isEditing) {
     <h2 class="preview-header">
-      Preview
-      @if ( activeMediaMode === 'media' ) {
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="2" y1="12" x2="22" y2="12"></line>
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-      </svg>
-      } @else {
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-      </svg>
-      }
-      <svg class="svg-button" (click)="toggleMediaMode()" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <span>
+        Preview
+        @if ( activeMediaMode === 'media' ) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        }
+      </span>
+      <svg class="svg-button" (click)="toggleMediaMode()" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+        viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
         <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
         <path d="M3 3v5h5"></path>
         <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
@@ -127,64 +130,64 @@
     </h2>
     <div class="carousel-container">
 
-        @if (activeMediaMode === 'media') {
-        @if (editedItem.safe_media_urls && editedItem.safe_media_urls.length > 0) {
-        <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
-          @for (media of editedItem.safe_media_urls; track media.id) {
-          <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
-            @if (media.media_type === 'video') {
-            <div class="item-content-video">
-              <video #mediaElement controls loop [muted]="true" appVideoObserver>
-                <source [src]="media.safe_hd_url">
-              </video>
-            </div>
-            } @else {
-            <div class="item-content-image">
-              <img [src]="media.safe_hd_url" alt="Media content" loading="lazy">
-            </div>
-            }
+      @if (activeMediaMode === 'media') {
+      @if (editedItem.safe_media_urls && editedItem.safe_media_urls.length > 0) {
+      <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
+        @for (media of editedItem.safe_media_urls; track media.id) {
+        <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
+          @if (media.media_type === 'video') {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="media.safe_hd_url">
+            </video>
+          </div>
+          } @else {
+          <div class="item-content-image">
+            <img [src]="media.safe_hd_url" alt="Media content" loading="lazy">
           </div>
           }
         </div>
-        <ng-container
-          *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_media_urls, item: editedItem }"></ng-container>
-        } @else {
-        <div class="empty-media-placeholder">
-          <p>No external media available.</p>
-        </div>
-        }
-        }
-
-        @if (activeMediaMode === 'files') {
-        @if (editedItem.safe_files && editedItem.safe_files.length > 0) {
-        <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
-          @for (file of editedItem.safe_files; track file.id) {
-          <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
-            <div class="item-content-video">
-              @if (file.file_type.includes('IMG')) {
-              <div class="item-content-image">
-                <img [src]="file.safe_file_serve_url" alt="File content" loading="lazy">
-              </div>
-              } @else {
-              <video #mediaElement controls loop [muted]="true" appVideoObserver>
-                <source [src]="file.safe_file_serve_url">
-              </video>
-              }
-            </div>
-          </div>
-          }
-        </div>
-        <ng-container
-          *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_files, item: editedItem }"></ng-container>
-        } @else {
-        <div class="empty-media-placeholder">
-          <p>No uploaded files available.</p>
-        </div>
-        }
         }
       </div>
-    }
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_media_urls, item: editedItem }"></ng-container>
+      } @else {
+      <div class="empty-media-placeholder">
+        <p>No external media available.</p>
+      </div>
+      }
+      }
+
+      @if (activeMediaMode === 'files') {
+      @if (editedItem.safe_files && editedItem.safe_files.length > 0) {
+      <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
+        @for (file of editedItem.safe_files; track file.id) {
+        <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
+          <div class="item-content-video">
+            @if (file.file_type.includes('IMG')) {
+            <div class="item-content-image">
+              <img [src]="file.safe_file_serve_url" alt="File content" loading="lazy">
+            </div>
+            } @else {
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="file.safe_file_serve_url">
+            </video>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_files, item: editedItem }"></ng-container>
+      } @else {
+      <div class="empty-media-placeholder">
+        <p>No uploaded files available.</p>
+      </div>
+      }
+      }
+    </div>
   </div>
+  }
 </div>
 
 <ng-template #carouselControls let-mediaList let-item="item">

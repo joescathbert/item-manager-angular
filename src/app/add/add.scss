@@ -19,6 +19,7 @@
 
 .add-preview {
   max-width: 600px;
+  width: 600px;
   margin: 0rem auto 0rem 2rem;
   border-radius: 10px;
   color: #f6f7f8;
@@ -36,11 +37,23 @@ h2.preview-header {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: space-between;
+}
+
+h2.preview-header span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+svg.svg-button {
+  transition: transform 0.2s;
 }
 
 svg.svg-button:hover {
   cursor: pointer;
   stroke: $primary-color;
+  transform: rotate(22deg);
 }
 
 /* --- Form Styles --- */
@@ -438,7 +451,7 @@ input[type="file"] {
 
 /* --- Responsive Adjustments --- */
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .add-container {
     flex-direction: column;
     margin: 0rem;
@@ -454,6 +467,7 @@ input[type="file"] {
   .add-preview {
     margin: 0rem 0rem auto 0rem;
     min-height: unset;
+    width: auto;
   }
 
   .file-item {
