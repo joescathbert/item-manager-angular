@@ -1,8 +1,8 @@
-import { Component, OnInit, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { map, mergeMap } from 'rxjs/operators';
+import { map, mergeMap, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 
@@ -80,112 +80,92 @@ export class Edit extends Add implements OnInit {
   }
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
-      const safeItem = item as SafeItemInterface;
-      // 1. Initialize Carousel State
-      safeItem.currentIndex = 0;
-  
-      // 2. Process the main Item Source URL (The "Open Source" link)
-      if (item.url) {
-        safeItem.safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
-      }
-      // 3. Process the Multiple Media URLs array
-      if (item.media_urls && item.media_urls.length > 0) {
-        safeItem.safe_media_urls = item.media_urls.map((m: MediaURL) => {
-          const safeMedia: SafeMediaURL = { ...m };
-  
-          let hdUrl = m.hd_url
-          let sdUrl = m.sd_url
-  
-          // Apply Proxy Logic for specific video domains
-          const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
-          if (m.media_type === 'video' && proxyDomains.includes(m.hd_url_domain)) {
-            hdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(hdUrl)}`;
-          }
-          if (m.media_type === 'video' && proxyDomains.includes(m.sd_url_domain)) {
-            sdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(sdUrl)}`;
-          }
-  
-          // Sanitize both HD and SD versions
-          safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
-          safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
-  
-          return safeMedia;
-        });
-  
-        // Fallback for legacy: set the first media as the primary safe_media_url
-        safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
-      }
-      // 4. Process file url
-      if (item.files && item.files.length > 0) {
-        safeItem.safe_files = item.files.map((f: File) => {
-          const safeFile: SafeFile = { ...f };
-  
-          const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
-          safeFile.safe_file_serve_url = this.sanitizer.bypassSecurityTrustUrl(fileUrl);
-  
-          return safeFile;
-        });
-  
-      }
-  
-      return safeItem
+    const safeItem = item as SafeItemInterface;
+    // 1. Initialize Carousel State
+    safeItem.currentIndex = 0;
+
+    // 2. Process the main Item Source URL (The "Open Source" link)
+    if (item.url) {
+      safeItem.safe_url = this.sanitizer.bypassSecurityTrustUrl(item.url);
     }
+    // 3. Process the Multiple Media URLs array
+    if (item.media_urls && item.media_urls.length > 0) {
+      safeItem.safe_media_urls = item.media_urls.map((m: MediaURL) => {
+        const safeMedia: SafeMediaURL = { ...m };
+
+        let hdUrl = m.hd_url
+        let sdUrl = m.sd_url
+
+        // Apply Proxy Logic for specific video domains
+        const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
+        if (m.media_type === 'video' && proxyDomains.includes(m.hd_url_domain)) {
+          hdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(hdUrl)}`;
+        }
+        if (m.media_type === 'video' && proxyDomains.includes(m.sd_url_domain)) {
+          sdUrl = `${environment.apiUrl}/proxy-media/?url=${encodeURIComponent(sdUrl)}`;
+        }
+
+        // Sanitize both HD and SD versions
+        safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
+        safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
+
+        return safeMedia;
+      });
+
+    }
+    // 4. Process file url
+    if (item.files && item.files.length > 0) {
+      safeItem.safe_files = item.files.map((f: File) => {
+        const safeFile: SafeFile = { ...f };
+
+        const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
+        safeFile.safe_file_serve_url = this.sanitizer.bypassSecurityTrustUrl(fileUrl);
+
+        return safeFile;
+      });
+
+    }
+
+    return safeItem
+  }
 
   // Method to fetch and pre-fill the form
   private loadItemData(itemId: number): void {
     this.itemService.getItem(itemId).pipe(
-      // Handle Link
-      mergeMap((item: ItemInterface) => {
-        this.editedItem = item;
-        if (item.link_id) {
-          return this.itemService.getLink(item.link_id).pipe(
-            map(link => ({
-              ...item,
-              url: link.url,
-              url_domain: link.url_domain,
-              media_url: link.media_url,
-              media_url_domain: link.media_url_domain,
-              media_urls: link.media_urls
-            }))
-          );
+      map((item: ItemInterface) => {
+        // 1. Flatten Link & FileGroup details safely (just like loadItemDetails)
+        if (item.link_details) {
+          item.url = item.link_details.url;
+          item.url_domain = item.link_details.url_domain;
+          item.media_urls = item.link_details.media_urls;
         }
-        return of(item);
-      }),
 
-      // Handle FileGroup
-      mergeMap((item: ItemInterface) => {
-        if (item.file_group_id) {
-          return this.itemService.getFileGroup(item.file_group_id).pipe(
-            map(group => {
-              return {
-                ...item,
-                files: group.files
-              };
-            })
-          );
+        if (item.file_group_details) {
+          item.files = item.file_group_details.files;
         }
-        return of(item);
+
+        // 2. Return processed item
+        return this.processItemUrls(item);
       }),
-    ).subscribe({
-      next: (processedItem: (ItemInterface)) => {
-        // Pre-fill the form fields using the collected data
-        this.editedItem = this.processItemUrls(processedItem);
-        const itemUrl = (processedItem as any).url || '';
-        this.originalUrl = itemUrl
+      tap((finalItem: SafeItemInterface) => {
+        // 3. Side effects: Update local state and the form
+        this.editedItem = finalItem;
+        this.originalUrl = finalItem.url || '';
+
         this.addItemForm.patchValue({
-          name: this.editedItem.name,
-          url: itemUrl,
-          dateOfOrigin: this.editedItem.date_of_origin
+          name: finalItem.name,
+          url: this.originalUrl,
+          dateOfOrigin: finalItem.date_of_origin
         });
 
-        // Pre-fill and manage tags
-        this.tags = this.editedItem.tags.sort() || [];
+        // 4. Update tags and UI
+        this.tags = [...(finalItem.tags || [])].sort();
         this.filterSuggestions();
         this.cdr.detectChanges();
-      },
+      })
+    ).subscribe({
       error: (err) => {
         console.error('Failed to load item data for editing:', err);
-        alert('Error: Item not found or failed to load.');
         this.router.navigate(['/home']);
       }
     });

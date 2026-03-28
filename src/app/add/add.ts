@@ -47,7 +47,11 @@ export class Add {
     tags: [],
     created_at: '',
     link_id: null,
+    link_details: null,
     file_group_id: null,
+    file_group_details: null,
+    prev_id: null,
+    next_id: null,
     media_urls: [],
   };
 

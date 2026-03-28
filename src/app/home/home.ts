@@ -3,9 +3,9 @@ import { Router } from '@angular/router';
 import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Inject } from '@angular/core';
-import { map, mergeMap } from 'rxjs/operators';
-import { of, forkJoin, Subscription} from 'rxjs';
-import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef} from '@angular/core';
+import { map, mergeMap, tap, finalize } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { FormsModule } from '@angular/forms';
@@ -46,26 +46,26 @@ export class Home {
   private tagFilterSubscription!: Subscription;
 
   constructor(
-    private itemService: ItemService, 
-    private router: Router, 
-    private cdRef: ChangeDetectorRef, 
+    private itemService: ItemService,
+    private router: Router,
+    private cdRef: ChangeDetectorRef,
     private appRef: ApplicationRef,
     private sanitizer: DomSanitizer,
     private toastService: ToastService,
     private tagFilterService: TagFilterService,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) { }
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
       // RESET SERVICE STATE (MUST BE IMPLEMENTED IN SERVICE)
-      this.itemService.resetPagination(); 
+      this.itemService.resetPagination();
 
       // RESET COMPONENT STATE
       this.items = [];
       this.page = 1;
       this.loading = false;
-      this.hasNextPage = true; 
+      this.hasNextPage = true;
       this.activeTagFilters = [];
 
       // Subscribe to filter changes
@@ -78,7 +78,7 @@ export class Home {
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
         this.hasNextPage = !!nextUrl;
         this.cdRef.markForCheck();
-    });
+      });
     }
   }
 
@@ -123,8 +123,6 @@ export class Home {
         return safeMedia;
       });
 
-      // Fallback for legacy: set the first media as the primary safe_media_url
-      safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
     }
 
     return safeItem
@@ -135,42 +133,46 @@ export class Home {
     this.loading = true;
 
     this.itemService.getItems(this.page, this.activeTagFilters).pipe(
-      mergeMap((data: PagedItems) => {
-        this.totalItemCount = data.count
-        const itemObservables = data.results.map(item => {
-          if (item.link_id) {
-            return this.itemService.getLink(item.link_id).pipe(
-              map(link => ({ ...item,
-                url: link.url, url_domain: link.url_domain,
-                media_url: link.media_url, media_url_domain: link.media_url_domain, media_urls: link.media_urls }))
-            );
-          } else {
-            return of(item);
+      map((data: PagedItems) => {
+        // 1. Store the total count
+        this.totalItemCount = data.count;
+
+        // 2. Flatten and process each item in the results array
+        return data.results.map(item => {
+          // Flatten Link details if they exist
+          if (item.link_details) {
+            item.url = item.link_details.url;
+            item.url_domain = item.link_details.url_domain;
+            item.media_urls = item.link_details.media_urls;
           }
+
+          // Flatten FileGroup details if they exist
+          if (item.file_group_details) {
+            item.files = item.file_group_details.files;
+          }
+
+          // Sanitize URLs using your existing logic
+          return this.processItemUrls(item);
         });
-        return forkJoin(itemObservables); 
+      }),
+      tap((processedItems: SafeItemInterface[]) => {
+        // 3. Side Effects: Update local array and pagination
+        this.items = [...this.items, ...processedItems];
+        this.page++;
+
+        // If the number of items we have matches the total, there's no next page
+        if (this.items.length >= this.totalItemCount) {
+          this.hasNextPage = false;
+        }
+      }),
+      finalize(() => {
+        // 4. Cleanup: Always turn off loading and trigger Change Detection
+        this.loading = false;
+        this.cdRef.markForCheck();
       })
     ).subscribe({
-      next: (processedItems: (ItemInterface & { url?: string })[]) => {
-        console.log(`Loaded ${processedItems.length} items for page ${this.page}`);
-        console.log(processedItems);
-        this.items = [
-          ...this.items, 
-          ...processedItems.map(item => this.processItemUrls(item))
-        ];
-        this.page++;
-        this.cdRef.markForCheck();
-        this.appRef.tick();
-      },
-      error: (err) => {
-        console.error('Error loading items:', err);
-        this.loading = false;
-        this.cdRef.markForCheck();
-      },
-      complete: () => {
-        this.loading = false;
-        console.log('Finished loading items.');
-      }
+      next: (items) => console.log(`Loaded ${items.length} items. Total: ${this.items.length}`),
+      error: (err) => console.error('Error loading items:', err)
     });
   }
 
@@ -197,7 +199,7 @@ export class Home {
 
   deleteItem(): void {
     // Use the item stored in itemToDelete
-    if (!this.itemToDelete) return; 
+    if (!this.itemToDelete) return;
 
     const itemToDeleteId = this.itemToDelete.id;
 
@@ -252,34 +254,34 @@ export class Home {
   // Method to handle "Open Item" action
   openItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
-    this.activeOptionsMenuId = null; 
+    this.activeOptionsMenuId = null;
 
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
-        this.router.navigate(['/item', item.id]);
-        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
-        // const url = this.router.serializeUrl(urlSegments);
-        // window.open(url, '_blank')
+      this.router.navigate(['/item', item.id]);
+      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+      // const url = this.router.serializeUrl(urlSegments);
+      // window.open(url, '_blank')
     } else {
-        console.error('Cannot open item: ID is missing.', item);
-        // Optional: Show a user-friendly error message
+      console.error('Cannot open item: ID is missing.', item);
+      // Optional: Show a user-friendly error message
     }
   }
 
   // Method to handle "Edit Item" action
   editItem(item: ItemInterface): void {
     // 1. Close the dropdown menu
-    this.activeOptionsMenuId = null; 
+    this.activeOptionsMenuId = null;
 
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
-        this.router.navigate(['/edit', item.id]);
-        // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
-        // const url = this.router.serializeUrl(urlSegments);
-        // window.open(url, '_blank')
+      this.router.navigate(['/edit', item.id]);
+      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+      // const url = this.router.serializeUrl(urlSegments);
+      // window.open(url, '_blank')
     } else {
-        console.error('Cannot edit item: ID is missing.', item);
-        // Optional: Show a user-friendly error message
+      console.error('Cannot edit item: ID is missing.', item);
+      // Optional: Show a user-friendly error message
     }
   }
 
@@ -295,7 +297,7 @@ export class Home {
     // Since safeUrl is a SafeResourceUrl object, we access the string value 
     // using the 'toString()' method or by accessing the private value (less ideal, but sometimes necessary).
     // The most reliable way, assuming correct sanitization, is often to coerce it.
-    
+
     // Attempt to extract the URL string:
     // If you are using TypeScript 4.4+ and have configured things strictly, 
     // you might need to use type assertion or check the structure.
@@ -335,7 +337,7 @@ export class Home {
     // Only add if the tag is not already in the filters
     if (!this.tagFilterService.currentFilters.includes(srcTag)) {
       // If the tag exists in allTags, use it; otherwise, use the first suggestion if available
-      if (this.allTags.includes(srcTag)){
+      if (this.allTags.includes(srcTag)) {
         this.tagFilterService.addFilter(srcTag);
         this.resetAndLoadItems();
         this.activeOptionsMenuId = null; // Close any open menus
@@ -361,7 +363,7 @@ export class Home {
    */
   clearTagFilters(): void {
     if (this.tagFilterService.currentFilters.length > 0) {
-      this.tagFilterService.clearFilters(); 
+      this.tagFilterService.clearFilters();
       this.resetAndLoadItems();
     }
   }
@@ -370,13 +372,13 @@ export class Home {
   filterSuggestions(): void {
     const input = this.tagInput.trim().toLowerCase();
     if (!input) {
-        // If input is empty, show all available tags that haven't been selected
-        this.suggestionTagFilters = this.allTags.filter(tag_name => !this.activeTagFilters.includes(tag_name));
+      // If input is empty, show all available tags that haven't been selected
+      this.suggestionTagFilters = this.allTags.filter(tag_name => !this.activeTagFilters.includes(tag_name));
     } else {
-        // Filter tags that match the input AND haven't been selected
-        this.suggestionTagFilters = this.allTags.filter(tag_name => 
-            tag_name.toLowerCase().includes(input) && !this.activeTagFilters.includes(tag_name)
-        );
+      // Filter tags that match the input AND haven't been selected
+      this.suggestionTagFilters = this.allTags.filter(tag_name =>
+        tag_name.toLowerCase().includes(input) && !this.activeTagFilters.includes(tag_name)
+      );
     }
   }
 
@@ -386,10 +388,10 @@ export class Home {
     this.items = [];
     this.page = 1;
     this.hasNextPage = true;
-    this.loading = false; 
+    this.loading = false;
 
     // 2. Reset service pagination state
-    this.itemService.resetPagination(); 
+    this.itemService.resetPagination();
 
     // 3. Load items with the new filter
     this.loadItems();

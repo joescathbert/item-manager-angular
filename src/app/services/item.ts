@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, Subject, throwError } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors, FileGroup } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
@@ -58,10 +58,26 @@ export class Item {
     this.logger.log('ItemService: Pagination state reset.');
   }
 
-  getItem(itemId: number): Observable<ItemInterface> {
+  getItem(itemId: number, tags?: string[]): Observable<ItemInterface> {
     const url = `${this.baseUrl}/items/${itemId}/`;
-    this.logger.log('Fetching item from URL:', url);
-    return this.http.get<ItemInterface>(url);
+    let options = {};
+    let params = new HttpParams();
+    if (tags && tags.length > 0) {
+      params = params.set('tag_names', tags.join(','));
+    }
+    options = { params };
+    const fullUrl = params.keys().length > 0
+      ? `${url}?${params.toString()}`
+      : url;
+    this.logger.log('Fetching item from URL:', fullUrl);
+    return this.http.get<ItemInterface>(url, options).pipe(
+      tap(item => this.logger.log(`[ItemService] Received item: ${item.name}`, item)),
+
+      catchError(error => {
+        this.logger.error(`[ItemService] Failed to fetch item ${itemId}`, error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getItemNeighbors(itemId: number, tagFilters: string[]): Observable<ItemNeighbors> {
@@ -77,6 +93,7 @@ export class Item {
     return this.http.get<ItemNeighbors>(url);
   }
 
+  // Unused
   getLink(linkId: number): Observable<Link> {
     const url = `${this.baseUrl}/links/${linkId}/`;
     this.logger.log('Fetching link from URL:', url);
@@ -89,6 +106,7 @@ export class Item {
     return this.http.get<Tag[]>(url);
   }
 
+  // Unused
   getFileGroup(fileGroupId: number): Observable<FileGroup> {
     const url = `${this.baseUrl}/file-groups/${fileGroupId}/`;
     this.logger.log('Fetching file group from URL:', url);

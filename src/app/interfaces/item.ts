@@ -14,18 +14,19 @@ export interface Item {
   tags: string[];
   created_at: string;
   link_id: number | null;
+  link_details: Link | null;
   file_group_id: number | null;
+  file_group_details: FileGroup | null;
+  prev_id: number | null;
+  next_id: number | null;
   url?: string;
   url_domain?: string;
-  media_url?: string;
-  media_url_domain?: string;
   media_urls: MediaURL[];
   files?: File[];
 }
 
 export interface SafeItem extends Item {
   safe_url?: SafeResourceUrl;
-  safe_media_url?: SafeResourceUrl;
   safe_media_urls?: SafeMediaURL[];
   currentIndex?: number;
   safe_files?: SafeFile[];
