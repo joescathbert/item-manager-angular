@@ -259,7 +259,7 @@ export class Home {
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
       this.router.navigate(['/item', item.id]);
-      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
+      // const urlSegments = this.router.createUrlTree(['/item', item.id]);
       // const url = this.router.serializeUrl(urlSegments);
       // window.open(url, '_blank')
     } else {

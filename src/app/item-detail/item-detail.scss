@@ -436,6 +436,20 @@
 
 /* --- Responsive Adjustments --- */
 
+@media (min-width: 601px) and (min-height: 1500px) {
+  .item-detail-container {
+    min-height: 95vh;
+  }
+
+  .navigation-bar {
+    max-width: 90%;
+  }
+
+  .item-card, .skeleton-card {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 600px) {
   .item-card,
   .navigation-bar {
