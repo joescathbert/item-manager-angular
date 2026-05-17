@@ -105,6 +105,14 @@ export class Add {
     }
   }
 
+  addSuggestedTag() {
+    const srcTag: string = this.tagInput.trim();
+    if (srcTag && !this.tags.includes(srcTag) && this.suggestionTags.length > 0) {
+      this.tags.push(this.suggestionTags[0].name);
+    }
+    this.tagInput = ''; // Clear the input after adding
+  }
+
   removeTag(tagToRemove: string) {
     this.tags = this.tags.filter(tag => tag !== tagToRemove);
   }

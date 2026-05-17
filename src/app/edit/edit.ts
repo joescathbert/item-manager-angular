@@ -113,6 +113,10 @@ export class Edit extends Add implements OnInit {
       });
 
     }
+    else {
+      this.activeMediaMode = "files"; // To automatically switch to files mode if no media url is present
+    }
+
     // 4. Process file url
     if (item.files && item.files.length > 0) {
       safeItem.safe_files = item.files.map((f: File) => {

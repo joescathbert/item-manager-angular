@@ -8,8 +8,9 @@
       <section class="form-section tag-section">
         <div class="tag-input-group">
           <input type="text" placeholder="Enter tag name (e.g., angular, rxjs)" [(ngModel)]="tagInput"
-            [ngModelOptions]="{standalone: true}" (keydown.enter)="$event.preventDefault(); addTag()"
-            (input)="filterSuggestions()" list="tag-suggestions" autocapitalize="off" />
+            [ngModelOptions]="{standalone: true}" (keydown.shift.enter)="$event.preventDefault(); addTag()"
+            (keydown.enter)="$event.preventDefault(); addSuggestedTag()" (input)="filterSuggestions()"
+            list="tag-suggestions" autocapitalize="off" />
           <button type="button" (click)="addTag()">Add Tag</button>
         </div>
 

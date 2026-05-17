@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems, File, SafeFile } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
@@ -119,6 +119,26 @@ export class Home {
         // Sanitize both HD and SD versions
         safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustResourceUrl(hdUrl);
         safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustResourceUrl(sdUrl);
+
+        return safeMedia;
+      });
+    }
+    else if (item.files && item.files.length > 0) {
+      safeItem.safe_media_urls = item.files.map((f: File) => {
+        const safeMedia: SafeMediaURL = {
+          id: 0,
+          url: "",
+          hd_url: "",
+          hd_url_domain: "",
+          sd_url: "",
+          sd_url_domain: "",
+          media_type: "video",
+          order: 0,
+        };
+
+        const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
+        safeMedia.safe_hd_url = this.sanitizer.bypassSecurityTrustUrl(fileUrl);
+        safeMedia.safe_sd_url = this.sanitizer.bypassSecurityTrustUrl(fileUrl);
 
         return safeMedia;
       });

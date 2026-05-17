@@ -166,7 +166,10 @@ export class ItemDetail implements OnInit {
 
         return safeMedia;
       });
-
+      this.activeMediaMode = "media"; // To automatically switch to media mode if media url is present
+    }
+    else {
+      this.activeMediaMode = "files"; // To automatically switch to files mode if no media url is present
     }
     // 4. Process file url
     if (item.files && item.files.length > 0) {
