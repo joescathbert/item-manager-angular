@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidatorFn } from '@angular/forms';
 import { of } from 'rxjs';
@@ -22,12 +22,15 @@ import { Logger } from '../services/logger';
 })
 export class Add {
   addItemForm!: FormGroup;
+  @ViewChild('tagInputField') tagInputField!: ElementRef<HTMLInputElement>;
+
   tagInput: string = '';
   tags: string[] = [];
   loading: boolean = false; // For submission button state
   // State for suggestions
   allTags: Tag[] = [];
   suggestionTags: Tag[] = [];
+  showTagSuggestions: boolean = true;
 
   selectedFiles: File[] = []; // Property to hold the selected files
   selectedFileTypes: string[] = []; // Property to hold the file types of selected files
@@ -102,6 +105,7 @@ export class Add {
     if (tagName && !this.tags.includes(tagName)) {
       this.tags.push(tagName);
       this.tagInput = ''; // Clear the input after adding
+      this.hideSuggestionsOnce();
     }
   }
 
@@ -111,6 +115,15 @@ export class Add {
       this.tags.push(this.suggestionTags[0].name);
     }
     this.tagInput = ''; // Clear the input after adding
+    this.hideSuggestionsOnce();
+  }
+
+  private hideSuggestionsOnce(): void {
+    this.showTagSuggestions = false;
+    setTimeout(() => {
+      this.showTagSuggestions = true;
+      this.filterSuggestions();
+    }, 0);
   }
 
   removeTag(tagToRemove: string) {
