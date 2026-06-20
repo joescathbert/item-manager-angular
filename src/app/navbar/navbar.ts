@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter } from '@angular/core';
 import { Router, NavigationEnd, RouterModule } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { Auth as AuthService } from '../auth/auth';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-navbar',
@@ -15,7 +16,7 @@ export class Navbar {
 
   @Output() sidebarToggle = new EventEmitter<void>();
 
-  constructor(private router: Router, private auth: AuthService) {}
+  constructor(private router: Router, private auth: AuthService) { }
 
   ngOnInit() {
     this.isLoginPage = this.router.url.includes('/login');
@@ -31,5 +32,9 @@ export class Navbar {
   logout() {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  startDriveAuth() {
+    window.open(`${environment.apiUrl}/gdrive/auth-url/`, '_blank');
   }
 }

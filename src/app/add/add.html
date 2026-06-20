@@ -83,6 +83,49 @@
           </ul>
         </div>
         }
+        @if (isEditing) {
+        @if (editedItem.files && editedItem.files.length > 0) {
+        <div class="file-list-container">
+          <h3>Uploaded Files ({{ editedItem.files.length }})</h3>
+          <ul class="file-list">
+            @for (file of editedItem.files; track $index) {
+            <li class="file-item uploaded-file-item" [class.active]="$index === (editedItem.currentIndex || 0)">
+              <span class="file-order">{{ $index + 1 }}.</span>
+              <span class="file-name" (click)="previewFile($index)">{{ file.file_name }}</span>
+
+              <div class="file-actions">
+
+                <!-- <button type="button" class="preview-file" (click)="previewFile($index)" title="Preview File">
+                    <i class="fa-solid fa-eye"></i>
+                  </button> -->
+
+                <!-- <select class="file-type-select" [(ngModel)]="selectedFileTypes[$index]"
+                    [ngModelOptions]="{standalone: true}">
+                    <option value="ORG">ORG</option>
+                    <option value="RAW">RAW</option>
+                    <option value="BON">BON</option>
+                  </select> -->
+
+                <!-- <button type="button" class="move-up" (click)="moveFileUp($index)" [disabled]="$index === 0"
+                    title="Move Up">
+                    &uarr;
+                  </button>
+
+                  <button type="button" class="move-down" (click)="moveFileDown($index)"
+                    [disabled]="$index === selectedFiles.length - 1" title="Move Down">
+                    &darr;
+                  </button>
+
+                  <button type="button" class="remove-file" (click)="removeFile($index)" title="Remove File">
+                    &times;
+                  </button> -->
+              </div>
+            </li>
+            }
+          </ul>
+        </div>
+        }
+        }
 
         <input type="hidden" formControlName="name">
       </section>

@@ -19,7 +19,10 @@
           </span>
         </a>
       }
-      <button (click)="logout()" type="button">Logout</button>
+      <button (click)="startDriveAuth()" type="button" class="gdrive-btn">
+        <img src="/assets/gdrive.svg" alt="GDrive Authentication" class="gdrive-auth">
+      </button>
+      <button (click)="logout()" type="button" class="logout-btn">Logout</button>
     }
   </div>
 </nav>

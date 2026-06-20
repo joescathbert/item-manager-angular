@@ -8,7 +8,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 
 // Re-use interfaces and services
 import { ItemPayload, LinkPayload } from '../interfaces/item';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, MediaURL, SafeMediaURL, SafeFile, File } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, MediaURL, SafeMediaURL, SafeFile, File as FileInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
@@ -119,7 +119,7 @@ export class Edit extends Add implements OnInit {
 
     // 4. Process file url
     if (item.files && item.files.length > 0) {
-      safeItem.safe_files = item.files.map((f: File) => {
+      safeItem.safe_files = item.files.map((f: FileInterface) => {
         const safeFile: SafeFile = { ...f };
 
         const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
@@ -200,6 +200,14 @@ export class Edit extends Add implements OnInit {
     // Reset index to 0 so we don't end up on a non-existent slide in the other mode
     if (this.editedItem) {
       this.editedItem.currentIndex = 0;
+    }
+  }
+
+  // Method to preview fle
+  override previewFile(fileIndex: number): void {
+    this.activeMediaMode = 'files';
+    if (this.editedItem) {
+      this.editedItem.currentIndex = fileIndex;
     }
   }
 

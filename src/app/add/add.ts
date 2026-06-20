@@ -16,7 +16,7 @@ import { Logger } from '../services/logger';
 @Component({
   selector: 'app-add',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule], 
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './add.html',
   styleUrl: './add.scss'
 })
@@ -66,7 +66,7 @@ export class Add {
     protected toastService: ToastService,
     protected cdr: ChangeDetectorRef,
     protected logger: Logger
-  ) {}
+  ) { }
 
   // Custom Validator function to enforce URL OR File
   private urlOrFileRequiredValidator: ValidatorFn = (control: AbstractControl): { [key: string]: any } | null => {
@@ -78,7 +78,7 @@ export class Add {
     // The main FormGroup validation will ensure 'name' and 'dateOfOrigin' are there.
 
     // For now, return null and rely on the onSubmit check for simplicity.
-    return null; 
+    return null;
   };
 
   ngOnInit(): void {
@@ -202,7 +202,7 @@ export class Add {
     this.selectedFileTypes = [...this.selectedFileTypes, ...newTypes];
 
     // Reset the input value to allow the user to select the same file(s) again if needed
-    event.target.value = null; 
+    event.target.value = null;
   }
 
   // Removes a file from the selectedFiles array by index
@@ -215,11 +215,11 @@ export class Add {
   moveFileUp(index: number): void {
     if (index > 0) {
       // Standard array swap using destructuring
-      [this.selectedFiles[index - 1], this.selectedFiles[index]] = 
-      [this.selectedFiles[index], this.selectedFiles[index - 1]];
+      [this.selectedFiles[index - 1], this.selectedFiles[index]] =
+        [this.selectedFiles[index], this.selectedFiles[index - 1]];
 
-      [this.selectedFileTypes[index - 1], this.selectedFileTypes[index]] = 
-      [this.selectedFileTypes[index], this.selectedFileTypes[index - 1]];
+      [this.selectedFileTypes[index - 1], this.selectedFileTypes[index]] =
+        [this.selectedFileTypes[index], this.selectedFileTypes[index - 1]];
     }
   }
 
@@ -227,20 +227,20 @@ export class Add {
   moveFileDown(index: number): void {
     if (index < this.selectedFiles.length - 1) {
       // Standard array swap using destructuring
-      [this.selectedFiles[index + 1], this.selectedFiles[index]] = 
-      [this.selectedFiles[index], this.selectedFiles[index + 1]];
+      [this.selectedFiles[index + 1], this.selectedFiles[index]] =
+        [this.selectedFiles[index], this.selectedFiles[index + 1]];
 
-      [this.selectedFileTypes[index + 1], this.selectedFileTypes[index]] = 
-      [this.selectedFileTypes[index], this.selectedFileTypes[index + 1]];
+      [this.selectedFileTypes[index + 1], this.selectedFileTypes[index]] =
+        [this.selectedFileTypes[index], this.selectedFileTypes[index + 1]];
     }
   }
 
   // Getter to safely format the file names for display
   public get selectedFileNames(): string {
-      if (this.selectedFiles && this.selectedFiles.length > 0) {
-          return this.selectedFiles.map(f => f.name).join(', ');
-      }
-      return '';
+    if (this.selectedFiles && this.selectedFiles.length > 0) {
+      return this.selectedFiles.map(f => f.name).join(', ');
+    }
+    return '';
   }
 
   // --- Form Actions ---
@@ -249,7 +249,7 @@ export class Add {
 
     const hasUrl = !!url;
     const hasFiles = this.selectedFiles.length > 0;
-    
+
     if (this.addItemForm.invalid || this.tags.length === 0 || (!hasUrl && !hasFiles)) {
       let errorMsg = '';
       if (this.addItemForm.invalid) errorMsg = 'Please fill out all required fields.';
@@ -264,11 +264,11 @@ export class Add {
 
     // CONDITIONAL SUBMISSION LOGIC
     if (hasFiles) {
-        // If files are present, use the NEW file group submission logic
-        this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles, this.selectedFileTypes);
+      // If files are present, use the NEW file group submission logic
+      this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles, this.selectedFileTypes);
     } else {
-        // If no files are present, use the OLD link submission logic
-        this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
+      // If no files are present, use the OLD link submission logic
+      this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
     }
   }
 
@@ -277,13 +277,16 @@ export class Add {
   }
 
   // Placeholder method for the child (Edit) component
-  toggleMediaMode() {}
+  toggleMediaMode() { }
+
+  // Placeholder method for the child (Edit) component
+  previewFile(fileIndex: number) { }
 
   // This method is now safe to be called by the default onSubmit()
   protected submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
     const itemPayload: ItemPayload = {
       name: name,
-      type: 'link', 
+      type: 'link',
       date_of_origin: dateOfOrigin,
       tag_names: tags
     };
@@ -306,7 +309,7 @@ export class Add {
       next: () => {
         this.loading = false;
         // 4. Success: Navigate back home.
-        this.toastService.showSuccess('Link added.'); 
+        this.toastService.showSuccess('Link added.');
         this.router.navigate(['/home']);
       },
       error: (err) => {
@@ -342,16 +345,16 @@ export class Add {
           // This nested mergeMap ensures the file upload is complete before trying to create the link.
           mergeMap(() => {
             if (hasSecondaryLink) {
-                const linkPayload: LinkPayload = {
-                    item: newItemId,
-                    url: url
-                };
-                // Return the observable for Link creation
-                return this.itemService.createLink(linkPayload);
+              const linkPayload: LinkPayload = {
+                item: newItemId,
+                url: url
+              };
+              // Return the observable for Link creation
+              return this.itemService.createLink(linkPayload);
             } else {
-                // If no URL, return an Observable that immediately emits a null value, 
-                // allowing the subscription to continue without error.
-                return of(null);
+              // If no URL, return an Observable that immediately emits a null value, 
+              // allowing the subscription to continue without error.
+              return of(null);
             }
           })
         );
@@ -363,7 +366,7 @@ export class Add {
         if (hasSecondaryLink) {
           successMsg += ' A secondary link was also added.';
         }
-        this.toastService.showSuccess(successMsg); 
+        this.toastService.showSuccess(successMsg);
         this.router.navigate(['/home']);
       },
       error: (err) => {

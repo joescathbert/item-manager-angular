@@ -7,7 +7,7 @@ import { of } from 'rxjs';
 
 import { Item as ItemService } from '../services/item';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File, SafeFile } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File as FileInterface, SafeFile } from '../interfaces/item';
 import { MediaMode } from '../interfaces/misc';
 
 import { environment } from '../../environments/environment';
@@ -173,7 +173,7 @@ export class ItemDetail implements OnInit {
     }
     // 4. Process file url
     if (item.files && item.files.length > 0) {
-      safeItem.safe_files = item.files.map((f: File) => {
+      safeItem.safe_files = item.files.map((f: FileInterface) => {
         const safeFile: SafeFile = { ...f };
 
         const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`

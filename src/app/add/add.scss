@@ -202,7 +202,7 @@ input[type="file"] {
   margin: 0;
 }
 
-.file-item {
+li.file-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -220,10 +220,13 @@ input[type="file"] {
   }
 }
 
+li.uploaded-file-item:hover, li.uploaded-file-item.active {
+  color: $primary-hover;
+}
+
 .file-order {
   font-weight: bold;
   margin-right: 10px;
-  color: $focus-color; // Highlight the order number
 }
 
 .file-name {
@@ -231,6 +234,7 @@ input[type="file"] {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .file-actions {

@@ -12,7 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems, File, SafeFile } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems, File as FileInterface } from '../interfaces/item';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
@@ -124,7 +124,7 @@ export class Home {
       });
     }
     else if (item.files && item.files.length > 0) {
-      safeItem.safe_media_urls = item.files.map((f: File) => {
+      safeItem.safe_media_urls = item.files.map((f: FileInterface) => {
         const safeMedia: SafeMediaURL = {
           id: 0,
           url: "",
