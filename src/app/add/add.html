@@ -89,12 +89,16 @@
           <h3>Uploaded Files ({{ editedItem.files.length }})</h3>
           <ul class="file-list">
             @for (file of editedItem.files; track $index) {
-            <li class="file-item uploaded-file-item" [class.active]="$index === (editedItem.currentIndex || 0)">
-              <span class="file-order">{{ $index + 1 }}.</span>
-              <span class="file-name" (click)="previewFile($index)">{{ file.file_name }}</span>
+            <li class="file-item uploaded-file-item" (click)="previewFile($index)" [class.active]="$index === (editedItem.currentIndex || 0) && activeMediaMode === 'files'">
+              <span >
+                <span class="file-order">{{ $index + 1 }}.</span>
+                <span class="file-name">{{ file.file_name }}</span>
+              </span>
 
               <div class="file-actions">
-
+                <span class="file-type">
+                  {{ file.file_type }}
+                </span>
                 <!-- <button type="button" class="preview-file" (click)="previewFile($index)" title="Preview File">
                     <i class="fa-solid fa-eye"></i>
                   </button> -->

@@ -220,21 +220,34 @@ li.file-item {
   }
 }
 
-li.uploaded-file-item:hover, li.uploaded-file-item.active {
-  color: $primary-hover;
+li.uploaded-file-item:hover {
+  cursor: pointer;
+
+  span {
+    color: $primary-hover;
+  }
 }
 
-.file-order {
+li.uploaded-file-item.active {
+  span {
+    color: $primary-hover;
+  }
+}
+
+span.file-order {
   font-weight: bold;
   margin-right: 10px;
 }
 
-.file-name {
+span.file-name {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: pointer;
+}
+
+span.file-type {
+  font-weight: bold;
 }
 
 .file-actions {

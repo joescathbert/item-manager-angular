@@ -22,14 +22,14 @@
       &larr;
     </button>
     <div class="item-options-menu">
-      <button class="options-button" (click)="toggleOptions(item.id, $event)">
+      <button #optionsBtn class="options-button" (click)="toggleOptions(item.id, $event)">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
           <path
             d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
         </svg>
       </button>
       @if (activeOptionsMenuId === item.id) {
-      <div class="options-dropdown" (click)="$event.stopPropagation()">
+      <div #dropdownMenu class="options-dropdown" (click)="$event.stopPropagation()">
         <button class="menu-item" (click)="toggleMediaMode()">
           Switch to {{ activeMediaMode === 'media' ? 'Files' : 'Media' }}
         </button>

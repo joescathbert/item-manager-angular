@@ -208,6 +208,11 @@ export class Edit extends Add implements OnInit {
     this.activeMediaMode = 'files';
     if (this.editedItem) {
       this.editedItem.currentIndex = fileIndex;
+      window.scrollTo({
+        top: 50,
+        left: 0,
+        behavior: 'smooth'
+      });
     }
   }
 

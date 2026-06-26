@@ -1,11 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, HostListener, ViewChild, ElementRef, ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef, Inject, PLATFORM_ID } from '@angular/core';
 import { Router } from '@angular/router';
-import { PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Inject } from '@angular/core';
-import { map, mergeMap, tap, finalize } from 'rxjs/operators';
+import { map, tap, finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
-import { ChangeDetectorRef, ChangeDetectionStrategy, ApplicationRef } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { FormsModule } from '@angular/forms';
@@ -45,6 +42,10 @@ export class Home {
   tagInput: string = '';
   private tagFilterSubscription!: Subscription;
 
+  // Query the DOM elements specifically
+  @ViewChild('optionsBtn') optionsBtn!: ElementRef;
+  @ViewChild('dropdownMenu') dropdownMenu!: ElementRef;
+
   constructor(
     private itemService: ItemService,
     private router: Router,
@@ -53,7 +54,7 @@ export class Home {
     private sanitizer: DomSanitizer,
     private toastService: ToastService,
     private tagFilterService: TagFilterService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    @Inject(PLATFORM_ID) private platformId: Object,
   ) { }
 
   ngOnInit() {
@@ -244,6 +245,19 @@ export class Home {
   }
 
   // -------- Item Option Methods --------
+
+  // Closes the menu if you click anywhere except the button or the menu card itself
+  @HostListener('document:click', ['$event'])
+  clickout(event: Event) {
+    const clickedTarget = event.target as HTMLElement;
+
+    const clickedBtn = this.optionsBtn?.nativeElement.contains(clickedTarget);
+    const clickedMenu = this.dropdownMenu?.nativeElement.contains(clickedTarget);
+
+    if (!clickedBtn && !clickedMenu) {
+      this.activeOptionsMenuId = null;
+    }
+  }
 
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {

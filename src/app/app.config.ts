@@ -1,5 +1,5 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './auth/auth-interceptor';
 
@@ -9,7 +9,11 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes), provideClientHydration(withEventReplay()),
+    provideRouter(
+      routes,
+      withInMemoryScrolling({scrollPositionRestoration: "enabled"})
+    ),
+    provideClientHydration(withEventReplay()),
     provideHttpClient(
       withFetch(),
       withInterceptors([

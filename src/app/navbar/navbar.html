@@ -7,22 +7,43 @@
 
   <div class="navbar-right">
     @if (!isLoginPage) {
-      @if (!isAddPage) {
-        <a routerLink="/add" title="Add Item" class="nav-icon-button-link">
-          <span class="nav-icon-button-content">
-            <span class="nav-icon">
-              <svg rpl="" fill="currentColor" height="20" icon-name="add-square" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
-                <path d="M14.7 2H5.3C3.481 2 2 3.48 2 5.3v9.4C2 16.519 3.48 18 5.3 18h9.4c1.819 0 3.3-1.48 3.3-3.3V5.3C18 3.481 16.52 2 14.7 2zm1.499 12.7a1.5 1.5 0 01-1.499 1.499H5.3A1.5 1.5 0 013.801 14.7V5.3A1.5 1.5 0 015.3 3.801h9.4A1.5 1.5 0 0116.199 5.3v9.4zM14 10.9h-3.1V14H9.1v-3.1H6V9.1h3.1V6h1.8v3.1H14v1.8z"></path>
-              </svg>
-            </span>
-            <span>Add</span>
-          </span>
-        </a>
-      }
-      <button (click)="startDriveAuth()" type="button" class="gdrive-btn">
-        <img src="/assets/gdrive.svg" alt="GDrive Authentication" class="gdrive-auth">
+    @if (!isAddPage) {
+    <a routerLink="/add" title="Add Item" class="nav-icon-button-link">
+      <span class="nav-icon-button-content">
+        <span class="nav-icon">
+          <svg fill="currentColor" height="20" viewBox="0 0 20 20" width="20" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M14.7 2H5.3C3.481 2 2 3.48 2 5.3v9.4C2 16.519 3.48 18 5.3 18h9.4c1.819 0 3.3-1.48 3.3-3.3V5.3C18 3.481 16.52 2 14.7 2zm1.499 12.7a1.5 1.5 0 01-1.499 1.499H5.3A1.5 1.5 0 013.801 14.7V5.3A1.5 1.5 0 015.3 3.801h9.4A1.5 1.5 0 0116.199 5.3v9.4zM14 10.9h-3.1V14H9.1v-3.1H6V9.1h3.1V6h1.8v3.1H14v1.8z">
+            </path>
+          </svg>
+        </span>
+        <span>Add</span>
+      </span>
+    </a>
+    }
+
+    <!-- Profile Dropdown Container -->
+    <div class="profile-container">
+      <button #profileBtn (click)="toggleMenu($event)" type="button" class="profile-avatar-btn" title="User Menu">
+        <svg class="avatar-placeholder" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5-4-8-4z" />
+        </svg>
       </button>
-      <button (click)="logout()" type="button" class="logout-btn">Logout</button>
+
+      @if (isMenuOpen) {
+      <div #dropdownMenu class="dropdown-menu">
+        <button (click)="startDriveAuth()" type="button" class="dropdown-item">
+          <img src="/assets/gdrive.svg" alt="" class="dropdown-icon">
+          <span>Google Drive</span>
+        </button>
+        <hr class="dropdown-divider">
+        <button (click)="logout()" type="button" class="dropdown-item logout-item">
+          <span>Logout</span>
+        </button>
+      </div>
+      }
+    </div>
     }
   </div>
 </nav>

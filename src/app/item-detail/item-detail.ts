@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, ViewChild, ElementRef, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -35,6 +35,10 @@ export class ItemDetail implements OnInit {
   // Neighbor IDs
   prevId: number | null = null;
   nextId: number | null = null;
+
+  // Query the DOM elements specifically
+  @ViewChild('optionsBtn') optionsBtn!: ElementRef;
+  @ViewChild('dropdownMenu') dropdownMenu!: ElementRef;
 
   constructor(
     private route: ActivatedRoute,
@@ -233,6 +237,19 @@ export class ItemDetail implements OnInit {
   }
 
   // -------- Item Option Methods --------
+
+  // Closes the menu if you click anywhere except the button or the menu card itself
+  @HostListener('document:click', ['$event'])
+  clickout(event: Event) {
+    const clickedTarget = event.target as HTMLElement;
+
+    const clickedBtn = this.optionsBtn?.nativeElement.contains(clickedTarget);
+    const clickedMenu = this.dropdownMenu?.nativeElement.contains(clickedTarget);
+
+    if (!clickedBtn && !clickedMenu) {
+      this.activeOptionsMenuId = null;
+    }
+  }
 
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {
