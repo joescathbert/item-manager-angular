@@ -1,38 +1,46 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidatorFn } from '@angular/forms';
 import { of } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
-import { CommonModule } from '@angular/common'; // Needed for Common features like NgIf, NgFor
+import { CommonModule } from '@angular/common';
+
 import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
+import { Tag as TagService } from '../services/tag';
 import { Toast as ToastService } from '../services/toast';
-import { Tag } from '../interfaces/item';
+import { Tag } from '../interfaces/tag';
+import { MediaMode } from '../interfaces/misc';
 
-// We need to inject the NgIf/NgFor directives for standalone components
+import { Logger } from '../services/logger';
+
 @Component({
   selector: 'app-add',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule], 
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   templateUrl: './add.html',
   styleUrl: './add.scss'
 })
 export class Add {
   addItemForm!: FormGroup;
+  @ViewChild('tagInputField') tagInputField!: ElementRef<HTMLInputElement>;
+
   tagInput: string = '';
   tags: string[] = [];
   loading: boolean = false; // For submission button state
   // State for suggestions
   allTags: Tag[] = [];
   suggestionTags: Tag[] = [];
+  showTagSuggestions: boolean = true;
 
-  // 🚨 NEW: Property to hold the selected files
-  selectedFiles: File[] = [];
+  selectedFiles: File[] = []; // Property to hold the selected files
+  selectedFileTypes: string[] = []; // Property to hold the file types of selected files
 
-  // Protected properties for the child (Edit) component to read/override 🚨
+  // Protected properties for the child (Edit) component
   protected isEditing: boolean = false;
   protected headerText: string = 'Add New Item';
   protected submitButtonText: string = 'Add Item';
+  protected activeMediaMode: MediaMode = 'media';
 
   protected editedItem: SafeItemInterface = {
     id: 0, // Placeholder ID
@@ -43,20 +51,26 @@ export class Add {
     tags: [],
     created_at: '',
     link_id: null,
+    link_details: null,
     file_group_id: null,
+    file_group_details: null,
+    prev_id: null,
+    next_id: null,
     media_urls: [],
   };
 
   constructor(
     protected fb: FormBuilder,
     protected itemService: ItemService,
+    protected tagService: TagService,
     protected router: Router,
     protected route: ActivatedRoute,
     protected toastService: ToastService,
-    protected cdr: ChangeDetectorRef
-  ) {}
+    protected cdr: ChangeDetectorRef,
+    protected logger: Logger
+  ) { }
 
-  // 🚨 NEW: Custom Validator function to enforce URL OR File
+  // Custom Validator function to enforce URL OR File
   private urlOrFileRequiredValidator: ValidatorFn = (control: AbstractControl): { [key: string]: any } | null => {
     const url = control.get('url')?.value;
 
@@ -66,7 +80,7 @@ export class Add {
     // The main FormGroup validation will ensure 'name' and 'dateOfOrigin' are there.
 
     // For now, return null and rely on the onSubmit check for simplicity.
-    return null; 
+    return null;
   };
 
   ngOnInit(): void {
@@ -82,7 +96,7 @@ export class Add {
     this.handleTemplateTags();
   }
 
-  // Helper to get today's date in YYYY-MM-DD format for the input default
+  // Helper method to get today's date in YYYY-MM-DD format for the input default
   private getCurrentDate(): string {
     return new Date().toISOString().split('T')[0];
   }
@@ -93,7 +107,25 @@ export class Add {
     if (tagName && !this.tags.includes(tagName)) {
       this.tags.push(tagName);
       this.tagInput = ''; // Clear the input after adding
+      this.hideSuggestionsOnce();
     }
+  }
+
+  addSuggestedTag() {
+    const srcTag: string = this.tagInput.trim();
+    if (srcTag && !this.tags.includes(srcTag) && this.suggestionTags.length > 0) {
+      this.tags.push(this.suggestionTags[0].name);
+    }
+    this.tagInput = ''; // Clear the input after adding
+    this.hideSuggestionsOnce();
+  }
+
+  private hideSuggestionsOnce(): void {
+    this.showTagSuggestions = false;
+    setTimeout(() => {
+      this.showTagSuggestions = true;
+      this.filterSuggestions();
+    }, 0);
   }
 
   removeTag(tagToRemove: string) {
@@ -102,7 +134,7 @@ export class Add {
 
   // --- Tag Suggestion Management ---
   loadAllTags(): void {
-    this.itemService.getTags().subscribe({
+    this.tagService.getTags().subscribe({
       next: (tags: Tag[]) => {
         this.allTags = tags;
         this.suggestionTags = tags; // Initially show all tags
@@ -167,32 +199,29 @@ export class Add {
 
     // Convert FileList to Array and merge with existing files (if any)
     const newFiles = Array.from(files);
+    const newTypes = newFiles.map(() => 'RAW');
     this.selectedFiles = [...this.selectedFiles, ...newFiles];
+    this.selectedFileTypes = [...this.selectedFileTypes, ...newTypes];
 
     // Reset the input value to allow the user to select the same file(s) again if needed
-    event.target.value = null; 
-
-    // If Item Name is default, set it to the first file's name
-    if (this.selectedFiles.length > 0 && this.addItemForm.get('name')?.value === 'New Item') {
-      this.addItemForm.patchValue({ name: this.selectedFiles[0].name });
-    }
+    event.target.value = null;
   }
 
   // Removes a file from the selectedFiles array by index
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
-    // If the last file was removed, you might want to adjust the form validity/name
-    if (this.selectedFiles.length === 0) {
-        this.addItemForm.patchValue({ name: 'New Item' });
-    }
+    this.selectedFileTypes.splice(index, 1);
   }
 
   // Moves a file up in the list (decreases index)
   moveFileUp(index: number): void {
     if (index > 0) {
       // Standard array swap using destructuring
-      [this.selectedFiles[index - 1], this.selectedFiles[index]] = 
-      [this.selectedFiles[index], this.selectedFiles[index - 1]];
+      [this.selectedFiles[index - 1], this.selectedFiles[index]] =
+        [this.selectedFiles[index], this.selectedFiles[index - 1]];
+
+      [this.selectedFileTypes[index - 1], this.selectedFileTypes[index]] =
+        [this.selectedFileTypes[index], this.selectedFileTypes[index - 1]];
     }
   }
 
@@ -200,17 +229,20 @@ export class Add {
   moveFileDown(index: number): void {
     if (index < this.selectedFiles.length - 1) {
       // Standard array swap using destructuring
-      [this.selectedFiles[index + 1], this.selectedFiles[index]] = 
-      [this.selectedFiles[index], this.selectedFiles[index + 1]];
+      [this.selectedFiles[index + 1], this.selectedFiles[index]] =
+        [this.selectedFiles[index], this.selectedFiles[index + 1]];
+
+      [this.selectedFileTypes[index + 1], this.selectedFileTypes[index]] =
+        [this.selectedFileTypes[index], this.selectedFileTypes[index + 1]];
     }
   }
 
   // Getter to safely format the file names for display
   public get selectedFileNames(): string {
-      if (this.selectedFiles && this.selectedFiles.length > 0) {
-          return this.selectedFiles.map(f => f.name).join(', ');
-      }
-      return '';
+    if (this.selectedFiles && this.selectedFiles.length > 0) {
+      return this.selectedFiles.map(f => f.name).join(', ');
+    }
+    return '';
   }
 
   // --- Form Actions ---
@@ -219,12 +251,11 @@ export class Add {
 
     const hasUrl = !!url;
     const hasFiles = this.selectedFiles.length > 0;
-    
+
     if (this.addItemForm.invalid || this.tags.length === 0 || (!hasUrl && !hasFiles)) {
       let errorMsg = '';
       if (this.addItemForm.invalid) errorMsg = 'Please fill out all required fields.';
       else if (this.tags.length === 0) errorMsg = 'Please add at least one tag.';
-      // CORE LOGIC: Ensure AT LEAST one of URL or Files is present.
       else if (!hasUrl && !hasFiles) errorMsg = 'Please provide a URL OR select at least one file.';
 
       this.toastService.showError(errorMsg);
@@ -235,11 +266,11 @@ export class Add {
 
     // CONDITIONAL SUBMISSION LOGIC
     if (hasFiles) {
-        // If files are present, use the NEW file group submission logic
-        this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles);
+      // If files are present, use the NEW file group submission logic
+      this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles, this.selectedFileTypes);
     } else {
-        // If no files are present, use the OLD link submission logic
-        this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
+      // If no files are present, use the OLD link submission logic
+      this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
     }
   }
 
@@ -247,11 +278,17 @@ export class Add {
     this.router.navigate(['/home']);
   }
 
+  // Placeholder method for the child (Edit) component
+  toggleMediaMode() { }
+
+  // Placeholder method for the child (Edit) component
+  previewFile(fileIndex: number) { }
+
   // This method is now safe to be called by the default onSubmit()
   protected submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
     const itemPayload: ItemPayload = {
       name: name,
-      type: 'link', 
+      type: 'link',
       date_of_origin: dateOfOrigin,
       tag_names: tags
     };
@@ -274,7 +311,7 @@ export class Add {
       next: () => {
         this.loading = false;
         // 4. Success: Navigate back home.
-        this.toastService.showSuccess('Item added.'); 
+        this.toastService.showSuccess('Link added.');
         this.router.navigate(['/home']);
       },
       error: (err) => {
@@ -287,7 +324,7 @@ export class Add {
   }
 
   // Method for File Upload submission
-  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], files: File[]): void {
+  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], files: File[], fileTypes: string[]): void {
     // Extract URL from the form right before submission
     const url = this.addItemForm.get('url')?.value || '';
     const hasSecondaryLink = !!url;
@@ -303,23 +340,23 @@ export class Add {
       // 1. Create the Item. API returns the new item object, including its ID.
       mergeMap((newItem: any) => {
         const newItemId = newItem.id;
-
+        this.logger.log(files, fileTypes)
         // 2. Upload Files using the new API.
-        return this.itemService.uploadFilesToItem(newItemId, files).pipe(
+        return this.itemService.uploadFilesToItem(newItemId, files, fileTypes).pipe(
           // 3. CONDITIONAL: Create Link if a URL was provided.
           // This nested mergeMap ensures the file upload is complete before trying to create the link.
           mergeMap(() => {
             if (hasSecondaryLink) {
-                const linkPayload: LinkPayload = {
-                    item: newItemId,
-                    url: url
-                };
-                // Return the observable for Link creation
-                return this.itemService.createLink(linkPayload);
+              const linkPayload: LinkPayload = {
+                item: newItemId,
+                url: url
+              };
+              // Return the observable for Link creation
+              return this.itemService.createLink(linkPayload);
             } else {
-                // If no URL, return an Observable that immediately emits a null value, 
-                // allowing the subscription to continue without error.
-                return of(null);
+              // If no URL, return an Observable that immediately emits a null value, 
+              // allowing the subscription to continue without error.
+              return of(null);
             }
           })
         );
@@ -327,11 +364,11 @@ export class Add {
     ).subscribe({
       next: () => {
         this.loading = false;
-        let successMsg = 'Item added.';
+        let successMsg = 'File uploaded.';
         if (hasSecondaryLink) {
           successMsg += ' A secondary link was also added.';
         }
-        this.toastService.showSuccess(successMsg); 
+        this.toastService.showSuccess(successMsg);
         this.router.navigate(['/home']);
       },
       error: (err) => {
@@ -347,6 +384,10 @@ export class Add {
   public nextSlide(item: SafeItemInterface): void {
     const idx = item.currentIndex ?? 0;
     if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
+      item.currentIndex = idx + 1;
+      this.cdr.markForCheck();
+    }
+    if (item.safe_files && idx < item.safe_files.length - 1) {
       item.currentIndex = idx + 1;
       this.cdr.markForCheck();
     }

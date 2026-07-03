@@ -7,9 +7,10 @@
 
       <section class="form-section tag-section">
         <div class="tag-input-group">
-          <input type="text" placeholder="Enter tag name (e.g., angular, rxjs)" [(ngModel)]="tagInput"
-            [ngModelOptions]="{standalone: true}" (keydown.enter)="$event.preventDefault(); addTag()"
-            (input)="filterSuggestions()" list="tag-suggestions" autocapitalize="off" />
+          <input #tagInputField type="text" placeholder="Enter tag name (e.g., angular, rxjs)" [(ngModel)]="tagInput"
+            [ngModelOptions]="{standalone: true}" (keydown.shift.enter)="$event.preventDefault(); addTag()"
+            (keydown.enter)="$event.preventDefault(); addSuggestedTag()" (input)="filterSuggestions()"
+            [attr.list]="showTagSuggestions ? 'tag-suggestions' : null" autocapitalize="off" />
           <button type="button" (click)="addTag()">Add Tag</button>
         </div>
 
@@ -55,6 +56,14 @@
               <span class="file-name">{{ file.name }}</span>
 
               <div class="file-actions">
+
+                <select class="file-type-select" [(ngModel)]="selectedFileTypes[$index]"
+                  [ngModelOptions]="{standalone: true}">
+                  <option value="ORG">ORG</option>
+                  <option value="RAW">RAW</option>
+                  <option value="BON">BON</option>
+                </select>
+
                 <button type="button" class="move-up" (click)="moveFileUp($index)" [disabled]="$index === 0"
                   title="Move Up">
                   &uarr;
@@ -73,6 +82,53 @@
             }
           </ul>
         </div>
+        }
+        @if (isEditing) {
+        @if (editedItem.files && editedItem.files.length > 0) {
+        <div class="file-list-container">
+          <h3>Existing Files ({{ editedItem.files.length }})</h3>
+          <ul class="file-list">
+            @for (file of editedItem.files; track $index) {
+            <li class="file-item uploaded-file-item" (click)="previewFile($index)" [class.active]="$index === (editedItem.currentIndex || 0) && activeMediaMode === 'files'">
+              <span >
+                <span class="file-order">{{ $index + 1 }}.</span>
+                <span class="file-name">{{ file.file_name }}</span>
+              </span>
+
+              <div class="file-actions">
+                <span class="file-type">
+                  {{ file.file_type }}
+                </span>
+                <!-- <button type="button" class="preview-file" (click)="previewFile($index)" title="Preview File">
+                    <i class="fa-solid fa-eye"></i>
+                  </button> -->
+
+                <!-- <select class="file-type-select" [(ngModel)]="selectedFileTypes[$index]"
+                    [ngModelOptions]="{standalone: true}">
+                    <option value="ORG">ORG</option>
+                    <option value="RAW">RAW</option>
+                    <option value="BON">BON</option>
+                  </select> -->
+
+                <!-- <button type="button" class="move-up" (click)="moveFileUp($index)" [disabled]="$index === 0"
+                    title="Move Up">
+                    &uarr;
+                  </button>
+
+                  <button type="button" class="move-down" (click)="moveFileDown($index)"
+                    [disabled]="$index === selectedFiles.length - 1" title="Move Down">
+                    &darr;
+                  </button>
+
+                  <button type="button" class="remove-file" (click)="removeFile($index)" title="Remove File">
+                    &times;
+                  </button> -->
+              </div>
+            </li>
+            }
+          </ul>
+        </div>
+        }
         }
 
         <input type="hidden" formControlName="name">
@@ -93,17 +149,44 @@
     </form>
   </div>
 
+  @if (isEditing) {
   <div class="add-preview">
-    @if (isEditing) {
-    <h2>Preview</h2>
+    <h2 class="preview-header">
+      <span>
+        Preview
+        @if ( activeMediaMode === 'media' ) {
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        } @else {
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        }
+      </span>
+      <svg class="svg-button" (click)="toggleMediaMode()" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+        viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+        <path d="M16 16h5v5"></path>
+      </svg>
+    </h2>
     <div class="carousel-container">
+
+      @if (activeMediaMode === 'media') {
       @if (editedItem.safe_media_urls && editedItem.safe_media_urls.length > 0) {
       <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
         @for (media of editedItem.safe_media_urls; track media.id) {
         <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
           @if (media.media_type === 'video') {
           <div class="item-content-video">
-            <video #mediaElement controls loop [muted]="true" autoplay>
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
               <source [src]="media.safe_hd_url">
             </video>
           </div>
@@ -115,32 +198,62 @@
         </div>
         }
       </div>
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_media_urls, item: editedItem }"></ng-container>
+      } @else {
+      <div class="empty-media-placeholder">
+        <p>No external media available.</p>
+      </div>
+      }
+      }
 
-      @if (editedItem.safe_media_urls.length > 1) {
-      <button class="carousel-control prev" (click)="prevSlide(editedItem)"
-        [disabled]="!editedItem.currentIndex || editedItem.currentIndex === 0">
-        &#10094;
-      </button>
-      <button class="carousel-control next" (click)="nextSlide(editedItem)"
-        [disabled]="editedItem.currentIndex === editedItem.safe_media_urls.length - 1">
-        &#10095;
-      </button>
-
-      <div class="carousel-dots">
-        @for (m of editedItem.safe_media_urls; track $index) {
-        <span class="dot" [class.active]="$index === (editedItem.currentIndex || 0)"></span>
+      @if (activeMediaMode === 'files') {
+      @if (editedItem.safe_files && editedItem.safe_files.length > 0) {
+      <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
+        @for (file of editedItem.safe_files; track file.id) {
+        <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
+          <div class="item-content-video">
+            @if (file.file_type.includes('IMG')) {
+            <div class="item-content-image">
+              <img [src]="file.safe_file_serve_url" alt="File content" loading="lazy">
+            </div>
+            } @else {
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="file.safe_file_serve_url">
+            </video>
+            }
+          </div>
+        </div>
         }
       </div>
-      }
-
-      } @else if (editedItem.safe_media_urls && editedItem.safe_media_urls.length == 1) {
-      <div class="item-content-video">
-        <video #mediaElement controls loop [muted]="true" autoplay>
-          <source [src]="editedItem.safe_media_urls[0].safe_hd_url">
-        </video>
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: editedItem.safe_files, item: editedItem }"></ng-container>
+      } @else {
+      <div class="empty-media-placeholder">
+        <p>No uploaded files available.</p>
       </div>
       }
+      }
     </div>
+  </div>
+  }
+</div>
+
+<ng-template #carouselControls let-mediaList let-item="item">
+  @if (item && mediaList && mediaList.length > 1) {
+  <button type="button" class="carousel-control prev" (click)="prevSlide(item)"
+    [disabled]="!item.currentIndex || item.currentIndex === 0">
+    &#10094;
+  </button>
+  <button type="button" class="carousel-control next" (click)="nextSlide(item)"
+    [disabled]="item.currentIndex === (mediaList.length - 1)">
+    &#10095;
+  </button>
+
+  <div class="carousel-dots">
+    @for (m of mediaList; track $index) {
+    <span class="dot" [class.active]="$index === (item.currentIndex || 0)"></span>
     }
   </div>
-</div>
+  }
+</ng-template>

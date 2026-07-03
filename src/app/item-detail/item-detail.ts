@@ -1,16 +1,17 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, ViewChild, ElementRef, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { isPlatformBrowser, CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
+import { switchMap, catchError, tap, map, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+
 import { Item as ItemService } from '../services/item';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File, SafeFile } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, ItemNeighbors, MediaURL, SafeMediaURL, File as FileInterface, SafeFile } from '../interfaces/item';
+import { MediaMode } from '../interfaces/misc';
+
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
-import { switchMap, catchError, mergeMap, map, finalize } from 'rxjs/operators';
-import { of, forkJoin } from 'rxjs';
-
-type MediaMode = 'media' | 'files';
 
 @Component({
   selector: 'app-item-detail',
@@ -35,6 +36,10 @@ export class ItemDetail implements OnInit {
   prevId: number | null = null;
   nextId: number | null = null;
 
+  // Query the DOM elements specifically
+  @ViewChild('optionsBtn') optionsBtn!: ElementRef;
+  @ViewChild('dropdownMenu') dropdownMenu!: ElementRef;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -47,38 +52,33 @@ export class ItemDetail implements OnInit {
 
   ngOnInit() {
     if (isPlatformBrowser(this.platformId)) {
-      // Subscribe to route parameter changes (e.g., when clicking Prev/Next)
       this.route.paramMap.pipe(
-        // Step 1: Reset state and get ID
-        map(params => {
+        // Step 1: Extract ID and Reset UI State
+        map(params => Number(params.get('id'))),
+        tap(itemId => {
+          if (isNaN(itemId)) {
+            this.router.navigate(['/']);
+            return;
+          }
           this.loading = true;
           this.item = null;
           this.prevId = null;
           this.nextId = null;
-          this.cdRef.markForCheck(); // Show loading/reset state immediately
-          return params.get('id');
+          this.cdRef.markForCheck();
         }),
-        // Step 2: Use switchMap to cancel old requests and start new ones
-        switchMap(id => {
-          const itemId = Number(id);
-          if (isNaN(itemId)) {
-            this.router.navigate(['/']);
-            return of(null);
-          }
 
-          // Step 3: Load Item Details and Neighbors concurrently using forkJoin
-          return forkJoin([
-            this.loadItemDetails(itemId),
-            this.loadNeighbors(itemId)
-          ]).pipe(
+        // Step 2: Single API call handles everything (Item + Neighbors)
+        switchMap(itemId => {
+          if (isNaN(itemId)) return of(null);
+
+          // Pass active filters/ordering so Django calculates the correct neighbors
+          return this.loadItemDetails(itemId).pipe(
             catchError(err => {
-              console.error('Error loading item or neighbors:', err);
+              console.error('Error loading item:', err);
               return of(null);
             }),
-            // Step 4: Ensure loading is set to false and view is checked after all API calls complete
             finalize(() => {
               this.loading = false;
-              console.log(this.nextId, this.prevId);
               this.cdRef.markForCheck();
             })
           );
@@ -89,46 +89,31 @@ export class ItemDetail implements OnInit {
 
   // --- Core Loading Methods ---
 
+  // Method to load item details
   private loadItemDetails(itemId: number) {
-    return this.itemService.getItem(itemId).pipe(
-      // 1. Handle Link
-      mergeMap((item: ItemInterface) => {
-        if (item.link_id) {
-          return this.itemService.getLink(item.link_id).pipe(
-            map(link => ({
-              ...item,
-              url: link.url,
-              url_domain: link.url_domain,
-              media_url: link.media_url,
-              media_url_domain: link.media_url_domain,
-              media_urls: link.media_urls
-            }))
-          );
+    this.activeTagFilters = this.tagFilterService.currentFilters;
+    return this.itemService.getItem(itemId, this.activeTagFilters).pipe(
+      map((item: ItemInterface) => {
+        // 1. Flatten Link & FileGroup details safely
+        if (item.link_details) {
+          item.url = item.link_details.url;
+          item.url_domain = item.link_details.url_domain;
+          item.media_urls = item.link_details.media_urls;
         }
-        return of(item);
-      }),
 
-      // 2. Handle FileGroup
-      mergeMap((item: ItemInterface) => {
-        if (item.file_group_id) {
-          return this.itemService.getFileGroup(item.file_group_id).pipe(
-            map(group => {
-              return {
-                ...item,
-                files: group.files
-              };
-            })
-          );
+        if (item.file_group_details) {
+          item.files = item.file_group_details.files;
         }
-        return of(item);
-      }),
 
-      // 3. Final processing and side effects
-      map((processedItem: ItemInterface) => this.processItemUrls(processedItem)),
-      map((safeItem: SafeItemInterface) => {
+        // 2. Process URLs (this returns SafeItemInterface)
+        return this.processItemUrls(item);
+      }),
+      tap((safeItem: SafeItemInterface) => {
+        // 3. Handle Side Effects (Assigning to local variable and CD)
         this.item = safeItem;
+        this.prevId = (safeItem as any).prev_id;
+        this.nextId = (safeItem as any).next_id;
         this.cdRef.markForCheck();
-        return safeItem;
       })
     );
   }
@@ -185,13 +170,14 @@ export class ItemDetail implements OnInit {
 
         return safeMedia;
       });
-
-      // Fallback for legacy: set the first media as the primary safe_media_url
-      safeItem.safe_media_url = safeItem.safe_media_urls[0].safe_hd_url;
+      this.activeMediaMode = "media"; // To automatically switch to media mode if media url is present
+    }
+    else {
+      this.activeMediaMode = "files"; // To automatically switch to files mode if no media url is present
     }
     // 4. Process file url
     if (item.files && item.files.length > 0) {
-      safeItem.safe_files = item.files.map((f: File) => {
+      safeItem.safe_files = item.files.map((f: FileInterface) => {
         const safeFile: SafeFile = { ...f };
 
         const fileUrl: string = `${environment.apiUrl}/files/${f.id}/serve/`
@@ -218,7 +204,6 @@ export class ItemDetail implements OnInit {
   }
 
   private navigateToItem(itemId: number): void {
-    console.log(`Navigating to item ID: ${itemId}`);
     this.router.navigate(['/item', itemId]);
   }
 
@@ -253,9 +238,21 @@ export class ItemDetail implements OnInit {
 
   // -------- Item Option Methods --------
 
+  // Closes the menu if you click anywhere except the button or the menu card itself
+  @HostListener('document:click', ['$event'])
+  clickout(event: Event) {
+    const clickedTarget = event.target as HTMLElement;
+
+    const clickedBtn = this.optionsBtn?.nativeElement.contains(clickedTarget);
+    const clickedMenu = this.dropdownMenu?.nativeElement.contains(clickedTarget);
+
+    if (!clickedBtn && !clickedMenu) {
+      this.activeOptionsMenuId = null;
+    }
+  }
+
   // Method to toggle the options menu
   toggleOptions(itemId: number, event: Event): void {
-    console.log(`Toggling options menu for item ID: ${itemId}`);
     // Prevent the click from propagating and closing the menu immediately
     event.stopPropagation();
 
@@ -361,6 +358,6 @@ export class ItemDetail implements OnInit {
     // Closes the menu
     this.activeOptionsMenuId = null;
     this.cdRef.markForCheck();
-}
+  }
 
 }

@@ -19,6 +19,7 @@
 
 .add-preview {
   max-width: 600px;
+  width: 600px;
   margin: 0rem auto 0rem 2rem;
   border-radius: 10px;
   color: #f6f7f8;
@@ -30,6 +31,29 @@ h3 {
   border-bottom: 1px solid #3c3c40;
   padding-bottom: 10px;
   margin-bottom: 15px;
+}
+
+h2.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+h2.preview-header span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+svg.svg-button {
+  transition: transform 0.2s;
+}
+
+svg.svg-button:hover {
+  cursor: pointer;
+  stroke: $primary-color;
+  transform: rotate(22deg);
 }
 
 /* --- Form Styles --- */
@@ -178,7 +202,7 @@ input[type="file"] {
   margin: 0;
 }
 
-.file-item {
+li.file-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -196,23 +220,68 @@ input[type="file"] {
   }
 }
 
-.file-order {
-  font-weight: bold;
-  margin-right: 10px;
-  color: $focus-color; // Highlight the order number
+li.uploaded-file-item:hover {
+  cursor: pointer;
+
+  span {
+    color: $primary-hover;
+  }
 }
 
-.file-name {
+li.uploaded-file-item.active {
+  span {
+    color: $primary-hover;
+  }
+}
+
+span.file-order {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+span.file-name {
   flex-grow: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+span.file-type {
+  font-weight: bold;
+}
+
 .file-actions {
   display: flex;
   gap: 5px;
   margin-left: 10px;
+}
+
+.file-actions .file-type-select {
+  background: $color-neutral-bg-hover;
+  border: 1px solid $color-neutral-border-medium;
+  color: $color-text-light;
+  padding: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: bold;
+  height: 30px;
+  outline: none;
+  font-family: inherit;
+
+  &:hover {
+    background-color: #4a4a4f;
+    border-color: $color-neutral-border-medium;
+  }
+
+  &:focus {
+    border-color: $focus-color;
+  }
+
+  option {
+    background-color: $color-netural-bg;
+    color: white;
+  }
 }
 
 .file-actions button {
@@ -399,7 +468,7 @@ input[type="file"] {
 
 /* --- Responsive Adjustments --- */
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .add-container {
     flex-direction: column;
     margin: 0rem;
@@ -415,6 +484,7 @@ input[type="file"] {
   .add-preview {
     margin: 0rem 0rem auto 0rem;
     min-height: unset;
+    width: auto;
   }
 
   .file-item {

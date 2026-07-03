@@ -1,9 +1,128 @@
 @use 'theme_variables.scss' as *;
 
+/* --- Group By Component Layout --- */
+
+.group-by-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 2px 0;
+}
+
+.group-label {
+  color: #aaa;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select-wrapper {
+  position: relative;
+  flex-grow: 0;
+  min-width: 160px; /* Gives the dropdown a balanced, consistent look */
+}
+
+.group-dropdown {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.85rem;
+  padding: 8px 12px;
+  border: 1px solid $color-neutral-border;
+  border-radius: $pill-border-radius;
+  background-color: $color-netural-bg;
+  color: #f6f7f8;
+  box-sizing: border-box;
+  cursor: pointer;
+  appearance: none; /* Removes standard browser arrow to keep things sleek */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  /* Custom subtle arrow icon styling */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23f6f7f8'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 18px;
+  padding-right: 30px; 
+
+  &:hover {
+    border-color: $color-neutral-border-medium;
+    background-color: $color-neutral-bg-hover;
+  }
+
+  &:focus {
+    border-color: $color-neutral-border-medium;
+    outline: 1px solid $focus-color;
+  }
+
+  /* Style options dark theme context */
+  option {
+    background-color: #1e1e1e; 
+    color: #f6f7f8;
+  }
+}
+
+.category-values-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  align-items: center;
+  min-height: 83vh;
+}
+
+.category-value-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  
+  background-color: $color-netural-bg;
+  border: 1px solid $color-neutral-border;
+  color: $color-text-light;
+  
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  width: 35%; /* Exact card matching layout constraint */
+  box-sizing: border-box;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+
+  &.clickable-value {
+    cursor: pointer;
+
+    &:hover {
+      background-color: $color-neutral-bg-hover;
+      border-color: #007bff; /* Highlight with theme blue */
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.category-value-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #f6f7f8;
+  text-transform: capitalize;
+}
+
+.category-value-badge {
+  background-color: #007bff;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 4px 12px;
+  border-radius: 50px;
+}
+
 
 /* --- Filter Bar and Pill Styles --- */
 
-.filter-pills-container {
+div.filter-pills-container {
   // Positioning and layout
   width: 100%;
   max-width: 35%; /* Match the width of .item-card */
@@ -62,35 +181,19 @@
   }
 }
 
-.select-filter-tag-list {
-    /* * These three lines enable horizontal scrolling.
-    * 1. overflow-x: auto - allows horizontal scrolling when content exceeds the container's width.
-    * 2. flex-wrap: nowrap - forces all flex items (the tags) onto a single line.
-    * 3. width: 100% - ensures the list takes up the full width of the container.
-    */
+div.select-filter-tag-list {
     overflow-x: auto;
     flex-wrap: nowrap; /* Forces tags onto one line for horizontal scrolling */
     width: 100%;
 
     display: flex;
-    /* Removed flex-wrap: wrap; as it conflicts with horizontal scrolling */
     gap: 8px;
-    // margin-bottom: 1rem;
-    margin-bottom: 0.5rem;
-    border-bottom: 1px solid $color-neutral-border-weak;
 
-    /* * Properties to hide the scrollbar, while keeping the scrolling functionality.
-    */
-
-    /* For WebKit browsers (Chrome, Safari) */
+    /* Properties to hide the scrollbar, while keeping the scrolling functionality. */
     &::-webkit-scrollbar {
         display: none;
     }
-
-    /* For IE and Edge */
     -ms-overflow-style: none;
-
-    /* For Firefox */
     scrollbar-width: none;
 }
 
@@ -174,13 +277,10 @@
 
 /* --- Tag List and Pill Styles --- */
 
-.tag-list {
+div.tag-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid $color-neutral-border-weak;
 }
 
 .tag-pill {
@@ -229,7 +329,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 1.5rem;
 }
 
 .item-options-menu {
@@ -286,6 +386,16 @@
       background-color: var(--primary-color-hover, #0056b3); /* Highlight the selected action */
       color: white;
     }
+
+    div {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+
+      span {
+        margin: auto 0;
+      }
+    }
   }
 }
 
@@ -300,7 +410,7 @@
   }
 }
 
-/* --- Card Actions Styles --- */
+/* --- Card Actions Styles --- */ // REMOVED -------------
 
 .card-actions {
   margin-top: 1rem; // Add space above the button
@@ -655,6 +765,32 @@
   }
 }
 
+/* --- Manual Pagination Actions --- */
+
+.show-more-button {
+  background-color: $color-button-bg;
+  color: $color-text-light;
+  font-family: inherit;
+  font-weight: bold;
+  font-size: 0.9rem;
+  
+  border: 1px solid $color-neutral-border;
+  border-radius: 20px; /* Matching the pill aesthetics of end-of-page card */
+  padding: 10px 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+
+  &:hover {
+    background-color: $color-button-bg-hover;
+    border-color: $color-neutral-border-medium;
+  }
+
+  &:active {
+    transform: scale(0.98); /* Subtle tactile response when clicked */
+  }
+}
+
 /* --- Responsive Adjustments --- */
 
 @media (max-width: 800px) {
@@ -666,10 +802,10 @@
     width: unset;
   }
 
-  .filter-pills-container {
+  div.filter-pills-container {
     width: unset; 
     max-width: unset;
-    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
+    margin: 0 1rem 0.5rem 1rem;
   }
 }
 
@@ -682,10 +818,21 @@
     width: unset;
   }
 
-  .filter-pills-container {
+  div.filter-pills-container {
     width: unset; 
     max-width: unset;
-    margin: 0 1rem 1.5rem 1rem; /* Synchronize with .items-container padding */
+    margin: 0 1rem 0.5rem 1rem;
+  }
+
+  div.tag-list {
+    flex-wrap: nowrap; /* Forces tags onto one line for horizontal scrolling */
+    overflow-x: auto;
+    /*  Properties to hide the scrollbar, while keeping the scrolling functionality. */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 
   .carousel-slide {

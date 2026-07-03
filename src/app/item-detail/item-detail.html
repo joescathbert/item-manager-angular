@@ -22,14 +22,14 @@
       &larr;
     </button>
     <div class="item-options-menu">
-      <button class="options-button" (click)="toggleOptions(item.id, $event)">
+      <button #optionsBtn class="options-button" (click)="toggleOptions(item.id, $event)">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="options-icon">
           <path
             d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
         </svg>
       </button>
       @if (activeOptionsMenuId === item.id) {
-      <div class="options-dropdown" (click)="$event.stopPropagation()">
+      <div #dropdownMenu class="options-dropdown" (click)="$event.stopPropagation()">
         <button class="menu-item" (click)="toggleMediaMode()">
           Switch to {{ activeMediaMode === 'media' ? 'Files' : 'Media' }}
         </button>
@@ -58,11 +58,28 @@
         }
       </div>
       }
-      @if (item.tags && item.tags.length > 0) {
-      <button class="toggle-tags-button" (click)="toggleTags()" [title]="showAllTags ? 'Close Tags' : 'Show Tags'">
-        {{ showAllTags ? 'Close Tags' : 'Show Tags' }}
-      </button>
-      }
+      <div class="tag-control">
+        <span>
+          @if ( activeMediaMode === 'media' ) {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          } @else {
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          }
+        </span>
+        @if (item.tags && item.tags.length > 0) {
+        <button class="toggle-tags-button" (click)="toggleTags()" [title]="showAllTags ? 'Close Tags' : 'Show Tags'">
+          {{ showAllTags ? 'Close Tags' : 'Show Tags' }}
+        </button>
+        }
+      </div>
     </div>
 
     <div class="item-media-section">

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors, FileGroup } from '../interfaces/item';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, Subject, throwError } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
+import { Item as ItemInterface, Link, PagedItems, ItemNeighbors, FileGroup } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
@@ -21,26 +21,31 @@ export class Item {
   constructor(
     private http: HttpClient,
     private logger: Logger
-  ) {}
+  ) { }
 
   getItems(page: number, tags: string[] = []): Observable<PagedItems> {
     let url: string;
+    let options = {};
 
     if (this.nextUrl) {
       url = this.nextUrl;
     } else {
-      let params = [`page=${page}`];
+      url = `${this.baseUrl}/items/`;
+
+      let params = new HttpParams().set('page', page.toString());
+
       if (tags && tags.length > 0) {
-        // Join tags with a comma, as per API
-        params.push(`tag_names=${tags.join(',')}`); 
+        params = params.set('tag_names', tags.join(','));
       }
-      url = `${this.baseUrl}/items/?${params.join('&')}`;
+
+      options = { params };
     }
 
     this.logger.log(`Fetching items from URL: ${url}`);
 
-    return this.http.get<PagedItems>(url).pipe(
+    return this.http.get<PagedItems>(url, options).pipe(
       map(response => {
+        // Update the pagination state
         this.nextUrl = response.next;
         this.nextUrlSubject.next(response.next);
         return response;
@@ -53,10 +58,26 @@ export class Item {
     this.logger.log('ItemService: Pagination state reset.');
   }
 
-  getItem(itemId: number): Observable<ItemInterface> {
+  getItem(itemId: number, tags?: string[]): Observable<ItemInterface> {
     const url = `${this.baseUrl}/items/${itemId}/`;
-    this.logger.log('Fetching item from URL:', url);
-    return this.http.get<ItemInterface>(url);
+    let options = {};
+    let params = new HttpParams();
+    if (tags && tags.length > 0) {
+      params = params.set('tag_names', tags.join(','));
+    }
+    options = { params };
+    const fullUrl = params.keys().length > 0
+      ? `${url}?${params.toString()}`
+      : url;
+    this.logger.log('Fetching item from URL:', fullUrl);
+    return this.http.get<ItemInterface>(url, options).pipe(
+      tap(item => this.logger.log(`[ItemService] Received item: ${item.name}`, item)),
+
+      catchError(error => {
+        this.logger.error(`[ItemService] Failed to fetch item ${itemId}`, error);
+        return throwError(() => error);
+      })
+    );
   }
 
   getItemNeighbors(itemId: number, tagFilters: string[]): Observable<ItemNeighbors> {
@@ -64,7 +85,7 @@ export class Item {
     let params: string[] = [];
     if (tagFilters && tagFilters.length > 0) {
       // Join tags with a comma, as per API
-      params.push(`tag_names=${tagFilters.join(',')}`); 
+      params.push(`tag_names=${tagFilters.join(',')}`);
     }
     console.log('ItemService: Fetching item neighbors with tag filters:', tagFilters);
     url = `${this.baseUrl}/items/${itemId}/neighbors/?${params.join('&')}`;
@@ -72,18 +93,14 @@ export class Item {
     return this.http.get<ItemNeighbors>(url);
   }
 
+  // Unused
   getLink(linkId: number): Observable<Link> {
     const url = `${this.baseUrl}/links/${linkId}/`;
     this.logger.log('Fetching link from URL:', url);
     return this.http.get<Link>(url);
   }
 
-  getTags(): Observable<Tag[]> {
-    const url = `${this.baseUrl}/tags/`
-    this.logger.log('Fetching tags from URL:', url);
-    return this.http.get<Tag[]>(url);
-  }
-
+  // Unused
   getFileGroup(fileGroupId: number): Observable<FileGroup> {
     const url = `${this.baseUrl}/file-groups/${fileGroupId}/`;
     this.logger.log('Fetching file group from URL:', url);
@@ -126,7 +143,7 @@ export class Item {
     return this.http.delete(url);
   }
 
-  uploadFilesToItem(itemId: number, files: File[]): Observable<any> {
+  uploadFilesToItem(itemId: number, files: File[], fileTypes: string[]): Observable<any> {
     // 1. Define the target URL for your Django endpoint
     const url = `${this.baseUrl}/file-groups/upload-to-gdrive/`;
 
@@ -137,9 +154,12 @@ export class Item {
     formData.append('item', itemId.toString());
 
     // 4. Append all selected files using the key 'files' (as specified in your curl example)
-    files.forEach((file) => {
+    files.forEach((file, index) => {
       // The third argument is the filename, which helps the backend process the file
-      formData.append('files', file, file.name); 
+      formData.append('files', file, file.name);
+      if (fileTypes && fileTypes[index]) {
+        formData.append('file_types', fileTypes[index]);
+      }
     });
 
     this.logger.log('Uploading files to URL:', url, 'for Item ID:', itemId);
