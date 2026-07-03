@@ -7,8 +7,9 @@ import { CommonModule } from '@angular/common';
 
 import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
+import { Tag as TagService } from '../services/tag';
 import { Toast as ToastService } from '../services/toast';
-import { Tag } from '../interfaces/item';
+import { Tag } from '../interfaces/tag';
 import { MediaMode } from '../interfaces/misc';
 
 import { Logger } from '../services/logger';
@@ -61,6 +62,7 @@ export class Add {
   constructor(
     protected fb: FormBuilder,
     protected itemService: ItemService,
+    protected tagService: TagService,
     protected router: Router,
     protected route: ActivatedRoute,
     protected toastService: ToastService,
@@ -132,7 +134,7 @@ export class Add {
 
   // --- Tag Suggestion Management ---
   loadAllTags(): void {
-    this.itemService.getTags().subscribe({
+    this.tagService.getTags().subscribe({
       next: (tags: Tag[]) => {
         this.allTags = tags;
         this.suggestionTags = tags; // Initially show all tags

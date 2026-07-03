@@ -1,10 +1,5 @@
 import { SafeResourceUrl } from "@angular/platform-browser";
 
-export interface Tag {
-  id: number;
-  name: string;
-}
-
 export interface Item {
   id: number;
   owner: string;

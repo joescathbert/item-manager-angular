@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems, Tag, ItemNeighbors, FileGroup } from '../interfaces/item';
+import { Item as ItemInterface, Link, PagedItems, ItemNeighbors, FileGroup } from '../interfaces/item';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
@@ -98,12 +98,6 @@ export class Item {
     const url = `${this.baseUrl}/links/${linkId}/`;
     this.logger.log('Fetching link from URL:', url);
     return this.http.get<Link>(url);
-  }
-
-  getTags(): Observable<Tag[]> {
-    const url = `${this.baseUrl}/tags/`
-    this.logger.log('Fetching tags from URL:', url);
-    return this.http.get<Tag[]>(url);
   }
 
   // Unused

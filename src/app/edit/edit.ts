@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -10,6 +11,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ItemPayload, LinkPayload } from '../interfaces/item';
 import { Item as ItemInterface, SafeItem as SafeItemInterface, MediaURL, SafeMediaURL, SafeFile, File as FileInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
+import { Tag as TagService } from '../services/tag';
 import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
 import { MediaMode } from '../interfaces/misc';
@@ -46,37 +48,41 @@ export class Edit extends Add implements OnInit {
   constructor(
     protected override fb: FormBuilder, // 'override' is necessary when property is used in super()
     protected override itemService: ItemService,
+    protected override tagService: TagService,
     protected override router: Router,
     protected override route: ActivatedRoute,
     protected override toastService: ToastService,
     protected override cdr: ChangeDetectorRef,
     protected override logger: Logger,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Call the parent (Add) constructor with inherited services
-    super(fb, itemService, router, route, toastService, cdr, logger);
+    super(fb, itemService, tagService, router, route, toastService, cdr, logger);
   }
 
   // Override ngOnInit to handle fetching existing data
   override ngOnInit(): void {
-    // 1. Initialize the form structure using the parent's logic
-    // This calls Add.ngOnInit(), which sets up addItemForm, loads tags, and handles templates (optional)
-    super.ngOnInit();
+    if (isPlatformBrowser(this.platformId)) {
+      
+      // Execute parent initialization ONLY on the client side where tokens exist
+      super.ngOnInit();
 
-    // 2. Read the item ID from the URL (e.g., /edit/123)
-    this.route.paramMap.subscribe(params => {
-      const itemId = params.get('id');
-      if (itemId) {
-        this.loadItemData(Number(itemId));
-      } else {
-        // Handle error: No ID provided, redirect home
-        this.router.navigate(['/home']);
-      }
-    });
+      // Read the item ID from the URL safely
+      this.route.paramMap.subscribe(params => {
+        const itemId = params.get('id');
+        if (itemId) {
+          this.loadItemData(Number(itemId));
+        } else {
+          console.warn('No valid ID parameter detected in URL.');
+          this.router.navigate(['/home']);
+        }
+      });
 
-    // NOTE: We don't call super.handleTemplateTags() here, but since it's called 
-    // inside super.ngOnInit(), we should rely on that or remove it from the parent's ngOnInit 
-    // if template functionality is not desired on the Edit page.
+    } else {
+      // While running on the Node server (SSR), safely bypass compilation tracking
+      this.logger.log('Bypassing secure state compilation on Node runtime.');
+    }
   }
 
   private processItemUrls(item: ItemInterface): SafeItemInterface {
@@ -191,7 +197,15 @@ export class Edit extends Add implements OnInit {
     this.loading = true;
     const { name, url, dateOfOrigin } = this.addItemForm.value;
 
-    this.updateItemAndLink(name, url, dateOfOrigin, this.tags, this.editedItem);
+    this.updateItemAndLinkAndFile(
+      name,
+      url,
+      dateOfOrigin,
+      this.tags,
+      this.editedItem,
+      this.selectedFiles,
+      this.selectedFileTypes
+    );
   }
 
   // Method to toggle media mode
@@ -217,10 +231,19 @@ export class Edit extends Add implements OnInit {
   }
 
   // Update API method
-  private updateItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[], originalItem: SafeItemInterface): void {
+  private updateItemAndLinkAndFile(
+    name: string,
+    url: string,
+    dateOfOrigin: string,
+    tags: string[],
+    originalItem: SafeItemInterface,
+    files: File[] = [],
+    fileTypes: string[] = []
+  ): void {
     const itemId = originalItem.id;
     const linkId = originalItem.link_id;
     const itemType = originalItem.type;
+    const hasFiles = files.length > 0;
 
     const itemPayload: ItemPayload = {
       name: name,
@@ -239,6 +262,8 @@ export class Edit extends Add implements OnInit {
     this.itemService.updateItem(itemId, itemPayload).pipe(
       // 2. If item update succeeds, update the Link record (required for URL changes)
       mergeMap(() => {
+        let linkAction$ = of(null);
+
         if (linkId) {
           // A. Link exists: check if it needs updating or removal
           if (urlChanged && url) {
@@ -247,25 +272,28 @@ export class Edit extends Add implements OnInit {
               item: itemId,
               url: url
             };
-            return this.itemService.updateLink(linkId, linkPayload);
+            linkAction$ = this.itemService.updateLink(linkId, linkPayload);
           } else if (urlRemoved) {
             // URL is now empty: DELETE link
-            return this.itemService.deleteLink(linkId);
+            linkAction$ = this.itemService.deleteLink(linkId);
           }
-          // URL hasn't changed or was just removed: no API call needed.
-          return of(null);
-
         } else if (url) {
           // B. Link did NOT exist: but form now has a URL: CREATE link
           const linkPayload: LinkPayload = {
             item: itemId,
             url: url
           };
-          return this.itemService.createLink(linkPayload);
+          linkAction$ = this.itemService.createLink(linkPayload);
         }
 
-        // If no link action is needed, complete the observable chain
-        return of(null);
+        return linkAction$.pipe(
+          mergeMap(() => {
+            if (hasFiles) {
+              return this.itemService.uploadFilesToItem(itemId, files, fileTypes);
+            }
+            return of(null);
+          })
+        );
       })
     ).subscribe({
       next: () => {

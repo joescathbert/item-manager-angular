@@ -86,7 +86,7 @@
         @if (isEditing) {
         @if (editedItem.files && editedItem.files.length > 0) {
         <div class="file-list-container">
-          <h3>Uploaded Files ({{ editedItem.files.length }})</h3>
+          <h3>Existing Files ({{ editedItem.files.length }})</h3>
           <ul class="file-list">
             @for (file of editedItem.files; track $index) {
             <li class="file-item uploaded-file-item" (click)="previewFile($index)" [class.active]="$index === (editedItem.currentIndex || 0) && activeMediaMode === 'files'">

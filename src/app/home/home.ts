@@ -7,9 +7,11 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { InfiniteScrollDirective } from 'ngx-infinite-scroll';
 import { FormsModule } from '@angular/forms';
 import { Item as ItemService } from '../services/item';
+import { Tag as TagService } from '../services/tag';
 import { Toast as ToastService } from '../services/toast';
 import { TagFilter as TagFilterService } from '../services/tag-filter';
-import { Item as ItemInterface, SafeItem as SafeItemInterface, Tag, MediaURL, SafeMediaURL, PagedItems, File as FileInterface } from '../interfaces/item';
+import { Item as ItemInterface, SafeItem as SafeItemInterface, MediaURL, SafeMediaURL, PagedItems, File as FileInterface } from '../interfaces/item';
+import { Tag, TagCategoryValue } from '../interfaces/tag';
 import { environment } from '../../environments/environment';
 import { VideoObserver } from '../directives/video-observer';
 
@@ -42,12 +44,18 @@ export class Home {
   tagInput: string = '';
   private tagFilterSubscription!: Subscription;
 
+  groupByField: string = 'none';
+  categories: string[] = [];
+
+  categoryValues: TagCategoryValue[] = [];
+
   // Query the DOM elements specifically
   @ViewChild('optionsBtn') optionsBtn!: ElementRef;
   @ViewChild('dropdownMenu') dropdownMenu!: ElementRef;
 
   constructor(
     private itemService: ItemService,
+    private tagService: TagService,
     private router: Router,
     private cdRef: ChangeDetectorRef,
     private appRef: ApplicationRef,
@@ -76,6 +84,7 @@ export class Home {
       });
       this.loadItems();
       this.loadAllTags();
+      this.loadCategories();
       this.nextUrlSubscription = this.itemService.nextUrl$.subscribe(nextUrl => {
         this.hasNextPage = !!nextUrl;
         this.cdRef.markForCheck();
@@ -309,10 +318,14 @@ export class Home {
 
     // 2. Navigate to the edit route using the item's ID
     if (item.id) {
-      this.router.navigate(['/edit', item.id]);
-      // const urlSegments = this.router.createUrlTree(['/edit', item.id]);
-      // const url = this.router.serializeUrl(urlSegments);
-      // window.open(url, '_blank')
+      // this.router.navigate(['/edit', item.id]);
+      const urlTree = this.router.createUrlTree(['/edit', item.id]);
+
+      // Serialize the tree into a standard URL string
+      const url = this.router.serializeUrl(urlTree);
+
+      // Open the URL in a new browser tab
+      window.open(url, '_blank');
     } else {
       console.error('Cannot edit item: ID is missing.', item);
       // Optional: Show a user-friendly error message
@@ -345,13 +358,65 @@ export class Home {
     this.cdRef.markForCheck();
   }
 
+  // -------- Group By Methods --------
+
+  loadCategories(): void {
+    this.tagService.getTagCategories().subscribe({
+      next: (categoriesData: string[]) => {
+        this.categories = categoriesData;
+        this.cdRef.markForCheck(); // Alert change detection
+      },
+      error: (err) => {
+        console.error('Failed to load tag categories for dropdown:', err);
+      }
+    });
+  }
+
+  loadGroupValues(): void {
+    if (this.groupByField === 'none') {
+      // Re-initialize standard item feed states if necessary
+      this.categoryValues = [];
+    } else {
+      // Fetch group breakdown metrics using your active filters
+      this.tagService.getTagCategoryValues(this.groupByField, this.activeTagFilters).subscribe({
+        next: (data: TagCategoryValue[]) => {
+          this.categoryValues = data;
+        },
+        error: (err) => {
+          console.error(`Failed to load values for category ${this.groupByField}:`, err);
+          this.categoryValues = [];
+        }
+      });
+    }
+  }
+
+  onGroupByChange(selectedValue: string): void {
+    this.groupByField = selectedValue;
+
+    this.resetAndLoadItems();
+
+  }
+
+  selectCategoryValue(categoryValue: TagCategoryValue): void {
+    // Use the full structural name (e.g., "color-red") to feed your tag filter service
+    const targetTag = categoryValue.name;
+
+    if (!this.tagFilterService.currentFilters.includes(targetTag)) {
+      this.tagFilterService.addFilter(targetTag);
+    }
+
+    // Set group by back to none, which triggers resetAndLoadItems() internally
+    this.onGroupByChange('none');
+  }
+
+
   // -------- Tag Filter Methods --------
 
   /**
    * Loads all tags from the API
    */
   loadAllTags(): void {
-    this.itemService.getTags().subscribe({
+    this.tagService.getTags().subscribe({
       next: (tags: Tag[]) => {
         this.allTags = tags.map(tag => tag.name);
       },
@@ -429,6 +494,7 @@ export class Home {
 
     // 3. Load items with the new filter
     this.loadItems();
+    this.loadGroupValues();
     this.cdRef.markForCheck(); // Ensure the view updates
   }
 
