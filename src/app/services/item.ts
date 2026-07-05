@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, Subject, throwError } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
-import { Item as ItemInterface, Link, PagedItems, ItemNeighbors, FileGroup } from '../interfaces/item';
-import { ItemPayload, LinkPayload } from '../interfaces/item';
+import { Item as ItemInterface, PagedItems, ItemNeighbors, FileGroup } from '../interfaces/item';
+import { ItemPayload } from '../interfaces/item';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
 
@@ -94,13 +94,6 @@ export class Item {
   }
 
   // Unused
-  getLink(linkId: number): Observable<Link> {
-    const url = `${this.baseUrl}/links/${linkId}/`;
-    this.logger.log('Fetching link from URL:', url);
-    return this.http.get<Link>(url);
-  }
-
-  // Unused
   getFileGroup(fileGroupId: number): Observable<FileGroup> {
     const url = `${this.baseUrl}/file-groups/${fileGroupId}/`;
     this.logger.log('Fetching file group from URL:', url);
@@ -113,33 +106,15 @@ export class Item {
     return this.http.post(url, payload);
   }
 
-  createLink(payload: LinkPayload): Observable<any> {
-    const url = `${this.baseUrl}/links/`;
-    this.logger.log('Creating link at URL:', url, 'with payload:', payload);
-    return this.http.post(url, payload);
-  }
-
   updateItem(itemId: number, payload: ItemPayload): Observable<any> {
     const url = `${this.baseUrl}/items/${itemId}/`;
     this.logger.log('Updating item at URL:', url, 'with payload:', payload);
     return this.http.put(url, payload);
   }
 
-  updateLink(linkId: number, payload: LinkPayload): Observable<any> {
-    const url = `${this.baseUrl}/links/${linkId}/`;
-    this.logger.log('Updating link at URL:', url, 'with payload:', payload);
-    return this.http.put(url, payload);
-  }
-
   deleteItem(itemId: number): Observable<any> {
     const url = `${this.baseUrl}/items/${itemId}/`;
     this.logger.log('Deleting item at URL:', url);
-    return this.http.delete(url);
-  }
-
-  deleteLink(linkId: number): Observable<any> {
-    const url = `${this.baseUrl}/links/${linkId}/`;
-    this.logger.log('Deleting link at URL:', url);
     return this.http.delete(url);
   }
 
@@ -168,5 +143,21 @@ export class Item {
     // The Angular HttpClient handles the 'Content-Type: multipart/form-data' header automatically 
     // when sending a FormData object, which is correct.
     return this.http.post(url, formData);
+  }
+
+  /**
+   * Requests the backend to zip all files matching the given item_id
+   * and returns the archive file as a binary Blob.
+   */
+  downloadItemZip(itemId: number): Observable<Blob> {
+    const url = `${this.baseUrl}/items/download-zip/`;
+    const params = new HttpParams().set('item_id', itemId.toString());
+
+    this.logger.log(`Downloading file zip archive for Item ID: ${itemId}`);
+    
+    return this.http.get(url, {
+      params: params,
+      responseType: 'blob' // Essential for dealing with file downloads
+    });
   }
 }

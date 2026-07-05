@@ -134,9 +134,9 @@ export class Home {
       });
     }
     else if (item.files && item.files.length > 0) {
-      safeItem.safe_media_urls = item.files.map((f: FileInterface) => {
+      safeItem.safe_media_urls = item.files.map((f: FileInterface, index: number) => {
         const safeMedia: SafeMediaURL = {
-          id: 0,
+          id: 0 || index,
           url: "",
           hd_url: "",
           hd_url_domain: "",
@@ -332,6 +332,48 @@ export class Home {
     }
   }
 
+  // Method to handle "Download Zip" action
+  downloadItemZip(item: ItemInterface, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    // 1. Close the dropdown menu
+    this.activeOptionsMenuId = null;
+    this.cdRef.markForCheck();
+
+    if (!item.id) {
+      console.error('Cannot download ZIP: Item ID is missing.', item);
+      this.toastService.showError('Unable to download files: Missing Item ID.');
+      return;
+    }
+
+    this.toastService.showSuccess('Preparing your zip archive download...');
+
+    this.itemService.downloadItemZip(item.id).subscribe({
+      next: (blob: Blob) => {
+        // 2. Create a temporary client-side URL pointing to the binary object data
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Sanitize item name for fallback filename fallback
+        link.download = `${item.id}_files.zip`;
+
+        // 3. Append to DOM, click to trigger download, and clean up
+        document.body.appendChild(link);
+        link.click();
+
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        console.error(`Failed to download files zip for item ${item.id}:`, err);
+        this.toastService.showError('Failed to download ZIP archive. Please try again.');
+      }
+    });
+  }
+
   // Method to safely opens the external URL in a new tab
   openSafeUrl(safeUrl: any): void {
     this.activeOptionsMenuId = null; // Close the menu
@@ -357,6 +399,7 @@ export class Home {
 
     this.cdRef.markForCheck();
   }
+
 
   // -------- Group By Methods --------
 

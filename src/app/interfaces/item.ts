@@ -1,4 +1,5 @@
 import { SafeResourceUrl } from "@angular/platform-browser";
+import { Link } from "../interfaces/link";
 
 export interface Item {
   id: number;
@@ -37,16 +38,6 @@ export interface PagedItems {
 export interface ItemNeighbors {
   prev_id: number | null;
   next_id: number | null;
-}
-
-export interface Link {
-  id: number;
-  item: number;
-  url: string;
-  url_domain: string;
-  media_url: string;
-  media_url_domain: string;
-  media_urls: MediaURL[];
 }
 
 export interface MediaURL {
@@ -89,9 +80,4 @@ export interface ItemPayload {
   type: string;
   date_of_origin: string;
   tag_names: string[];
-}
-
-export interface LinkPayload {
-  item: number;
-  url: string;
 }

@@ -78,6 +78,8 @@ input[type="url"],
 input[type="date"] {
   font-family: inherit;
   padding: 10px;
+  /* Adjust base right padding dynamically to leave room only if the button is present */
+  padding-right: 12px; 
   border: 1px solid $color-neutral-border;
   border-radius: $pill-border-radius;
   background-color: $color-netural-bg;
@@ -93,11 +95,80 @@ input[type="date"] {
     border-color: $color-neutral-border-medium;
     outline: 1px solid $focus-color;
   }
+
+  /* NEW: Safe right spacing only applied when the fetch button is injected next to it */
+  &:has(~ .fetch-preview-btn) {
+    padding-right: 46px;
+  }
 }
 
 input[type="url"],
 input[type="date"] {
   width: 100%
+}
+
+/* --- Inline URL Button Wrapper & Spinner Layouts --- */
+
+.url-group-wrapper {
+  width: 100%;
+
+  .url-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    .fetch-preview-btnicon {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 0;
+      background-color: $color-button-bg;
+      color: #ffffff;
+      border: none;
+      border-radius: 50%; /* Rounded circle layout fits modern icon bars perfectly */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;   /* Perfect symmetrical square box matching the input height */
+      height: 28px;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+
+      &:hover:not(:disabled) {
+        background-color: $color-button-bg-hover;
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(-50%) scale(0.95);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      
+      svg {
+        display: block;
+      }
+    }
+  }
+}
+
+/* CSS Loader Spinner for Fetch Operations */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #ffffff;
+  animation: spin-loader 0.8s linear infinite;
+}
+
+@keyframes spin-loader {
+  to { transform: rotate(360deg); }
 }
 
 /* --- Tag Specific Styles --- */
