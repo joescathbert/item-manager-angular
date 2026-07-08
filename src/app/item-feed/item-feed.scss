@@ -1,0 +1,346 @@
+/* item-feed.component.scss */
+
+$overlay-z-index: 11;
+$ui-padding: 16px;
+$yt-red: #ff0000;
+$yt-white: #ffffff;
+
+.feed-container {
+  height: 100dvh;
+  width: 100vw;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  background-color: #0c0c0c; // Desktop outer background color
+
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Replace your existing .feed-item rule with this */
+.feed-item {
+  position: relative;
+  height: 100dvh;
+
+  // 1. Default to Desktop/Laptop constraint right at load time
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow: hidden;
+  background-color: #000;
+
+  // 2. Only scale up to true edge-to-edge full width on smaller smartphone displays
+  @media (max-width: 767px) {
+    max-width: none;
+    width: 100vw;
+  }
+}
+
+// ----------------------------------------
+// Media Carousel & Snapping Fixes
+// ----------------------------------------
+.media-carousel {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.media-slide {
+  position: relative;
+  // This must track 100% of the parent (.feed-item) bounds, NOT 100vw
+  min-width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+
+  video,
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+}
+
+// ----------------------------------------
+// Tap Zones for Video Interaction
+// ----------------------------------------
+.tap-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+
+  // FIX: Absolute protection against mobile OS context menu selection loops
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation; // Optimizes single/double tap speeds on mobile screens
+
+  &.left-zone {
+    left: 0;
+    width: 30%;
+  }
+
+  &.center-zone {
+    left: 30%;
+    width: 40%;
+  }
+
+  &.right-zone {
+    right: 0;
+    width: 30%;
+  }
+}
+
+// ----------------------------------------
+// Top Controls & Overlays
+// ----------------------------------------
+.options-menu {
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  right: $ui-padding;
+  z-index: $overlay-z-index;
+
+  .icon-btn {
+    background: transparent;
+    border: none;
+    color: $yt-white;
+    padding: 8px;
+    cursor: pointer;
+    filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.6));
+
+    &:active {
+      opacity: 0.7;
+    }
+  }
+}
+
+.bottom-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: $overlay-z-index;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  .item-info {
+    padding: 0 $ui-padding 12px $ui-padding;
+    color: $yt-white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+  }
+}
+
+.seek-container {
+  width: 100%;
+  height: 12px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.yt-seek-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  outline: none;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: height 0.1s ease-in-out;
+
+  &::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 100%;
+  }
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0px;
+    height: 0px;
+    background: $yt-red;
+    border-radius: 50%;
+    transition: width 0.1s, height 0.1s;
+  }
+
+  &:active,
+  &:hover {
+    height: 6px;
+
+    &::-webkit-slider-thumb {
+      width: 12px;
+      height: 12px;
+      margin-top: -3px;
+    }
+  }
+}
+
+
+// ----------------------------------------
+// Gesture Cue Animations & Overlays
+// ----------------------------------------
+.gesture-cue-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 6; // Above videos, behind tap zones
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  // Center circle scale animations (Play/Pause)
+  &.play,
+  &.pause {
+    .cue-icon-wrapper {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 50%;
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: cueScalePop 0.6s ease-out forwards;
+
+      svg {
+        width: 32px;
+        height: 32px;
+        color: #fff;
+      }
+    }
+  }
+
+  // Side double-tap ripple boundaries
+  &.forward {
+    justify-content: flex-end;
+    background: radial-gradient(circle at 85% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+    animation: sideFade 0.6s ease-out;
+
+    .cue-icon-wrapper {
+      padding-right: 40px;
+    }
+  }
+
+  &.backward {
+    justify-content: flex-start;
+    background: radial-gradient(circle at 15% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+    animation: sideFade 0.6s ease-out;
+
+    .cue-icon-wrapper {
+      padding-left: 40px;
+    }
+  }
+
+  .cue-icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    svg {
+      width: 36px;
+      height: 36px;
+    }
+  }
+}
+
+// Persistent top speed pill banner
+.speed-pill-indicator {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 16px) + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 0.8rem;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+// Keyframes
+@keyframes cueScalePop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  30% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+
+  80% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes sideFade {
+  0% {
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+
+// ----------------------------------------
+// Infinite Scroll Sentinel
+// ----------------------------------------
+.feed-sentinel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px; // Minimal thickness ensures it passes collision checks cleanly
+  pointer-events: none; // Prevents interception of user tap gestures
+  visibility: hidden; // Keeps it completely invisible to users
+}

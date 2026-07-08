@@ -1,0 +1,95 @@
+<div class="feed-container">
+  @for (item of feedData(); track item.id; let last = $last) {
+  <div class="feed-item">
+
+    <div class="options-menu">
+      <button class="icon-btn" (click)="openOptions(item.id)">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
+          <path
+            d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="media-carousel" (scroll)="onHorizontalScroll($event, item.id)">
+      @for (media of item.mediaList; track media.id) {
+      <div class="media-slide">
+
+        @if (media.type === 'video') {
+        <div class="tap-zone left-zone" (dblclick)="seekVideo(media.id, -3)"
+          (pointerdown)="startLongPress($event, media.id)" (pointerup)="clearLongPress(media.id)"
+          (pointerleave)="clearLongPress(media.id)">
+        </div>
+        <div class="tap-zone center-zone" (click)="togglePlay(media.id)"
+          (pointerdown)="startLongPress($event, media.id)" (pointerup)="clearLongPress(media.id)"
+          (pointerleave)="clearLongPress(media.id)">
+        </div>
+        <div class="tap-zone right-zone" (dblclick)="seekVideo(media.id, 3)"
+          (pointerdown)="startLongPress($event, media.id)" (pointerup)="clearLongPress(media.id)"
+          (pointerleave)="clearLongPress(media.id)">
+        </div>
+
+        @if (activeCueMap()[media.id]; as cue) {
+        <div class="gesture-cue-overlay" [class]="cue.type">
+          <div class="cue-icon-wrapper">
+            @if (cue.type === 'play') {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            } @else if (cue.type === 'pause') {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+            </svg>
+            } @else if (cue.type === 'forward') {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" />
+            </svg>
+            <span>+3s</span>
+            } @else if (cue.type === 'backward') {
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z" />
+            </svg>
+            <span>-3s</span>
+            }
+          </div>
+        </div>
+        }
+
+        @if (isFastForwardingMap()[media.id]) {
+        <div class="speed-pill-indicator">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
+            <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z" />
+          </svg>
+          <span>2X Speed</span>
+        </div>
+        }
+
+        <video [id]="'video-' + media.id" [src]="media.url" loop [muted]="true" playsinline preload="metadata"
+          appVideoObserver>
+        </video>
+
+        } @else {
+        <img [src]="media.url" alt="Item Media" draggable="false" loading="lazy" />
+        }
+      </div>
+      }
+    </div>
+
+    <div class="bottom-overlay">
+      <!-- <div class="item-info">
+        <h3>Place holder</h3>
+      </div> -->
+
+      <div class="seek-container">
+        <input type="range" class="yt-seek-slider" min="0" max="100" step="0.1" [value]="getVideoProgress(item.id)"
+          (input)="onSeekScrub($event, item.id)" />
+      </div>
+    </div>
+
+    @if (last) {
+    <div class="feed-sentinel" appScrollSentinel (visible)="fetchNextFeedPage()"></div>
+    }
+
+  </div>
+  }
+</div>

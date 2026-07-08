@@ -1,15 +1,18 @@
-import { Directive, ElementRef, Input } from '@angular/core';
+import { Directive, ElementRef, Input, OnInit, OnDestroy, Output, EventEmitter } from '@angular/core';
 import { Logger } from '../services/logger';
 
 @Directive({
   selector: '[appVideoObserver]',
 })
-export class VideoObserver {
+export class VideoObserver implements OnInit, OnDestroy {
 
   private observer!: IntersectionObserver;
 
   // Input to optionally control the visibility threshold (default is 50%)
   @Input() threshold: number = 0.5; 
+
+  // New Output event to bubble visibility up to the component template
+  @Output() intersecting = new EventEmitter<void>();
 
   constructor(private el: ElementRef<HTMLVideoElement>, private logger: Logger) {
     // Ensure the directive is only applied to video elements
@@ -27,14 +30,16 @@ export class VideoObserver {
     };
 
     // 2. Define the callback function
-    const callback: IntersectionObserverCallback = (entries, observer) => {
+    const callback: IntersectionObserverCallback = (entries) => {
       entries.forEach(entry => {
         const video = this.el.nativeElement;
 
         if (entry.isIntersecting) {
           // Video is visible: Play
-          // Using .catch() is important for handling browser autoplay policies
           video.play().catch(e => this.logger.log('Autoplay prevented or failed:', e));
+          
+          // 🚀 Notify the parent component that this video has entered view
+          this.intersecting.emit();
         } else {
           // Video is scrolled away: Pause
           video.pause();
@@ -54,5 +59,4 @@ export class VideoObserver {
       this.observer.disconnect();
     }
   }
-
 }

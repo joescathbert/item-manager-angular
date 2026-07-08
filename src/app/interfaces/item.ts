@@ -81,3 +81,21 @@ export interface ItemPayload {
   date_of_origin: string;
   tag_names: string[];
 }
+
+interface MediaAsset {
+  id: string | number;
+  url: string;
+  type: 'video' | 'image';
+}
+
+export interface FeedItem {
+  id: string | number;
+  // name field is optional now since backend dropped it
+  mediaList: MediaAsset[];
+}
+
+export interface PaginatedFeedResponse {
+  next: string | null;
+  previous: string | null;
+  results: FeedItem[];
+}
