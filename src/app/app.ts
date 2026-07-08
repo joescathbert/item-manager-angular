@@ -22,8 +22,8 @@ export class App {
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: NavigationEnd) => {
-      // Hide the navbar if the active URL path is 'shorts-test'
-      const isShortsPage = event.urlAfterRedirects.includes('shorts-test');
+      // Hide the navbar if the active URL path is 'item-feed'
+      const isShortsPage = event.urlAfterRedirects.includes('item-feed');
       this.showNavbar.set(!isShortsPage);
     });
   }
