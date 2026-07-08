@@ -37,8 +37,28 @@
           <input id="dateOfOrigin" type="date" formControlName="dateOfOrigin" required>
         </div>
 
-        <div class="form-group">
-          <input id="url" type="url" formControlName="url" placeholder="URL (Required if no files are uploaded)">
+        <!-- URL Input Field with Embedded Inline Action Button -->
+        <div class="form-group url-group-wrapper">
+          <div class="url-input-container">
+            <input id="url" type="url" formControlName="url" placeholder="URL (Required if no files are uploaded)">
+
+            @if (!isEditing) {
+            <button type="button" class="fetch-preview-btnicon"
+              [disabled]="previewLoading || !addItemForm.get('url')?.value" (click)="fetchUrlPreview()"
+              title="Fetch Preview">
+              @if (previewLoading) {
+              <span class="spinner"></span>
+              } @else {
+              <!-- Clean Scrape/Search Link Icon -->
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+              </svg>
+              }
+            </button>
+            }
+          </div>
         </div>
 
         <div class="form-group file-upload-group">
@@ -83,14 +103,16 @@
           </ul>
         </div>
         }
+
         @if (isEditing) {
         @if (editedItem.files && editedItem.files.length > 0) {
         <div class="file-list-container">
           <h3>Existing Files ({{ editedItem.files.length }})</h3>
           <ul class="file-list">
             @for (file of editedItem.files; track $index) {
-            <li class="file-item uploaded-file-item" (click)="previewFile($index)" [class.active]="$index === (editedItem.currentIndex || 0) && activeMediaMode === 'files'">
-              <span >
+            <li class="file-item uploaded-file-item" (click)="previewFile($index)"
+              [class.active]="$index === (editedItem.currentIndex || 0) && activeMediaMode === 'files'">
+              <span>
                 <span class="file-order">{{ $index + 1 }}.</span>
                 <span class="file-name">{{ file.file_name }}</span>
               </span>
@@ -99,30 +121,6 @@
                 <span class="file-type">
                   {{ file.file_type }}
                 </span>
-                <!-- <button type="button" class="preview-file" (click)="previewFile($index)" title="Preview File">
-                    <i class="fa-solid fa-eye"></i>
-                  </button> -->
-
-                <!-- <select class="file-type-select" [(ngModel)]="selectedFileTypes[$index]"
-                    [ngModelOptions]="{standalone: true}">
-                    <option value="ORG">ORG</option>
-                    <option value="RAW">RAW</option>
-                    <option value="BON">BON</option>
-                  </select> -->
-
-                <!-- <button type="button" class="move-up" (click)="moveFileUp($index)" [disabled]="$index === 0"
-                    title="Move Up">
-                    &uarr;
-                  </button>
-
-                  <button type="button" class="move-down" (click)="moveFileDown($index)"
-                    [disabled]="$index === selectedFiles.length - 1" title="Move Down">
-                    &darr;
-                  </button>
-
-                  <button type="button" class="remove-file" (click)="removeFile($index)" title="Remove File">
-                    &times;
-                  </button> -->
               </div>
             </li>
             }
@@ -149,7 +147,12 @@
     </form>
   </div>
 
+  <!-- ========================================================================= -->
+  <!-- PREVIEW SIDE PANEL: EXPLICITLY SEPARATED BLOCKS                          -->
+  <!-- ========================================================================= -->
+
   @if (isEditing) {
+  <!-- 1. EDIT MODE PANEL -->
   <div class="add-preview">
     <h2 class="preview-header">
       <span>
@@ -168,6 +171,7 @@
         </svg>
         }
       </span>
+
       <svg class="svg-button" (click)="toggleMediaMode()" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
         viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round">
@@ -177,12 +181,12 @@
         <path d="M16 16h5v5"></path>
       </svg>
     </h2>
-    <div class="carousel-container">
 
+    <div class="carousel-container">
       @if (activeMediaMode === 'media') {
       @if (editedItem.safe_media_urls && editedItem.safe_media_urls.length > 0) {
       <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
-        @for (media of editedItem.safe_media_urls; track media.id) {
+        @for (media of editedItem.safe_media_urls; track $index) {
         <div class="carousel-slide" [class.is-active]="$index === (editedItem.currentIndex || 0)">
           @if (media.media_type === 'video') {
           <div class="item-content-video">
@@ -236,9 +240,50 @@
       }
     </div>
   </div>
+
+  } @else if (previewItem && previewItem.safe_media && previewItem.safe_media.length > 0) {
+  <!-- 2. CREATION MODE PANEL (URL SCRAPE PREVIEW) -->
+  <div class="add-preview">
+    <h2 class="preview-header">
+      <span>
+        Link Preview
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </span>
+    </h2>
+
+    <div class="carousel-container">
+      <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(previewItem.currentIndex || 0) * 100) + '%)'">
+        @for (media of previewItem.safe_media; track $index) {
+        <div class="carousel-slide" [class.is-active]="$index === (previewItem.currentIndex || 0)">
+          @if (media.media_type === 'video') {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="media.safe_hd_url">
+            </video>
+          </div>
+          } @else {
+          <div class="item-content-image">
+            <img [src]="media.safe_hd_url" alt="Scraped content" loading="lazy">
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: previewItem.safe_media, item: previewItem }"></ng-container>
+    </div>
+  </div>
   }
+
 </div>
 
+<!-- CAROUSEL CONTROLS TEMPLATE -->
 <ng-template #carouselControls let-mediaList let-item="item">
   @if (item && mediaList && mediaList.length > 1) {
   <button type="button" class="carousel-control prev" (click)="prevSlide(item)"

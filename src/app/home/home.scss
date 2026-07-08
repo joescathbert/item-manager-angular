@@ -22,7 +22,8 @@
 .select-wrapper {
   position: relative;
   flex-grow: 0;
-  min-width: 160px; /* Gives the dropdown a balanced, consistent look */
+  min-width: 160px;
+  /* Gives the dropdown a balanced, consistent look */
 }
 
 .group-dropdown {
@@ -36,7 +37,8 @@
   color: #f6f7f8;
   box-sizing: border-box;
   cursor: pointer;
-  appearance: none; /* Removes standard browser arrow to keep things sleek */
+  appearance: none;
+  /* Removes standard browser arrow to keep things sleek */
   -webkit-appearance: none;
   -moz-appearance: none;
 
@@ -45,7 +47,7 @@
   background-repeat: no-repeat;
   background-position: right 8px center;
   background-size: 18px;
-  padding-right: 30px; 
+  padding-right: 30px;
 
   &:hover {
     border-color: $color-neutral-border-medium;
@@ -59,7 +61,7 @@
 
   /* Style options dark theme context */
   option {
-    background-color: #1e1e1e; 
+    background-color: #1e1e1e;
     color: #f6f7f8;
   }
 }
@@ -77,14 +79,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   background-color: $color-netural-bg;
   border: 1px solid $color-neutral-border;
   color: $color-text-light;
-  
+
   padding: 1rem 1.25rem;
   border-radius: 8px;
-  width: 35%; /* Exact card matching layout constraint */
+  width: 35%;
+  /* Exact card matching layout constraint */
   box-sizing: border-box;
   transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
 
@@ -93,10 +96,11 @@
 
     &:hover {
       background-color: $color-neutral-bg-hover;
-      border-color: #007bff; /* Highlight with theme blue */
+      border-color: #007bff;
+      /* Highlight with theme blue */
       transform: translateY(-1px);
     }
-    
+
     &:active {
       transform: translateY(0);
     }
@@ -125,10 +129,11 @@
 div.filter-pills-container {
   // Positioning and layout
   width: 100%;
-  max-width: 35%; /* Match the width of .item-card */
+  max-width: 35%;
+  /* Match the width of .item-card */
 
   // Center the container, matching .items-container alignment
-  margin: 0rem auto 0em auto; 
+  margin: 0rem auto 0em auto;
   padding: 10px;
 
   border-radius: 8px;
@@ -154,10 +159,12 @@ div.filter-pills-container {
     background-color: $color-netural-bg;
     color: #f6f7f8;
     box-sizing: border-box;
+
     &:hover {
       border-color: $color-neutral-border-medium;
       background-color: $color-neutral-bg-hover;
     }
+
     &:focus {
       border-color: $color-neutral-border-medium;
       outline: 1px solid $focus-color;
@@ -182,19 +189,21 @@ div.filter-pills-container {
 }
 
 div.select-filter-tag-list {
-    overflow-x: auto;
-    flex-wrap: nowrap; /* Forces tags onto one line for horizontal scrolling */
-    width: 100%;
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  /* Forces tags onto one line for horizontal scrolling */
+  width: 100%;
 
-    display: flex;
-    gap: 8px;
+  display: flex;
+  gap: 8px;
 
-    /* Properties to hide the scrollbar, while keeping the scrolling functionality. */
-    &::-webkit-scrollbar {
-        display: none;
-    }
-    -ms-overflow-style: none;
-    scrollbar-width: none;
+  /* Properties to hide the scrollbar, while keeping the scrolling functionality. */
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .filter-label {
@@ -209,7 +218,8 @@ div.select-filter-tag-list {
   // Styles for the active filter pill (the one at the top)
   display: inline-flex;
   align-items: center;
-  background-color: #e53935; /* Use your primary delete/action red */
+  background-color: #e53935;
+  /* Use your primary delete/action red */
   color: $color-text-light;
   padding: .4em .5rem .4rem 1rem;
   border-radius: 50px;
@@ -237,8 +247,9 @@ div.select-filter-tag-list {
 }
 
 .clear-filters-button {
-  margin-left: auto; /* Push to the right */
-  background-color: $color-button-bg; 
+  margin-left: auto;
+  /* Push to the right */
+  background-color: $color-button-bg;
   color: $color-text-light;
   border: none;
   padding: 6px 12px;
@@ -303,8 +314,8 @@ div.tag-list {
   &.clickable-tag {
     cursor: pointer;
     // Revert base background for neutral interactive look
-    background-color: #007bff; 
-    border: 2px solid transparent; 
+    background-color: #007bff;
+    border: 2px solid transparent;
     // padding: 4px 10px; /* Base padding */
   }
 
@@ -315,9 +326,11 @@ div.tag-list {
 
   // Style when a tag is currently active as a filter
   &.active-filter {
-    border-color: #e53935; /* Highlight the active filter with the red accent */
-    background-color: #1e1e1e; /* Darken background to show selection */
-    color: $color-text-light; 
+    border-color: #e53935;
+    /* Highlight the active filter with the red accent */
+    background-color: #1e1e1e;
+    /* Darken background to show selection */
+    color: $color-text-light;
     // padding: 2px 8px; /* Adjust padding to accommodate the 2px border */
   }
 }
@@ -344,26 +357,30 @@ div.tag-list {
   color: var(--text-color, #aaa);
 
   &:hover {
-      color: var(--primary-color, #007bff);
+    color: var(--primary-color, #007bff);
   }
 }
 
 .options-icon {
   width: 20px;
   height: 20px;
-  display: block; /* Ensure the SVG fills the button area nicely */
+  display: block;
+  /* Ensure the SVG fills the button area nicely */
 }
 
 .options-dropdown {
   position: absolute;
-  top: 100%; /* Position it right below the button */
+  top: 100%;
+  /* Position it right below the button */
   right: 0;
-  z-index: 10; /* Ensure it floats above other content */
+  z-index: 10;
+  /* Ensure it floats above other content */
 
   min-width: 150px;
   margin-top: 4px;
 
-  background-color: var(--background-secondary, #222); /* Dark background for dropdown */
+  background-color: var(--background-secondary, #222);
+  /* Dark background for dropdown */
   border: 1px solid var(--border-color, #333);
   border-radius: 4px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -383,7 +400,8 @@ div.tag-list {
     font-size: 14px;
 
     &:hover {
-      background-color: var(--primary-color-hover, #0056b3); /* Highlight the selected action */
+      background-color: var(--primary-color-hover, #0056b3);
+      /* Highlight the selected action */
       color: white;
     }
 
@@ -404,13 +422,15 @@ div.tag-list {
     opacity: 0;
     transform: translateY(-5px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* --- Card Actions Styles --- */ // REMOVED -------------
+/* --- Card Actions Styles --- */
+// REMOVED -------------
 
 .card-actions {
   margin-top: 1rem; // Add space above the button
@@ -422,7 +442,7 @@ div.tag-list {
   background-color: #e53935;
   color: $color-text-light;
   border: none;
-  padding: 0.5rem; 
+  padding: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -438,9 +458,12 @@ div.tag-list {
 
 .delete-icon {
   /* Ensure the SVG is sized appropriately */
-  width: 1.25rem; /* 20px */
-  height: 1.25rem; /* 20px */
-  fill: currentColor; /* Inherit the white color from the button */
+  width: 1.25rem;
+  /* 20px */
+  height: 1.25rem;
+  /* 20px */
+  fill: currentColor;
+  /* Inherit the white color from the button */
 }
 
 
@@ -450,6 +473,7 @@ div.tag-list {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -465,7 +489,8 @@ div.tag-list {
 
 .loading-spinner-container {
   display: flex;
-  justify-content: center; /* Center the spinner horizontally */
+  justify-content: center;
+  /* Center the spinner horizontally */
   align-items: center;
 }
 
@@ -474,9 +499,11 @@ div.tag-list {
   // 🚨 THICKER and SMALLER: Set width/height to 20px and border to 5px
   width: 20px;
   height: 20px;
-  border: 5px solid rgba(229, 57, 53, 0.2); /* Light transparent version of the red theme */
-  border-top: 5px solid #e53935; /* Primary Red color for the moving part */
-  
+  border: 5px solid rgba(229, 57, 53, 0.2);
+  /* Light transparent version of the red theme */
+  border-top: 5px solid #e53935;
+  /* Primary Red color for the moving part */
+
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -486,6 +513,7 @@ div.tag-list {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -512,7 +540,8 @@ div.tag-list {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+  background: rgba(0, 0, 0, 0.7);
+  /* Dark semi-transparent background */
   z-index: 9999;
 }
 
@@ -524,7 +553,8 @@ div.tag-list {
   background: #2a2a2d;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  z-index: 10000; /* Above the backdrop */
+  z-index: 10000;
+  /* Above the backdrop */
   width: 90%;
   max-width: 400px;
   padding: 20px;
@@ -570,7 +600,8 @@ div.tag-list {
 }
 
 .modal-confirm-button {
-  background-color: #e53935; /* Your existing red theme */
+  background-color: #e53935;
+  /* Your existing red theme */
   color: $color-text-light;
 
   &:hover {
@@ -583,6 +614,7 @@ div.tag-list {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
@@ -592,18 +624,25 @@ div.tag-list {
 /* --- SKELETON LOADING STYLES --- */
 
 @keyframes shimmer {
-  0% { background-position: -468px 0; }
-  100% { background-position: 468px 0; }
+  0% {
+    background-position: -468px 0;
+  }
+
+  100% {
+    background-position: 468px 0;
+  }
 }
 
 .skeleton-card {
   // Inherits base .item-card styles (width, margin, shadow)
-  
+
   // Reset background and remove interactive styles
-  background-color: #3c3c40; /* Slightly darker base for skeleton */
+  background-color: #3c3c40;
+  /* Slightly darker base for skeleton */
   pointer-events: none;
   cursor: default;
-  overflow: hidden; /* Important for the shimmer effect */
+  overflow: hidden;
+  /* Important for the shimmer effect */
 
   // Apply shimmer effect background
   background: linear-gradient(to right, #3c3c40 8%, #4e4e52 18%, #3c3c40 33%);
@@ -613,13 +652,15 @@ div.tag-list {
 
 .skeleton-line {
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1); /* Visible lines within the shimmer */
+  background-color: rgba(255, 255, 255, 0.1);
+  /* Visible lines within the shimmer */
   margin-bottom: 10px;
 }
 
 .skeleton-header {
   height: 18px;
-  width: 60%; /* Mimics a title/user name */
+  width: 60%;
+  /* Mimics a title/user name */
   margin-top: 5px;
 }
 
@@ -638,7 +679,7 @@ div.tag-list {
   padding-top: 50%;
   margin-left: auto;
   margin-right: auto;
-  background-color: rgba(255, 255, 255, 0.1); 
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   margin-bottom: 15px;
 }
@@ -667,7 +708,7 @@ div.tag-list {
   margin: 10px 0;
   box-sizing: border-box;
 
-  height: auto; 
+  height: auto;
   transition: height 0.3s ease;
 }
 
@@ -689,17 +730,18 @@ div.tag-list {
     height: 0;
     overflow: hidden;
   }
-  
+
   &.is-active {
     height: auto;
   }
 
-  img, .item-content-video video {
+  img,
+  .item-content-video video {
     display: block;
     width: 100%;
     height: auto;
     max-height: 85vh;
-    object-fit: contain; 
+    object-fit: contain;
     background-color: #000;
   }
 }
@@ -773,9 +815,10 @@ div.tag-list {
   font-family: inherit;
   font-weight: bold;
   font-size: 0.9rem;
-  
+
   border: 1px solid $color-neutral-border;
-  border-radius: 20px; /* Matching the pill aesthetics of end-of-page card */
+  border-radius: 20px;
+  /* Matching the pill aesthetics of end-of-page card */
   padding: 10px 24px;
   cursor: pointer;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -787,7 +830,8 @@ div.tag-list {
   }
 
   &:active {
-    transform: scale(0.98); /* Subtle tactile response when clicked */
+    transform: scale(0.98);
+    /* Subtle tactile response when clicked */
   }
 }
 
@@ -802,8 +846,12 @@ div.tag-list {
     width: unset;
   }
 
+  .category-value-card {
+    width: 80%;
+  }
+
   div.filter-pills-container {
-    width: unset; 
+    width: unset;
     max-width: unset;
     margin: 0 1rem 0.5rem 1rem;
   }
@@ -818,25 +866,34 @@ div.tag-list {
     width: unset;
   }
 
+  .category-value-card {
+    width: 80%;
+  }
+
   div.filter-pills-container {
-    width: unset; 
+    width: unset;
     max-width: unset;
     margin: 0 1rem 0.5rem 1rem;
   }
 
   div.tag-list {
-    flex-wrap: nowrap; /* Forces tags onto one line for horizontal scrolling */
+    flex-wrap: nowrap;
+    /* Forces tags onto one line for horizontal scrolling */
     overflow-x: auto;
+
     /*  Properties to hide the scrollbar, while keeping the scrolling functionality. */
     &::-webkit-scrollbar {
-        display: none;
+      display: none;
     }
+
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
   .carousel-slide {
-    img, .item-content-video video {
+
+    img,
+    .item-content-video video {
       max-height: 80vh; // Give more room on mobile portrait
     }
   }

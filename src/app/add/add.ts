@@ -1,16 +1,18 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild, inject, DestroyRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidatorFn } from '@angular/forms';
 import { of } from 'rxjs';
 import { mergeMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
-import { ItemPayload, LinkPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
-import { Item as ItemService } from '../services/item';
-import { Tag as TagService } from '../services/tag';
-import { Toast as ToastService } from '../services/toast';
+import { ItemPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
+import { LinkPayload, SafePreviewLink } from '../interfaces/link';
 import { Tag } from '../interfaces/tag';
 import { MediaMode } from '../interfaces/misc';
+import { Item as ItemService } from '../services/item';
+import { Link as LinkService } from '../services/link';
+import { Tag as TagService } from '../services/tag';
+import { Toast as ToastService } from '../services/toast';
 
 import { Logger } from '../services/logger';
 
@@ -59,9 +61,14 @@ export class Add {
     media_urls: [],
   };
 
+  protected previewLoading: boolean = false;
+  protected previewItem: SafePreviewLink & { currentIndex?: number } = { original_url: '', media: [], safe_media: [], currentIndex: 0 };
+  private destroyRef = inject(DestroyRef);
+
   constructor(
     protected fb: FormBuilder,
     protected itemService: ItemService,
+    protected linkService: LinkService,
     protected tagService: TagService,
     protected router: Router,
     protected route: ActivatedRoute,
@@ -149,13 +156,13 @@ export class Add {
   filterSuggestions(): void {
     const input = this.tagInput.trim().toLowerCase();
     if (!input) {
-        // If input is empty, show all available tags that haven't been selected
-        this.suggestionTags = this.allTags.filter(tag => !this.tags.includes(tag.name));
+      // If input is empty, show all available tags that haven't been selected
+      this.suggestionTags = this.allTags.filter(tag => !this.tags.includes(tag.name));
     } else {
-        // Filter tags that match the input AND haven't been selected
-        this.suggestionTags = this.allTags.filter(tag => 
-            tag.name.toLowerCase().includes(input) && !this.tags.includes(tag.name)
-        );
+      // Filter tags that match the input AND haven't been selected
+      this.suggestionTags = this.allTags.filter(tag =>
+        tag.name.toLowerCase().includes(input) && !this.tags.includes(tag.name)
+      );
     }
   }
 
@@ -305,7 +312,7 @@ export class Add {
         };
 
         // 3. Create the Link.
-        return this.itemService.createLink(linkPayload);
+        return this.linkService.createLink(linkPayload);
       })
     ).subscribe({
       next: () => {
@@ -352,7 +359,7 @@ export class Add {
                 url: url
               };
               // Return the observable for Link creation
-              return this.itemService.createLink(linkPayload);
+              return this.linkService.createLink(linkPayload);
             } else {
               // If no URL, return an Observable that immediately emits a null value, 
               // allowing the subscription to continue without error.
@@ -380,26 +387,102 @@ export class Add {
     });
   }
 
-  // Navigate to the next media item
-  public nextSlide(item: SafeItemInterface): void {
-    const idx = item.currentIndex ?? 0;
-    if (item.safe_media_urls && idx < item.safe_media_urls.length - 1) {
-      item.currentIndex = idx + 1;
-      this.cdr.markForCheck();
+  /**
+   * Helper method to determine the array length of the currently active view mode
+   */
+  private getActiveLength(item: SafeItemInterface | SafePreviewLink): number {
+    if (this.isEditing) {
+      const editItem = item as SafeItemInterface;
+      if (this.activeMediaMode === 'media' && editItem.safe_media_urls) {
+        return editItem.safe_media_urls.length;
+      }
+      if (this.activeMediaMode === 'files' && editItem.safe_files) {
+        return editItem.safe_files.length;
+      }
+    } else {
+      const previewItem = item as SafePreviewLink;
+      return previewItem.safe_media?.length ?? 0;
     }
-    if (item.safe_files && idx < item.safe_files.length - 1) {
+    return 0;
+  }
+
+  /**
+   * Navigate to the next media item
+   * Stops at the final item.
+   */
+  public nextSlide(item: SafeItemInterface | SafePreviewLink): void {
+    const idx = item.currentIndex ?? 0;
+    const maxLen = this.getActiveLength(item);
+
+    // Only increment if we are not at the last item
+    if (idx < maxLen - 1) {
       item.currentIndex = idx + 1;
       this.cdr.markForCheck();
     }
   }
 
-  // Navigate to the previous media item
-  public prevSlide(item: SafeItemInterface): void {
+  /**
+   * Navigate to the previous media item
+   * Stops at the first item (0).
+   */
+  public prevSlide(item: SafeItemInterface | SafePreviewLink): void {
     const idx = item.currentIndex ?? 0;
+
+    // Only decrement if we are not at the first item
     if (idx > 0) {
       item.currentIndex = idx - 1;
       this.cdr.markForCheck();
     }
+  }
+
+  public fetchUrlPreview(): void {
+    const url = this.addItemForm.get('url')?.value?.trim();
+
+    if (!this.isValidUrl(url)) {
+      this.toastService.showError('Please enter a valid URL before fetching a preview.');
+      return;
+    }
+
+    this.previewLoading = true;
+    this.clearPreview();
+    this.logger.log('[AddForm] Manually requesting media extract for:', url);
+
+    this.linkService.extractMedia(url).subscribe({
+      next: (response: SafePreviewLink) => {
+        this.previewLoading = false;
+        if (response && response.safe_media && response.safe_media.length > 0) {
+          this.previewItem = {
+            ...response,
+            currentIndex: 0
+          };
+          this.activeMediaMode = 'media';
+          this.toastService.showSuccess('Preview loaded successfully.');
+        } else {
+          this.toastService.showError('No viewable media found on this link.');
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.previewLoading = false;
+        this.logger.error('[AddForm] Media extraction failed', err);
+        this.toastService.showError('Failed to scrape media preview from this URL.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private isValidUrl(url: string): boolean {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  private clearPreview(): void {
+    this.previewItem = { original_url: '', media: [], safe_media: [], currentIndex: 0 };
   }
 
 }

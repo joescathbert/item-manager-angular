@@ -8,9 +8,11 @@ import { of } from 'rxjs';
 import { DomSanitizer } from '@angular/platform-browser';
 
 // Re-use interfaces and services
-import { ItemPayload, LinkPayload } from '../interfaces/item';
+import { ItemPayload } from '../interfaces/item';
+import { LinkPayload } from '../interfaces/link';
 import { Item as ItemInterface, SafeItem as SafeItemInterface, MediaURL, SafeMediaURL, SafeFile, File as FileInterface } from '../interfaces/item';
 import { Item as ItemService } from '../services/item';
+import { Link as LinkService } from '../services/link';
 import { Tag as TagService } from '../services/tag';
 import { Toast as ToastService } from '../services/toast';
 import { Add } from '../add/add';
@@ -48,6 +50,7 @@ export class Edit extends Add implements OnInit {
   constructor(
     protected override fb: FormBuilder, // 'override' is necessary when property is used in super()
     protected override itemService: ItemService,
+    protected override linkService: LinkService,
     protected override tagService: TagService,
     protected override router: Router,
     protected override route: ActivatedRoute,
@@ -58,7 +61,7 @@ export class Edit extends Add implements OnInit {
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     // Call the parent (Add) constructor with inherited services
-    super(fb, itemService, tagService, router, route, toastService, cdr, logger);
+    super(fb, itemService, linkService, tagService, router, route, toastService, cdr, logger);
   }
 
   // Override ngOnInit to handle fetching existing data
@@ -272,10 +275,10 @@ export class Edit extends Add implements OnInit {
               item: itemId,
               url: url
             };
-            linkAction$ = this.itemService.updateLink(linkId, linkPayload);
+            linkAction$ = this.linkService.updateLink(linkId, linkPayload);
           } else if (urlRemoved) {
             // URL is now empty: DELETE link
-            linkAction$ = this.itemService.deleteLink(linkId);
+            linkAction$ = this.linkService.deleteLink(linkId);
           }
         } else if (url) {
           // B. Link did NOT exist: but form now has a URL: CREATE link
@@ -283,7 +286,7 @@ export class Edit extends Add implements OnInit {
             item: itemId,
             url: url
           };
-          linkAction$ = this.itemService.createLink(linkPayload);
+          linkAction$ = this.linkService.createLink(linkPayload);
         }
 
         return linkAction$.pipe(
