@@ -7,6 +7,19 @@
 
   <div class="navbar-right">
     @if (!isLoginPage) {
+    <a routerLink="/item-feed" title="Item Feed" class="nav-icon-button-link">
+      <span class="nav-icon-button-content">
+        <span class="nav-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+            <path d="M2 8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8z" />
+            <path d="M6 4h12" opacity="0.5" />
+            <path d="M9 1h6" opacity="0.3" />
+            <polygon points="10 11 15 14 10 17 10 11" fill="currentColor" />
+          </svg>
+        </span>
+      </span>
+    </a>
     @if (!isAddPage) {
     <a routerLink="/add" title="Add Item" class="nav-icon-button-link">
       <span class="nav-icon-button-content">
@@ -17,7 +30,6 @@
             </path>
           </svg>
         </span>
-        <span>Add</span>
       </span>
     </a>
     }

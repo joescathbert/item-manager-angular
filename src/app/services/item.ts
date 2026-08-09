@@ -121,17 +121,18 @@ export class Item {
     return this.http.delete(url);
   }
 
-  uploadFilesToItem(itemId: number, files: File[], fileTypes: string[]): Observable<any> {
-    // 1. Define the target URL for your Django endpoint
+  uploadFilesToItem(itemId: number, fileDescription: string, files: File[], fileTypes: string[]): Observable<any> {
+    // Define the target URL for your Django endpoint
     const url = `${this.baseUrl}/file-groups/upload-to-gdrive/`;
 
-    // 2. Create the FormData object to hold binary and text data
+    // Create the FormData object to hold binary and text data
     const formData: FormData = new FormData();
 
-    // 3. Append the Item ID (as specified in your curl example)
+    // Append the Item ID and fileDescription
     formData.append('item', itemId.toString());
+    formData.append('description', fileDescription);
 
-    // 4. Append all selected files using the key 'files' (as specified in your curl example)
+    // Append all selected files using the key 'files'
     files.forEach((file, index) => {
       // The third argument is the filename, which helps the backend process the file
       formData.append('files', file, file.name);
@@ -189,12 +190,28 @@ export class Item {
    * Fetches the paginated item shorts feed and automatically wraps asset 
    * endpoints with the proxy URL if they point to third-party domains.
    */
-  getItemFeed(targetUrl?: string | null): Observable<any> {
-    const url = targetUrl || this.feedNextUrl || `${this.baseUrl}/items/feed/`;
+  getItemFeed(targetUrl?: string | null, tags: string[] = []): Observable<any> {
+    let url: string;
+    let options = {};
+
+    // If a pagination next URL is provided or cached, use it directly (it already includes query params)
+    if (targetUrl) {
+      url = targetUrl;
+    } else if (this.feedNextUrl) {
+      url = this.feedNextUrl;
+    } else {
+      url = `${this.baseUrl}/items/feed/`;
+
+      // Set up tag filters for the initial request
+      if (tags && tags.length > 0) {
+        const params = new HttpParams().set('tag_names', tags.join(','));
+        options = { params };
+      }
+    }
 
     this.logger.log(`[ItemService] Fetching feed from URL: ${url}`);
 
-    return this.http.get<any>(url).pipe(
+    return this.http.get<any>(url, options).pipe(
       map(response => {
         // Intercept and loop through the results to append proxy strings safely
         const processedResults = response.results.map((item: any) => {

@@ -154,6 +154,7 @@ export class Edit extends Add implements OnInit {
         }
 
         if (item.file_group_details) {
+          item.file_description = item.file_group_details.description;
           item.files = item.file_group_details.files;
         }
 
@@ -165,10 +166,13 @@ export class Edit extends Add implements OnInit {
         this.editedItem = finalItem;
         this.originalUrl = finalItem.url || '';
 
+        console.log(finalItem.file_description);
+
         this.addItemForm.patchValue({
           name: finalItem.name,
           url: this.originalUrl,
-          dateOfOrigin: finalItem.date_of_origin
+          dateOfOrigin: finalItem.date_of_origin,
+          fileDescription: finalItem.file_description
         });
 
         // 4. Update tags and UI
@@ -198,7 +202,7 @@ export class Edit extends Add implements OnInit {
     }
 
     this.loading = true;
-    const { name, url, dateOfOrigin } = this.addItemForm.value;
+    const { name, url, dateOfOrigin, fileDescription } = this.addItemForm.value;
 
     this.updateItemAndLinkAndFile(
       name,
@@ -206,6 +210,7 @@ export class Edit extends Add implements OnInit {
       dateOfOrigin,
       this.tags,
       this.editedItem,
+      fileDescription,
       this.selectedFiles,
       this.selectedFileTypes
     );
@@ -240,6 +245,7 @@ export class Edit extends Add implements OnInit {
     dateOfOrigin: string,
     tags: string[],
     originalItem: SafeItemInterface,
+    fileDescription: string,
     files: File[] = [],
     fileTypes: string[] = []
   ): void {
@@ -292,7 +298,7 @@ export class Edit extends Add implements OnInit {
         return linkAction$.pipe(
           mergeMap(() => {
             if (hasFiles) {
-              return this.itemService.uploadFilesToItem(itemId, files, fileTypes);
+              return this.itemService.uploadFilesToItem(itemId, fileDescription, files, fileTypes);
             }
             return of(null);
           })

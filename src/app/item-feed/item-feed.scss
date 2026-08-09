@@ -12,7 +12,6 @@ $yt-white: #ffffff;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   background-color: #0c0c0c; // Desktop outer background color
-
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
@@ -20,12 +19,11 @@ $yt-white: #ffffff;
   }
 }
 
-/* Replace your existing .feed-item rule with this */
 .feed-item {
   position: relative;
   height: 100dvh;
 
-  // 1. Default to Desktop/Laptop constraint right at load time
+  // Default to Desktop/Laptop constraint right at load time
   width: 100%;
   max-width: 420px;
   margin: 0 auto;
@@ -35,7 +33,7 @@ $yt-white: #ffffff;
   overflow: hidden;
   background-color: #000;
 
-  // 2. Only scale up to true edge-to-edge full width on smaller smartphone displays
+  // Only scale up to true edge-to-edge full width on smaller smartphone displays
   @media (max-width: 767px) {
     max-width: none;
     width: 100vw;
@@ -50,8 +48,9 @@ $yt-white: #ffffff;
   height: 100%;
   width: 100%;
   overflow-x: scroll;
-  scroll-snap-type: x mandatory;
+  scroll-snap-type: x mandatory; // Mandates snapping boundaries
   scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch; // Ensures fluid but bounded inertial tracking on iOS
   scrollbar-width: none;
 
   &::-webkit-scrollbar {
@@ -61,20 +60,21 @@ $yt-white: #ffffff;
 
 .media-slide {
   position: relative;
-  // This must track 100% of the parent (.feed-item) bounds, NOT 100vw
   min-width: 100%;
   height: 100%;
   scroll-snap-align: start;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #000;
+  background-color: #000; // Left/Right bars blend into this black background
 
   video,
   img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain; // Seamlessly handles vertical or horizontal media
     pointer-events: none;
   }
 }
@@ -115,9 +115,11 @@ $yt-white: #ffffff;
 // ----------------------------------------
 .options-menu {
   position: absolute;
-  top: env(safe-area-inset-top, 16px);
+  top: calc(env(safe-area-inset-top, 0px) + 16px); // Adjusts beautifully for phone notches vs desktop
   right: $ui-padding;
   z-index: $overlay-z-index;
+  display: flex; // Aligns multiple buttons in a horizontal row
+  gap: 10px; // Spacing layout padding between icons
 
   .icon-btn {
     background: transparent;
@@ -131,21 +133,52 @@ $yt-white: #ffffff;
       opacity: 0.7;
     }
   }
+
+  .exit-btn {
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
 }
 
+// ----------------------------------------
+// 🚀 New Translucent Timed Bottom Overlay
+// ----------------------------------------
 .bottom-overlay {
   position: absolute;
-  bottom: 0;
+  bottom: 0; // Lock hard against the screen floor grid boundary
   left: 0;
   width: 100%;
   z-index: $overlay-z-index;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  // Sleek translucent background blur styling
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  // Substantial physical height track + handles safe-area home indicators on modern smartphones
+  box-sizing: border-box;
+  padding: 20px $ui-padding calc(20px + env(safe-area-inset-bottom, 0px)) $ui-padding;
+
+  // Hidden state settings with subtle scale/slide animations
+  opacity: 0;
+  pointer-events: none; // Allows gestures to pass cleanly through the space while hidden
+  transform: translateY(15px);
+  transition: opacity 0.25s ease-in-out, transform 0.25s ease-in-out;
+
+  // Activated state token injected dynamically by Angular mapping rules
+  &.visible {
+    opacity: 1;
+    pointer-events: auto; // Restores tracking inputs instantly
+    transform: translateY(0);
+  }
 
   .item-info {
-    padding: 0 $ui-padding 12px $ui-padding;
+    padding-bottom: 12px;
     color: $yt-white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 
@@ -159,50 +192,52 @@ $yt-white: #ffffff;
 
 .seek-container {
   width: 100%;
-  height: 12px;
+  height: 24px; // Expanded touch target window framework
   display: flex;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .yt-seek-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.3);
+  height: 4px;
+  border-radius: 2px;
   outline: none;
   margin: 0;
   padding: 0;
   cursor: pointer;
-  transition: height 0.1s ease-in-out;
+  box-sizing: border-box;
+
+  // 🚀 THE FIX: Dynamic linear-gradient tracking the CSS variable perfectly
+  background: linear-gradient(to right,
+    #{$yt-red} 0%,
+    #{$yt-red} var(--seek-progress, 0%),
+    rgba(255, 255, 255, 0.25) var(--seek-progress, 0%),
+    rgba(255, 255, 255, 0.25) 100%);
 
   &::-webkit-slider-runnable-track {
     width: 100%;
     height: 100%;
+    background: transparent;
+
+    // border-radius: 2px; // Matches the parent slider height radius
+    // overflow: hidden; // Clips the gradient crisp at 0% and 100% bounds
   }
 
   &::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 0px;
-    height: 0px;
-    background: $yt-red;
+    width: 14px;
+    height: 14px;
+    background: $yt-white; // 💡 Pro-tip: Make the knob white like YouTube so it pops against the red rail layout
     border-radius: 50%;
-    transition: width 0.1s, height 0.1s;
-  }
-
-  &:active,
-  &:hover {
-    height: 6px;
-
-    &::-webkit-slider-thumb {
-      width: 12px;
-      height: 12px;
-      margin-top: -3px;
-    }
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    margin-top: -5px; // Centers thumb over the 4px track height baseline
+    position: relative;
+    z-index: 2;
   }
 }
-
 
 // ----------------------------------------
 // Gesture Cue Animations & Overlays
@@ -330,7 +365,6 @@ $yt-white: #ffffff;
     opacity: 0;
   }
 }
-
 
 // ----------------------------------------
 // Infinite Scroll Sentinel

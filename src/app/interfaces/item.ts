@@ -18,6 +18,7 @@ export interface Item {
   url?: string;
   url_domain?: string;
   media_urls: MediaURL[];
+  file_description?: string;
   files?: File[];
 }
 

@@ -61,6 +61,10 @@
           </div>
         </div>
 
+        <div class="form-group">
+          <input id="fileDescription" type="text" formControlName="fileDescription" placeholder="File Description">
+        </div>
+
         <div class="form-group file-upload-group">
           <label for="files">File Upload</label>
           <input id="files" type="file" (change)="onFileSelected($event)" multiple>

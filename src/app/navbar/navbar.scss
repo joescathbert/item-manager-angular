@@ -30,7 +30,7 @@
   .navbar-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: .5rem;
 
     a.nav-icon-button-link {
       color: $color-text-light;
@@ -57,6 +57,7 @@
   // Profile Menu Container
   .profile-container {
     position: relative; // Anchor point for the absolutely positioned dropdown menu
+    padding: 0rem 0.5rem;
 
     .profile-avatar-btn {
       background: $color-item-hover-bg;

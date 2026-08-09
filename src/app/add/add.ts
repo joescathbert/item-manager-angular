@@ -94,7 +94,8 @@ export class Add {
     this.addItemForm = this.fb.group({
       name: ['New Item', Validators.required],
       dateOfOrigin: [this.getCurrentDate(), Validators.required],
-      url: [''], // URL is now optional initially
+      url: [''],
+      fileDescription: ['']
     }, { validators: this.urlOrFileRequiredValidator });
 
     // Load all tags when the component initializes
@@ -120,10 +121,29 @@ export class Add {
 
   addSuggestedTag() {
     const srcTag: string = this.tagInput.trim();
-    if (srcTag && !this.tags.includes(srcTag) && this.suggestionTags.length > 0) {
-      this.tags.push(this.suggestionTags[0].name);
+
+    // 1. Guard check: Ensure we have input and suggestions to work with
+    if (!srcTag || !this.suggestionTags || this.suggestionTags.length === 0) {
+      this.tagInput = '';
+      this.hideSuggestionsOnce();
+      return;
     }
-    this.tagInput = ''; // Clear the input after adding
+
+    // 2. Check if the typed text exactly matches ANY available suggestion
+    const exactMatch = this.suggestionTags.find(
+      tag => tag.name.toLowerCase() === srcTag.toLowerCase()
+    );
+
+    // 3. Determine the target tag: Use the exact match if found, otherwise fallback to the first suggestion
+    const tagToAdd = exactMatch ? exactMatch.name : this.suggestionTags[0].name;
+
+    // 4. Prevent adding duplicates to your final array
+    if (!this.tags.includes(tagToAdd)) {
+      this.tags.push(tagToAdd);
+    }
+
+    // 5. Clean up UI state
+    this.tagInput = '';
     this.hideSuggestionsOnce();
   }
 
@@ -254,7 +274,7 @@ export class Add {
 
   // --- Form Actions ---
   onSubmit() {
-    const { name, url, dateOfOrigin } = this.addItemForm.value;
+    const { name, url, dateOfOrigin, fileDescription } = this.addItemForm.value;
 
     const hasUrl = !!url;
     const hasFiles = this.selectedFiles.length > 0;
@@ -274,7 +294,7 @@ export class Add {
     // CONDITIONAL SUBMISSION LOGIC
     if (hasFiles) {
       // If files are present, use the NEW file group submission logic
-      this.submitItemAndFiles(name, dateOfOrigin, this.tags, this.selectedFiles, this.selectedFileTypes);
+      this.submitItemAndFiles(name, dateOfOrigin, this.tags, fileDescription, this.selectedFiles, this.selectedFileTypes);
     } else {
       // If no files are present, use the OLD link submission logic
       this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
@@ -331,7 +351,7 @@ export class Add {
   }
 
   // Method for File Upload submission
-  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], files: File[], fileTypes: string[]): void {
+  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], fileDescription:string, files: File[], fileTypes: string[]): void {
     // Extract URL from the form right before submission
     const url = this.addItemForm.get('url')?.value || '';
     const hasSecondaryLink = !!url;
@@ -349,7 +369,7 @@ export class Add {
         const newItemId = newItem.id;
         this.logger.log(files, fileTypes)
         // 2. Upload Files using the new API.
-        return this.itemService.uploadFilesToItem(newItemId, files, fileTypes).pipe(
+        return this.itemService.uploadFilesToItem(newItemId, fileDescription, files, fileTypes).pipe(
           // 3. CONDITIONAL: Create Link if a URL was provided.
           // This nested mergeMap ensures the file upload is complete before trying to create the link.
           mergeMap(() => {
