@@ -31,12 +31,12 @@
       @if (activeOptionsMenuId === item.id) {
       <div #dropdownMenu class="options-dropdown" (click)="$event.stopPropagation()">
         <button class="menu-item" (click)="toggleMediaMode()">
-          Switch to {{ activeMediaMode === 'media' ? 'Files' : 'Media' }}
+          Switch to {{ activeMediaMode === 'link' ? 'Files' : 'Media' }}
         </button>
         <button class="menu-item" (click)="editItem(item)">Edit Item</button>
         <button class="menu-item" (click)="useAsTemplate(item)">Use as Template</button>
         <button class="menu-item" (click)="openCurrentMedia(item)">
-          Open {{ activeMediaMode === 'media' ? 'Media' : 'File' }}
+          Open {{ activeMediaMode === 'link' ? 'Media' : 'File' }}
         </button>
         <button class="menu-item" (click)="openSafeUrl(item.safe_url)">Open Source</button>
       </div>
@@ -60,7 +60,7 @@
       }
       <div class="tag-control">
         <span>
-          @if ( activeMediaMode === 'media' ) {
+          @if ( activeMediaMode === 'link' ) {
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"></circle>
@@ -85,7 +85,7 @@
     <div class="item-media-section">
       <div class="carousel-container">
 
-        @if (activeMediaMode === 'media') {
+        @if (activeMediaMode === 'link') {
         @if (item.safe_media_urls && item.safe_media_urls.length > 0) {
         <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(item.currentIndex || 0) * 100) + '%)'">
           @for (media of item.safe_media_urls; track media.id) {

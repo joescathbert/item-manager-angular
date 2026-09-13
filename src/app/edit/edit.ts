@@ -43,7 +43,7 @@ export class Edit extends Add implements OnInit {
   protected override isEditing: boolean = true;
   protected override headerText: string = 'Edit Item';
   protected override submitButtonText: string = 'Update Item';
-  protected override activeMediaMode: MediaMode = 'media';
+  protected override activeMediaMode: MediaMode = 'link';
 
 
   // Must re-inject everything the Add component uses
@@ -172,7 +172,7 @@ export class Edit extends Add implements OnInit {
           name: finalItem.name,
           url: this.originalUrl,
           dateOfOrigin: finalItem.date_of_origin,
-          fileDescription: finalItem.file_description
+          fileDescription: finalItem.file_description || ''
         });
 
         // 4. Update tags and UI
@@ -202,7 +202,7 @@ export class Edit extends Add implements OnInit {
     }
 
     this.loading = true;
-    const { name, url, dateOfOrigin, fileDescription } = this.addItemForm.value;
+    const { name, url, dateOfOrigin, fileDescription = '' } = this.addItemForm.value;
 
     this.updateItemAndLinkAndFile(
       name,
@@ -218,7 +218,7 @@ export class Edit extends Add implements OnInit {
 
   // Method to toggle media mode
   override toggleMediaMode() {
-    this.activeMediaMode = this.activeMediaMode === 'media' ? 'files' : 'media';
+    this.activeMediaMode = this.activeMediaMode === 'link' ? 'files' : 'link';
     // Reset index to 0 so we don't end up on a non-existent slide in the other mode
     if (this.editedItem) {
       this.editedItem.currentIndex = 0;

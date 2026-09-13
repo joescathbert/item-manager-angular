@@ -77,7 +77,12 @@
             @for (file of selectedFiles; track $index) {
             <li class="file-item">
               <span class="file-order">{{ $index + 1 }}.</span>
-              <span class="file-name">{{ file.name }}</span>
+              <span class="file-name" (click)="previewUploadPreview($index)">
+                {{ file.name }}
+                <span class="file-size">
+                  ({{ formatFileSize(file.size) }})
+                </span>
+              </span>
 
               <div class="file-actions">
 
@@ -152,16 +157,15 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- PREVIEW SIDE PANEL: EXPLICITLY SEPARATED BLOCKS                          -->
+  <!-- PREVIEW SIDE PANEL                                                       -->
   <!-- ========================================================================= -->
-
-  @if (isEditing) {
-  <!-- 1. EDIT MODE PANEL -->
   <div class="add-preview">
+    @if (isEditing) {
+    <!-- 1. EDIT MODE PANEL -->
     <h2 class="preview-header">
       <span>
         Preview
-        @if ( activeMediaMode === 'media' ) {
+        @if ( activeMediaMode === 'link' ) {
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="10"></circle>
@@ -187,7 +191,7 @@
     </h2>
 
     <div class="carousel-container">
-      @if (activeMediaMode === 'media') {
+      @if (activeMediaMode === 'link') {
       @if (editedItem.safe_media_urls && editedItem.safe_media_urls.length > 0) {
       <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(editedItem.currentIndex || 0) * 100) + '%)'">
         @for (media of editedItem.safe_media_urls; track $index) {
@@ -243,12 +247,11 @@
       }
       }
     </div>
-  </div>
-
-  } @else if (previewItem && previewItem.safe_media && previewItem.safe_media.length > 0) {
-  <!-- 2. CREATION MODE PANEL (URL SCRAPE PREVIEW) -->
-  <div class="add-preview">
+    }
+    @else {
+    <!-- 2. CREATE MODE PANEL -->
     <h2 class="preview-header">
+      @if (activeMediaMode === 'link') {
       <span>
         Link Preview
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
@@ -258,9 +261,29 @@
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
         </svg>
       </span>
+      } @else {
+      <span>
+        File Upload Preview
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+      </span>
+      }
+      <svg class="svg-button" (click)="toggleMediaMode()" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+        viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+        <path d="M3 3v5h5"></path>
+        <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+        <path d="M16 16h5v5"></path>
+      </svg>
     </h2>
 
     <div class="carousel-container">
+      @if (activeMediaMode === 'link' && previewItem && previewItem.safe_media && previewItem.safe_media.length > 0) {
       <div class="carousel-wrapper" [style.transform]="'translateX(' + (-(previewItem.currentIndex || 0) * 100) + '%)'">
         @for (media of previewItem.safe_media; track $index) {
         <div class="carousel-slide" [class.is-active]="$index === (previewItem.currentIndex || 0)">
@@ -281,10 +304,34 @@
 
       <ng-container
         *ngTemplateOutlet="carouselControls; context: { $implicit: previewItem.safe_media, item: previewItem }"></ng-container>
-    </div>
-  </div>
-  }
+      }
+      @else if (activeMediaMode === 'files' && previewUpload && previewUpload.media && previewUpload.media.length > 0)
+      {
+      <div class="carousel-wrapper"
+        [style.transform]="'translateX(' + (-(previewUpload.currentIndex || 0) * 100) + '%)'">
+        @for (media of previewUpload.media; track media.file_url) {
+        <div class="carousel-slide" [class.is-active]="$index === (previewUpload.currentIndex || 0)">
+          @if (media.media_type === 'video') {
+          <div class="item-content-video">
+            <video #mediaElement controls loop [muted]="true" appVideoObserver>
+              <source [src]="media.file_url">
+            </video>
+          </div>
+          } @else {
+          <div class="item-content-image">
+            <img [src]="media.file_url" alt="Uploaded content" loading="lazy">
+          </div>
+          }
+        </div>
+        }
+      </div>
 
+      <ng-container
+        *ngTemplateOutlet="carouselControls; context: { $implicit: previewUpload.media, item: previewUpload }"></ng-container>
+      }
+    </div>
+    }
+  </div>
 </div>
 
 <!-- CAROUSEL CONTROLS TEMPLATE -->

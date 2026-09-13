@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { PreviewLink, SafePreviewLink, Link as LinkInterface, LinkPayload } from '../interfaces/link';
+import { LinkPreview, SafeLinkPreview, Link as LinkInterface, LinkPayload } from '../interfaces/link';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -24,12 +24,12 @@ export class Link {
    * Scrapes external stream links from a URL, routes specific video domains 
    * through a proxy, and passes them through DomSanitizer in-pipeline.
    */
-  extractMedia(url: string): Observable<SafePreviewLink> {
+  extractMedia(url: string): Observable<SafeLinkPreview> {
     const targetUrl = `${this.baseUrl}/links/extract-media/`;
     this.logger.log('[LinkService] Processing extraction stream target for:', url);
 
-    return this.http.post<PreviewLink>(targetUrl, { url }).pipe(
-      map((response: PreviewLink): SafePreviewLink => {
+    return this.http.post<LinkPreview>(targetUrl, { url }).pipe(
+      map((response: LinkPreview): SafeLinkPreview => {
         const proxyDomains = ['media.redgifs.com', 'video.twimg.com', 'i.imgur.com'];
 
         const safeMedia = response.media?.map(m => {

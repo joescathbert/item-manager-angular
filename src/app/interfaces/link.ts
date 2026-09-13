@@ -3,28 +3,40 @@ import { MediaURL } from "./item";
 
 export type MediaType = 'video' | 'image'
 
-export interface PreviewMedia {
+export interface LinkPreviewMedia {
   hd_url: string;
   sd_url: string;
   media_type: MediaType;
 
 }
 
-export interface SafePreviewMedia extends PreviewMedia {
+export interface SafeLinkPreviewMedia extends LinkPreviewMedia {
   safe_hd_url?: SafeResourceUrl;
   safe_sd_url?: SafeResourceUrl;
 
 }
 
-export interface PreviewLink {
+export interface LinkPreview {
   original_url: string;
-  media: PreviewMedia[];
+  media: LinkPreviewMedia[];
 }
 
-export interface SafePreviewLink extends PreviewLink {
+export interface SafeLinkPreview extends LinkPreview {
   currentIndex?: number;
-  safe_media?: SafePreviewMedia[];
+  safe_media?: SafeLinkPreviewMedia[];
 }
+
+export interface UploadPreviewMedia {
+  file: File;
+  file_url: string;
+  media_type: MediaType;
+}
+
+export interface UploadPreview {
+  currentIndex: number;
+  media: UploadPreviewMedia[];
+}
+
 
 export interface LinkPayload {
   item: number;

@@ -6,7 +6,7 @@ import { mergeMap } from 'rxjs/operators';
 import { CommonModule } from '@angular/common';
 
 import { ItemPayload, SafeItem as SafeItemInterface } from '../interfaces/item';
-import { LinkPayload, SafePreviewLink } from '../interfaces/link';
+import { LinkPayload, SafeLinkPreview, UploadPreview, UploadPreviewMedia } from '../interfaces/link';
 import { Tag } from '../interfaces/tag';
 import { MediaMode } from '../interfaces/misc';
 import { Item as ItemService } from '../services/item';
@@ -42,7 +42,7 @@ export class Add {
   protected isEditing: boolean = false;
   protected headerText: string = 'Add New Item';
   protected submitButtonText: string = 'Add Item';
-  protected activeMediaMode: MediaMode = 'media';
+  protected activeMediaMode: MediaMode = 'link';
 
   protected editedItem: SafeItemInterface = {
     id: 0, // Placeholder ID
@@ -62,7 +62,8 @@ export class Add {
   };
 
   protected previewLoading: boolean = false;
-  protected previewItem: SafePreviewLink & { currentIndex?: number } = { original_url: '', media: [], safe_media: [], currentIndex: 0 };
+  protected previewItem: SafeLinkPreview = { original_url: '', media: [], safe_media: [], currentIndex: 0 };
+  protected previewUpload: UploadPreview = { currentIndex: 0, media: [] };
   private destroyRef = inject(DestroyRef);
 
   constructor(
@@ -224,13 +225,37 @@ export class Add {
   onFileSelected(event: any): void {
     const files: FileList = event.target.files;
 
-    // Convert FileList to Array and merge with existing files (if any)
     const newFiles = Array.from(files);
     const newTypes = newFiles.map(() => 'RAW');
-    this.selectedFiles = [...this.selectedFiles, ...newFiles];
-    this.selectedFileTypes = [...this.selectedFileTypes, ...newTypes];
 
-    // Reset the input value to allow the user to select the same file(s) again if needed
+    this.selectedFiles = [
+      ...this.selectedFiles,
+      ...newFiles
+    ];
+
+    this.selectedFileTypes = [
+      ...this.selectedFileTypes,
+      ...newTypes
+    ];
+
+    const newMedia: UploadPreviewMedia[] = newFiles
+      .filter(file =>
+        file.type.startsWith('image/') ||
+        file.type.startsWith('video/')
+      )
+      .map(file => ({
+        file,
+        file_url: URL.createObjectURL(file),
+        media_type: file.type.startsWith('image/')
+          ? 'image'
+          : 'video'
+      }));
+
+    this.previewUpload.media = [
+      ...this.previewUpload.media,
+      ...newMedia
+    ];
+
     event.target.value = null;
   }
 
@@ -238,6 +263,14 @@ export class Add {
   removeFile(index: number): void {
     this.selectedFiles.splice(index, 1);
     this.selectedFileTypes.splice(index, 1);
+    this.previewUpload.media.splice(index, 1);
+
+    // Adjust carousel index if deleted item was the last slide
+    if (this.previewUpload.currentIndex >= this.previewUpload.media.length) {
+      this.previewUpload.currentIndex = Math.max(0, this.previewUpload.media.length - 1);
+    }
+
+    this.cdr.markForCheck();
   }
 
   // Moves a file up in the list (decreases index)
@@ -249,6 +282,10 @@ export class Add {
 
       [this.selectedFileTypes[index - 1], this.selectedFileTypes[index]] =
         [this.selectedFileTypes[index], this.selectedFileTypes[index - 1]];
+
+      // Swap Preview Upload
+      [this.previewUpload.media[index - 1], this.previewUpload.media[index]] =
+        [this.previewUpload.media[index], this.previewUpload.media[index - 1]];
     }
   }
 
@@ -261,6 +298,11 @@ export class Add {
 
       [this.selectedFileTypes[index + 1], this.selectedFileTypes[index]] =
         [this.selectedFileTypes[index], this.selectedFileTypes[index + 1]];
+
+      // Swap Preview Upload
+      [this.previewUpload.media[index + 1], this.previewUpload.media[index]] =
+        [this.previewUpload.media[index], this.previewUpload.media[index + 1]];
+
     }
   }
 
@@ -294,10 +336,10 @@ export class Add {
     // CONDITIONAL SUBMISSION LOGIC
     if (hasFiles) {
       // If files are present, use the NEW file group submission logic
-      this.submitItemAndFiles(name, dateOfOrigin, this.tags, fileDescription, this.selectedFiles, this.selectedFileTypes);
+      this.submitItemAndFiles(name, dateOfOrigin, fileDescription);
     } else {
       // If no files are present, use the OLD link submission logic
-      this.submitItemAndLink(name, url, dateOfOrigin, this.tags);
+      this.submitItemAndLink(name, url, dateOfOrigin);
     }
   }
 
@@ -305,19 +347,35 @@ export class Add {
     this.router.navigate(['/home']);
   }
 
-  // Placeholder method for the child (Edit) component
-  toggleMediaMode() { }
+  // Method to toggle preview media mode
+  toggleMediaMode() {
+    this.activeMediaMode = this.activeMediaMode === 'link' ? 'files' : 'link';
+    // Reset index to 0 so we don't end up on a non-existent slide in the other mode
+    if (this.previewItem) {
+      this.previewItem.currentIndex = 0;
+    }
+    if (this.previewUpload) {
+      this.previewUpload.currentIndex = 0;
+    }
+  }
 
   // Placeholder method for the child (Edit) component
   previewFile(fileIndex: number) { }
 
+  previewUploadPreview(fileIndex: number) {
+    this.activeMediaMode = this.activeMediaMode === 'link' ? 'files' : 'files';
+    if (this.previewUpload.media){
+      this.previewUpload.currentIndex = fileIndex;
+    }
+  }
+
   // This method is now safe to be called by the default onSubmit()
-  protected submitItemAndLink(name: string, url: string, dateOfOrigin: string, tags: string[]): void {
+  protected submitItemAndLink(name: string, url: string, dateOfOrigin: string): void {
     const itemPayload: ItemPayload = {
       name: name,
       type: 'link',
       date_of_origin: dateOfOrigin,
-      tag_names: tags
+      tag_names: this.tags
     };
 
     this.itemService.createItem(itemPayload).pipe(
@@ -351,7 +409,7 @@ export class Add {
   }
 
   // Method for File Upload submission
-  protected submitItemAndFiles(name: string, dateOfOrigin: string, tags: string[], fileDescription:string, files: File[], fileTypes: string[]): void {
+  protected submitItemAndFiles(name: string, dateOfOrigin: string, fileDescription: string): void {
     // Extract URL from the form right before submission
     const url = this.addItemForm.get('url')?.value || '';
     const hasSecondaryLink = !!url;
@@ -360,16 +418,15 @@ export class Add {
       name: name,
       type: 'file_group', // Item is always a file_group if files are selected
       date_of_origin: dateOfOrigin,
-      tag_names: tags
+      tag_names: this.tags
     };
 
     this.itemService.createItem(itemPayload).pipe(
       // 1. Create the Item. API returns the new item object, including its ID.
       mergeMap((newItem: any) => {
         const newItemId = newItem.id;
-        this.logger.log(files, fileTypes)
         // 2. Upload Files using the new API.
-        return this.itemService.uploadFilesToItem(newItemId, fileDescription, files, fileTypes).pipe(
+        return this.itemService.uploadFilesToItem(newItemId, fileDescription, this.selectedFiles, this.selectedFileTypes).pipe(
           // 3. CONDITIONAL: Create Link if a URL was provided.
           // This nested mergeMap ensures the file upload is complete before trying to create the link.
           mergeMap(() => {
@@ -410,27 +467,44 @@ export class Add {
   /**
    * Helper method to determine the array length of the currently active view mode
    */
-  private getActiveLength(item: SafeItemInterface | SafePreviewLink): number {
+  private getActiveLength(item: SafeItemInterface | SafeLinkPreview | UploadPreview): number {
     if (this.isEditing) {
       const editItem = item as SafeItemInterface;
-      if (this.activeMediaMode === 'media' && editItem.safe_media_urls) {
+      if (this.activeMediaMode === 'link' && editItem.safe_media_urls) {
         return editItem.safe_media_urls.length;
       }
       if (this.activeMediaMode === 'files' && editItem.safe_files) {
         return editItem.safe_files.length;
       }
     } else {
-      const previewItem = item as SafePreviewLink;
-      return previewItem.safe_media?.length ?? 0;
+      const previewLink = item as SafeLinkPreview;
+      const previewUpload = item as UploadPreview;
+      if (this.activeMediaMode === 'link' && previewLink.safe_media) {
+        return previewLink.safe_media?.length ?? 0;
+      }
+      if (this.activeMediaMode === 'files' && previewUpload.media) {
+        return previewUpload.media?.length ?? 0;
+      }
     }
     return 0;
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) {
+      return '0 Bytes';
+    }
+
+    const units = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${units[i]}`;
   }
 
   /**
    * Navigate to the next media item
    * Stops at the final item.
    */
-  public nextSlide(item: SafeItemInterface | SafePreviewLink): void {
+  public nextSlide(item: SafeItemInterface | SafeLinkPreview | UploadPreview): void {
     const idx = item.currentIndex ?? 0;
     const maxLen = this.getActiveLength(item);
 
@@ -445,7 +519,7 @@ export class Add {
    * Navigate to the previous media item
    * Stops at the first item (0).
    */
-  public prevSlide(item: SafeItemInterface | SafePreviewLink): void {
+  public prevSlide(item: SafeItemInterface | SafeLinkPreview | UploadPreview): void {
     const idx = item.currentIndex ?? 0;
 
     // Only decrement if we are not at the first item
@@ -468,14 +542,14 @@ export class Add {
     this.logger.log('[AddForm] Manually requesting media extract for:', url);
 
     this.linkService.extractMedia(url).subscribe({
-      next: (response: SafePreviewLink) => {
+      next: (response: SafeLinkPreview) => {
         this.previewLoading = false;
         if (response && response.safe_media && response.safe_media.length > 0) {
           this.previewItem = {
             ...response,
             currentIndex: 0
           };
-          this.activeMediaMode = 'media';
+          this.activeMediaMode = 'link';
           this.toastService.showSuccess('Preview loaded successfully.');
         } else {
           this.toastService.showError('No viewable media found on this link.');

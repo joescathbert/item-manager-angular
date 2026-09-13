@@ -1,1 +1,1 @@
-export type MediaMode = 'media' | 'files';
+export type MediaMode = 'link' | 'files';

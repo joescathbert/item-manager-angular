@@ -30,7 +30,7 @@ export class ItemDetail implements OnInit {
 
   activeOptionsMenuId: number | null = null; // Variable to track which item's menu is currently open
 
-  activeMediaMode: MediaMode = 'media';
+  activeMediaMode: MediaMode = 'link';
 
   // Neighbor IDs
   prevId: number | null = null;
@@ -170,7 +170,7 @@ export class ItemDetail implements OnInit {
 
         return safeMedia;
       });
-      this.activeMediaMode = "media"; // To automatically switch to media mode if media url is present
+      this.activeMediaMode = "link"; // To automatically switch to media mode if media url is present
     }
     else {
       this.activeMediaMode = "files"; // To automatically switch to files mode if no media url is present
@@ -315,7 +315,7 @@ export class ItemDetail implements OnInit {
     const index = item.currentIndex ?? 0;
     let url: any;
 
-    if (this.activeMediaMode === 'media') {
+    if (this.activeMediaMode === 'link') {
       url = item.safe_media_urls?.[index]?.safe_hd_url;
     } else {
       url = item.safe_files?.[index]?.safe_file_serve_url;
@@ -349,7 +349,7 @@ export class ItemDetail implements OnInit {
 
   // Method to toggle media mode
   toggleMediaMode() {
-    this.activeMediaMode = this.activeMediaMode === 'media' ? 'files' : 'media';
+    this.activeMediaMode = this.activeMediaMode === 'link' ? 'files' : 'link';
     // Reset index to 0 so we don't end up on a non-existent slide in the other mode
     if (this.item) {
       this.item.currentIndex = 0;
