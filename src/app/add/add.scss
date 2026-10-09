@@ -3,7 +3,7 @@
 .add-container {
   display: flex;
   flex-direction: row;
-  margin: 2rem 2rem 0rem 2rem;
+  margin: 2rem 2rem 2rem 2rem;
   border-radius: 10px;
   color: #f6f7f8;
   min-height: 83vh;
@@ -26,6 +26,7 @@
   min-height: 83vh;
 }
 
+/* Base Headings */
 h2,
 h3 {
   border-bottom: 1px solid #3c3c40;
@@ -33,11 +34,43 @@ h3 {
   margin-bottom: 15px;
 }
 
+/* --- Form Header Row (Header on Left, Action Buttons on Right) --- */
+/* --- Form Header Row (Header on Left, Action Buttons on Right) --- */
+.form-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: $color-netural-bg; // or specify your panel background: e.g. $color-neutral-bg or #1e1e20
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 10px;
+  margin-bottom: 1.5rem;
+
+  h2 {
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .button-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border-bottom: none;
+  }
+}
+
 h2.preview-header {
   display: flex;
   align-items: center;
   gap: 8px;
   justify-content: space-between;
+  margin-top: 0;
+  border-bottom: none;
 }
 
 h2.preview-header span {
@@ -48,12 +81,12 @@ h2.preview-header span {
 
 svg.svg-button {
   transition: transform 0.2s;
-}
 
-svg.svg-button:hover {
-  cursor: pointer;
-  stroke: $primary-color;
-  transform: rotate(22deg);
+  &:hover {
+    cursor: pointer;
+    stroke: $primary-color;
+    transform: rotate(22deg);
+  }
 }
 
 /* --- Form Styles --- */
@@ -78,7 +111,6 @@ input[type="url"],
 input[type="date"] {
   font-family: inherit;
   padding: 10px;
-  /* Adjust base right padding dynamically to leave room only if the button is present */
   padding-right: 12px;
   border: 1px solid $color-neutral-border;
   border-radius: $pill-border-radius;
@@ -96,17 +128,17 @@ input[type="date"] {
     outline: 1px solid $focus-color;
   }
 
-  /* NEW: Safe right spacing only applied when the fetch button is injected next to it */
-  &:has(~ .fetch-preview-btn) {
+  &:has(~ .fetch-preview-btnicon) {
     padding-right: 46px;
   }
 }
 
 .item-section {
+
   input[type="text"],
   input[type="url"],
   input[type="date"] {
-    width: 100%
+    width: 100%;
   }
 }
 
@@ -131,13 +163,11 @@ input[type="date"] {
       color: #ffffff;
       border: none;
       border-radius: 50%;
-      /* Rounded circle layout fits modern icon bars perfectly */
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       width: 28px;
-      /* Perfect symmetrical square box matching the input height */
       height: 28px;
       transition: background-color 0.2s ease, transform 0.1s ease;
 
@@ -161,7 +191,6 @@ input[type="date"] {
   }
 }
 
-/* CSS Loader Spinner for Fetch Operations */
 .spinner {
   display: inline-block;
   width: 14px;
@@ -219,7 +248,7 @@ input[type="date"] {
   background-color: #007bff;
   color: white;
   font-size: 0.8rem;
-  padding: .4em .5rem .4rem 1rem;
+  padding: 0.4em 0.5rem 0.4rem 1rem;
   border-radius: 50px;
   white-space: nowrap;
 }
@@ -245,19 +274,14 @@ input[type="date"] {
 /* --- File Upload Styles --- */
 
 .file-upload-group {
-  // Adding some separation to distinguish it from the URL input above it.
   margin-top: 2rem;
   padding-top: 1.5rem;
   border-top: 1px dashed $color-neutral-border;
 }
 
 input[type="file"] {
-  // Style the file input to occupy the full width, especially for mobile
   width: 100%;
   padding: 10px 0;
-  /* Add vertical padding */
-  // Since file inputs are notoriously difficult to style uniformly, 
-  // we focus on making the container clean.
 }
 
 /* --- Interactive File List Styles --- */
@@ -270,7 +294,7 @@ input[type="file"] {
     font-size: 1.1rem;
     margin-top: 0;
     padding-bottom: 5px;
-    border-bottom: none; // Remove the default separator
+    border-bottom: none;
   }
 }
 
@@ -318,10 +342,14 @@ span.file-order {
 }
 
 span.file-name {
-  flex-grow: 1;
+  flex: 1 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+span.file-size {
+  flex-shrink: 0;
 }
 
 span.file-type {
@@ -332,60 +360,59 @@ span.file-type {
   display: flex;
   gap: 5px;
   margin-left: 10px;
-}
 
-.file-actions .file-type-select {
-  background: $color-neutral-bg-hover;
-  border: 1px solid $color-neutral-border-medium;
-  color: $color-text-light;
-  padding: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.75rem;
-  font-weight: bold;
-  height: 30px;
-  outline: none;
-  font-family: inherit;
+  .file-type-select {
+    background: $color-neutral-bg-hover;
+    border: 1px solid $color-neutral-border-medium;
+    color: $color-text-light;
+    padding: 0 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: bold;
+    height: 30px;
+    outline: none;
+    font-family: inherit;
 
-  &:hover {
-    background-color: #4a4a4f;
-    border-color: $color-neutral-border-medium;
+    &:hover {
+      background-color: #4a4a4f;
+      border-color: $color-neutral-border-medium;
+    }
+
+    &:focus {
+      border-color: $focus-color;
+    }
+
+    option {
+      background-color: $color-netural-bg;
+      color: white;
+    }
   }
 
-  &:focus {
-    border-color: $focus-color;
-  }
+  button {
+    background: $color-neutral-bg-hover;
+    border: 1px solid $color-neutral-border-medium;
+    color: $color-text-light;
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+    height: 30px;
 
-  option {
-    background-color: $color-netural-bg;
-    color: white;
-  }
-}
+    &:hover:not(:disabled) {
+      background-color: #4a4a4f;
+    }
 
-.file-actions button {
-  // Resetting button styles to match action icons
-  background: $color-neutral-bg-hover;
-  border: 1px solid $color-neutral-border-medium;
-  color: $color-text-light;
-  padding: 5px 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  line-height: 1;
-  height: 30px; // Ensure uniform size
-
-  &:hover:not(:disabled) {
-    background-color: #4a4a4f;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   }
 }
 
 .remove-file {
-  background-color: #dc3545; // Red for removal
+  background-color: #dc3545;
   border-color: #dc3545;
   font-size: 1.2rem !important;
   padding: 2px 8px;
@@ -395,38 +422,42 @@ span.file-type {
   }
 }
 
-/* --- Button Section --- */
+/* --- Button Section General Styling --- */
 
 .button-section {
   display: flex;
   justify-content: flex-end;
-  gap: 15px;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-  border-top: 1px solid #3c3c40;
+  gap: 10px;
 
   button {
-    background-color: $color-action-button-bg;
+
     font-family: inherit;
     font-weight: bold;
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: $color-text-light;
     border: none;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: $pill-border-radius;
     cursor: pointer;
     transition: background-color 0.2s;
   }
 
   .cancel-button {
+    background-color: $color-button-bg;
+
     &:hover {
-      background-color: $color-action-button-bg-hover;
+      background-color: $color-button-bg-hover;
     }
   }
 
   .submit-button {
+    background-color: $color-action-button-bg;
+
+    &:hover {
+      background-color: $color-action-button-bg-hover;
+    }
+
     &:disabled {
       background-color: #555;
       cursor: not-allowed;
@@ -439,25 +470,24 @@ span.file-type {
 .carousel-container {
   position: relative;
   width: 100%;
-  overflow: hidden; // Critical: Hides the slides to the left and right
-  background-color: #000; // Solid background for mixed aspect ratios
+  overflow: hidden;
+  background-color: #000;
   border-radius: 8px;
   margin: 10px 0;
   box-sizing: border-box;
-
   height: auto;
   transition: height 0.3s ease;
 }
 
 .carousel-wrapper {
   display: flex;
-  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); // Smooth "snap" feel
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
   width: 100%;
   align-items: flex-start;
 }
 
 .carousel-slide {
-  min-width: 100%; // Each slide takes exactly one container width
+  min-width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -503,7 +533,7 @@ span.file-type {
   }
 
   &:disabled {
-    opacity: 0; // Hide buttons when they can't be used
+    opacity: 0;
     pointer-events: none;
   }
 
@@ -527,7 +557,7 @@ span.file-type {
   display: flex;
   justify-content: center;
   gap: 6px;
-  pointer-events: none; // Let clicks pass through to video controls
+  pointer-events: none;
 
   .dot {
     width: 7px;
@@ -543,7 +573,6 @@ span.file-type {
     }
   }
 }
-
 
 /* --- Responsive Adjustments --- */
 
@@ -566,14 +595,24 @@ span.file-type {
     width: auto;
   }
 
+  .form-header-row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+
+    .button-section {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+
   .file-item {
-    flex-wrap: wrap; // Allow file name to wrap on mobile
+    flex-wrap: wrap;
 
     .file-name {
-      flex-basis: 100%; // File name takes full width
+      flex-basis: 100%;
       margin-top: 5px;
       font-size: 0.9rem;
-      white-space: normal; // Allow text wrapping
+      white-space: normal;
     }
 
     .file-order {
@@ -581,7 +620,7 @@ span.file-type {
     }
 
     .file-actions {
-      margin-left: auto; // Push actions to the right
+      margin-left: auto;
       margin-top: 5px;
     }
   }
@@ -590,12 +629,12 @@ span.file-type {
 
     img,
     .item-content-video video {
-      max-height: 80vh; // Give more room on mobile portrait
+      max-height: 80vh;
     }
   }
 
   .carousel-control {
-    padding: 10px 5px; // Smaller buttons for thumbs
+    padding: 10px 5px;
     font-size: 1.2rem;
   }
 }

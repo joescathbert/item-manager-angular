@@ -67,7 +67,7 @@ export class Edit extends Add implements OnInit {
   // Override ngOnInit to handle fetching existing data
   override ngOnInit(): void {
     if (isPlatformBrowser(this.platformId)) {
-      
+
       // Execute parent initialization ONLY on the client side where tokens exist
       super.ngOnInit();
 
@@ -195,14 +195,51 @@ export class Edit extends Add implements OnInit {
       return;
     }
 
-    // Ensure we have the item we're editing
     if (!this.editedItem) {
       alert('Error: Cannot update item, original data missing.');
       return;
     }
 
-    this.loading = true;
     const { name, url, dateOfOrigin, fileDescription = '' } = this.addItemForm.value;
+    const trimmedUrl = url?.trim() || '';
+    const urlChanged = trimmedUrl !== this.originalUrl;
+
+    // Only verify duplicate link if a URL is provided AND it was modified
+    if (trimmedUrl && urlChanged) {
+      this.loading = true;
+      this.linkService.checkLinkExists(trimmedUrl, this.editedItem.id).subscribe({
+        next: (exists: boolean) => {
+          if (exists) {
+            this.loading = false;
+            this.cdr.markForCheck();
+
+            const proceed = window.confirm(
+              'This link already exists on another item in the database. Are you sure you want to use it?'
+            );
+
+            if (!proceed) {
+              return;
+            }
+          }
+
+          // Proceed with update
+          this.proceedWithUpdate(name, trimmedUrl, dateOfOrigin, fileDescription);
+        },
+        error: (err) => {
+          this.logger.error('[Edit] Failed to verify link existence:', err);
+          // Fallback: Proceed on verification failure
+          this.proceedWithUpdate(name, trimmedUrl, dateOfOrigin, fileDescription);
+        }
+      });
+    } else {
+      // URL was untouched or cleared -> proceed directly
+      this.proceedWithUpdate(name, trimmedUrl, dateOfOrigin, fileDescription);
+    }
+  }
+
+  private proceedWithUpdate(name: string, url: string, dateOfOrigin: string, fileDescription: string): void {
+    this.loading = true;
+    this.cdr.markForCheck();
 
     this.updateItemAndLinkAndFile(
       name,

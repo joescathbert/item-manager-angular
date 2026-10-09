@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { LinkPreview, SafeLinkPreview, Link as LinkInterface, LinkPayload } from '../interfaces/link';
+import { LinkPreview, SafeLinkPreview, Link as LinkInterface, LinkPayload, LinkCheckResponse } from '../interfaces/link';
 import { Logger } from './logger';
 import { environment } from '../../environments/environment';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -64,6 +64,17 @@ export class Link {
         return throwError(() => error);
       })
     );
+  }
+
+  checkLinkExists(url: string, excludeItemId?: number): Observable<boolean> {
+    let params = new HttpParams().set('url', url);
+    if (excludeItemId) {
+      params = params.set('exclude_item_id', excludeItemId.toString());
+    }
+
+    return this.http
+      .get<LinkCheckResponse>(`${this.baseUrl}/links/check-exists/`, { params })
+      .pipe(map(response => response.exists));
   }
 
   // unused

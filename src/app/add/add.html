@@ -1,9 +1,23 @@
 <div class="add-container">
 
   <div class="add-form">
-    <h2>{{ headerText }}</h2>
-
     <form [formGroup]="addItemForm" (ngSubmit)="onSubmit()">
+      <div class="form-header-row">
+        <h2>{{ headerText }}</h2>
+
+        <section class="button-section">
+          <button type="button" class="cancel-button" (click)="cancel()">
+            Cancel
+          </button>
+          <button type="submit" class="submit-button" [disabled]="addItemForm.invalid || loading">
+            @if (loading) {
+            <span>Submitting...</span>
+            } @else {
+            <span>{{ submitButtonText }}</span>
+            }
+          </button>
+        </section>
+      </div>
 
       <section class="form-section tag-section">
         <div class="tag-input-group">
@@ -77,11 +91,11 @@
             @for (file of selectedFiles; track $index) {
             <li class="file-item">
               <span class="file-order">{{ $index + 1 }}.</span>
-              <span class="file-name" (click)="previewUploadPreview($index)">
+              <span class="file-name" (click)="previewUploadPreview($index)" title="{{ file.name }}">
                 {{ file.name }}
-                <span class="file-size">
-                  ({{ formatFileSize(file.size) }})
-                </span>
+              </span>
+              <span class="file-size">
+                ({{ formatFileSize(file.size) }})
               </span>
 
               <div class="file-actions">
@@ -141,18 +155,6 @@
         <input type="hidden" formControlName="name">
       </section>
 
-      <section class="button-section">
-        <button type="button" class="cancel-button" (click)="cancel()">
-          Cancel
-        </button>
-        <button type="submit" class="submit-button" [disabled]="addItemForm.invalid || loading">
-          @if (loading) {
-          <span>Submitting...</span>
-          } @else {
-          <span>{{ submitButtonText }}</span>
-          }
-        </button>
-      </section>
     </form>
   </div>
 

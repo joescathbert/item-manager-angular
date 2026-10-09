@@ -52,3 +52,9 @@ export interface Link {
   media_url_domain: string;
   media_urls: MediaURL[];
 }
+
+export interface LinkCheckResponse {
+  exists: boolean;
+  matched_item_id: number | null;
+  matched_url: string | null;
+}

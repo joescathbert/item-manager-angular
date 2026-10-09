@@ -64,7 +64,6 @@ export class Add {
   protected previewLoading: boolean = false;
   protected previewItem: SafeLinkPreview = { original_url: '', media: [], safe_media: [], currentIndex: 0 };
   protected previewUpload: UploadPreview = { currentIndex: 0, media: [] };
-  private destroyRef = inject(DestroyRef);
 
   constructor(
     protected fb: FormBuilder,
@@ -318,7 +317,8 @@ export class Add {
   onSubmit() {
     const { name, url, dateOfOrigin, fileDescription } = this.addItemForm.value;
 
-    const hasUrl = !!url;
+    const trimmedUrl = url?.trim();
+    const hasUrl = !!trimmedUrl;
     const hasFiles = this.selectedFiles.length > 0;
 
     if (this.addItemForm.invalid || this.tags.length === 0 || (!hasUrl && !hasFiles)) {
@@ -331,14 +331,58 @@ export class Add {
       return;
     }
 
-    this.loading = true;
+    // If a URL is entered, verify uniqueness first
+    if (hasUrl) {
+      this.loading = true;
+      this.linkService.checkLinkExists(trimmedUrl).subscribe({
+        next: (exists: boolean) => {
+          if (exists) {
+            this.loading = false;
+            this.cdr.markForCheck();
 
-    // CONDITIONAL SUBMISSION LOGIC
+            // Native browser confirm or swap with your custom modal/dialog service:
+            const proceed = window.confirm(
+              'This link already exists in the database. Are you sure you want to add it again?'
+            );
+
+            if (!proceed) {
+              return;
+            }
+          }
+
+          // Proceed with final submission
+          this.executeSubmission(name, trimmedUrl, dateOfOrigin, fileDescription, hasFiles);
+        },
+        error: (err) => {
+          this.loading = false;
+          this.cdr.markForCheck();
+          this.logger.error('[Add] Failed to verify link existence:', err);
+          // Fallback: Proceed anyway or show toast based on your requirement
+          this.executeSubmission(name, trimmedUrl, dateOfOrigin, fileDescription, hasFiles);
+        }
+      });
+    } else {
+      // No URL (File-only submission) -> proceed immediately
+      this.executeSubmission(name, '', dateOfOrigin, fileDescription, hasFiles);
+    }
+  }
+
+  /**
+   * Dispatches to either file-based or link-based submission
+   */
+  private executeSubmission(
+    name: string,
+    url: string,
+    dateOfOrigin: string,
+    fileDescription: string,
+    hasFiles: boolean
+  ): void {
+    this.loading = true;
+    this.cdr.markForCheck();
+
     if (hasFiles) {
-      // If files are present, use the NEW file group submission logic
       this.submitItemAndFiles(name, dateOfOrigin, fileDescription);
     } else {
-      // If no files are present, use the OLD link submission logic
       this.submitItemAndLink(name, url, dateOfOrigin);
     }
   }
@@ -364,7 +408,7 @@ export class Add {
 
   previewUploadPreview(fileIndex: number) {
     this.activeMediaMode = this.activeMediaMode === 'link' ? 'files' : 'files';
-    if (this.previewUpload.media){
+    if (this.previewUpload.media) {
       this.previewUpload.currentIndex = fileIndex;
     }
   }
